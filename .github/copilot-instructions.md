@@ -1,3 +1,30 @@
+# The Freelancer Platform - Copilot Instructions
+
+## 📋 **CRITICAL: Feature Tracking**
+
+**ALWAYS** check and update the following files when implementing features:
+
+1. **`features.md`** - Complete API implementation tracker with checkboxes
+2. **`instructions.md`** - Development guidelines and architecture documentation
+
+### **When completing ANY API or task:**
+1. ✅ Mark the API as completed in `features.md` by changing `[ ]` to `[x]`
+2. ✅ Add the **COMPLETED** status next to the description  
+3. ✅ Update the implementation progress counters
+4. ✅ Update the service health status table
+5. ✅ Follow the implementation guidelines in `instructions.md`
+
+**Example:**
+```markdown
+# Before
+- [ ] `POST /api/auth/login` - User login (generate JWT)
+
+# After  
+- [x] `POST /api/auth/login` - User login (generate JWT) ✅ **COMPLETED**
+```
+
+---
+
 # Core User Flows – Detailed Breakdown
 
 ---
