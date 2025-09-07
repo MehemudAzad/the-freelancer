@@ -2,9 +2,11 @@ package com.thefreelancer.microservices.gig.mapper;
 
 import com.thefreelancer.microservices.gig.dto.GigCreateDto;
 import com.thefreelancer.microservices.gig.dto.GigResponseDto;
+import com.thefreelancer.microservices.gig.dto.GigUpdateDto;
 import com.thefreelancer.microservices.gig.model.Gig;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
@@ -31,6 +33,15 @@ public interface GigMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Gig toEntity(GigCreateDto createDto);
+    
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "profileId", ignore = true)
+    @Mapping(target = "tags", source = "tags", qualifiedByName = "listToArray")
+    @Mapping(target = "reviewAvg", ignore = true)
+    @Mapping(target = "reviewsCount", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    void updateEntityFromDto(GigUpdateDto updateDto, @MappingTarget Gig gig);
     
     @Named("statusToString")
     default String statusToString(Gig.Status status) {

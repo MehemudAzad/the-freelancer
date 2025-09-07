@@ -1,18 +1,15 @@
 package com.thefreelancer.microservices.gig.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class BadgeResponseDto {
-    
     private Long id;
     private String type;
     private Double score;

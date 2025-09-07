@@ -2,6 +2,7 @@ package com.thefreelancer.microservices.gig.service;
 
 import com.thefreelancer.microservices.gig.dto.GigCreateDto;
 import com.thefreelancer.microservices.gig.dto.GigResponseDto;
+import com.thefreelancer.microservices.gig.dto.GigUpdateDto;
 import com.thefreelancer.microservices.gig.mapper.GigMapper;
 import com.thefreelancer.microservices.gig.model.Gig;
 import com.thefreelancer.microservices.gig.repository.GigRepository;
@@ -83,5 +84,39 @@ public class GigService {
                 .stream()
                 .map(gigMapper::toResponseDto)
                 .toList();
+    }
+    
+    @Transactional
+    public Optional<GigResponseDto> updateGig(Long gigId, GigUpdateDto updateDto) {
+        log.info("Updating gig with ID: {}", gigId);
+        
+        Optional<Gig> gigOpt = gigRepository.findById(gigId);
+        
+        if (gigOpt.isEmpty()) {
+            log.warn("Gig not found with ID: {}", gigId);
+            return Optional.empty();
+        }
+        
+        Gig gig = gigOpt.get();
+        gigMapper.updateEntityFromDto(updateDto, gig);
+        
+        Gig updatedGig = gigRepository.save(gig);
+        log.info("Successfully updated gig with ID: {}", gigId);
+        
+        return Optional.of(gigMapper.toResponseDto(updatedGig));
+    }
+    
+    @Transactional
+    public boolean deleteGig(Long gigId) {
+        log.info("Deleting gig with ID: {}", gigId);
+        
+        if (!gigRepository.existsById(gigId)) {
+            log.warn("Gig not found with ID: {}", gigId);
+            return false;
+        }
+        
+        gigRepository.deleteById(gigId);
+        log.info("Successfully deleted gig with ID: {}", gigId);
+        return true;
     }
 }
