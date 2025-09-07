@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 18 / 52 APIs Completed (34.6%)**
+## 📊 **Overall Progress: 21 / 52 APIs Completed (40.4%)**
 
-**Current Status: All Gig Service APIs Complete! 🎉**
+**Current Status: Implementing Job-Proposal Service APIs**
 
 ---
 
@@ -64,9 +64,10 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 ## 💼 **Job Proposal Service APIs** (Port: 8083)
 
 ### Job Management (Client Side)
-- [ ] `POST /api/jobs` - Client posts a new job
-- [ ] `GET /api/jobs/{jobId}` - Get job details
-- [ ] `PUT /api/jobs/{jobId}` - Update job (scope, budget, requirements)
+
+- [x] `POST /api/jobs` - Client posts a new job ✅ **COMPLETED**
+- [x] `GET /api/jobs/{jobId}` - Get job details ✅ **COMPLETED**
+- [x] `PUT /api/jobs/{jobId}` - Update job (scope, budget, requirements) ✅ **COMPLETED**
 - [ ] `DELETE /api/jobs/{jobId}` - Cancel/close job posting
 - [ ] `GET /api/jobs/client/{clientId}` - Get all jobs posted by a client
 - [ ] `GET /api/jobs/search` - Search jobs by stack, budget, timeline
@@ -156,7 +157,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 |---------|----------|----------------|------------|-------------------|
 | Auth Service | ✅ | ✅ | 🟡 (3/13) | ❌ |
 | Gig Service | ✅ | ✅ | ✅ (15/15) | ❌ |
-| Job Proposal Service | ✅ | ❌ | ❌ (0/17) | ❌ |
+| Job Proposal Service | ✅ | ❌ | 🟡 (3/17) | ❌ |
 | Contract Service | ❌ | ❌ | ❌ (0/7) | ❌ |
 | Payment Service | ❌ | ❌ | ❌ (0/5) | ❌ |
 
