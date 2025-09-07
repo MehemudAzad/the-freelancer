@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  gig-postgres:
+    image: postgres:16-alpine
+    container_name: gig-postgres-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=gig_db
+    ports:
+      - "5434:5432"  # Different port to avoid conflict with auth-service
+    volumes:
+      # Persist database data in a local folder
+      - ./postgres-data:/var/lib/postgresql/data
+      # Run initialization script on first startup
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
