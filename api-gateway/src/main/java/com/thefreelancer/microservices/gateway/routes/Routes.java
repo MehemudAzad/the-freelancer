@@ -6,42 +6,61 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.function.RequestPredicates;
 import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
 @Configuration
 public class Routes {
+
+	private static final String AUTH_SERVICE_URL = "http://localhost:8081";
+	private static final String GIG_SERVICE_URL = "http://localhost:8082";
+	private static final String JOB_PROPOSAL_SERVICE_URL = "http://localhost:8083";
+
 	@Bean
-	public RouterFunction<ServerResponse> authServiceRoute(){
+	public RouterFunction<ServerResponse> authServiceRoute() {
 		return GatewayRouterFunctions.route("auth-service")
-			.route(RequestPredicates.path("/api/auth/**"), 
-				request -> {
-					// Forward to auth service without modification
-					return HandlerFunctions.http("http://localhost:8081").handle(request);
-				})
-			.build();
+				.route(RequestPredicates.path("/api/auth/**"), this::forwardToAuthService)
+				.build();
 	}
 
-    @Bean
-	public RouterFunction<ServerResponse> gigServiceRoute(){
+	@Bean
+	public RouterFunction<ServerResponse> gigServiceRoute() {
 		return GatewayRouterFunctions.route("gig-service")
-			.route(RequestPredicates.path("/api/gigs/**"), 
-				request -> {
-					// Create handler function that forwards user context headers
-					return HandlerFunctions.http("http://localhost:8082")
-						.handle(request);
-				})
-			.build();
+				.route(RequestPredicates.path("/api/gigs/**"), this::forwardToGigService)
+				.build();
 	}
 
-    @Bean
-	public RouterFunction<ServerResponse> jobProposalServiceRoute(){
+	@Bean
+	public RouterFunction<ServerResponse> jobProposalServiceRoute() {
 		return GatewayRouterFunctions.route("job-proposal-service")
-			.route(RequestPredicates.path("/api/jobs/**"), 
-				request -> {
-					// Create handler function that forwards user context headers
-					return HandlerFunctions.http("http://localhost:8083")
-						.handle(request);
-				})
-			.build();
+				.route(RequestPredicates.path("/api/jobs/**"), this::forwardToJobProposalService)
+				.build();
+	}
+
+	private ServerResponse forwardToAuthService(ServerRequest request) {
+		return forwardWithUserContext(request, AUTH_SERVICE_URL);
+	}
+
+	private ServerResponse forwardToGigService(ServerRequest request) {
+		return forwardWithUserContext(request, GIG_SERVICE_URL);
+	}
+
+	private ServerResponse forwardToJobProposalService(ServerRequest request) {
+		return forwardWithUserContext(request, JOB_PROPOSAL_SERVICE_URL);
+	}
+
+	private ServerResponse forwardWithUserContext(ServerRequest request, String targetUrl) {
+		ServerRequest.Builder builder = ServerRequest.from(request);
+
+		request.attribute("X-User-Id").ifPresent(userId -> builder.header("X-User-Id", userId.toString()));
+		request.attribute("X-User-Email").ifPresent(userEmail -> builder.header("X-User-Email", userEmail.toString()));
+		request.attribute("X-User-Role").ifPresent(userRole -> builder.header("X-User-Role", userRole.toString()));
+
+		try {
+			return HandlerFunctions.http(targetUrl).handle(builder.build());
+		} catch (Exception e) {
+			// This is a simplified error handling. In a real app, you'd want more robust logging.
+			return ServerResponse.status(500).body("Error forwarding request: " + e.getMessage());
+		}
 	}
 }
