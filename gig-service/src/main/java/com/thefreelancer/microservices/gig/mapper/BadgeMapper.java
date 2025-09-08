@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 )
 public interface BadgeMapper {
     
-    @Mapping(target = "score", source = "score", qualifiedByName = "doubleToBigDecimal")
+    @Mapping(target = "score", source = "score", qualifiedByName = "bigDecimalToDouble")
     BadgeResponseDto toResponseDto(ProfileBadge badge);
     
     @Mapping(target = "id", ignore = true)

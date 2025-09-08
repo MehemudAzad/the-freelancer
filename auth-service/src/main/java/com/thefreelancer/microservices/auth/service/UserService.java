@@ -28,6 +28,13 @@ public class UserService {
 
     @Transactional
     public UserResponseDto createUser(RegisterRequestDto registerRequest) {
+        User savedUser = createUserEntity(registerRequest);
+        // Convert to response DTO
+        return UserResponseDto.fromUser(savedUser);
+    }
+
+    @Transactional
+    public User createUserEntity(RegisterRequestDto registerRequest) {
         // Check if user already exists
         if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
             throw new RuntimeException("User with this email already exists");
@@ -58,8 +65,7 @@ public class UserService {
         );
         eventPublisher.publishUserCreated(event);
 
-        // Convert to response DTO
-        return UserResponseDto.fromUser(savedUser);
+        return savedUser;
     }
 
     public Optional<UserResponseDto> getUserById(Long id) {

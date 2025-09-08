@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 21 / 52 APIs Completed (40.4%)**
+## 📊 **Overall Progress: 25 / 52 APIs Completed (48.1%)**
 
-**Current Status: Implementing Job-Proposal Service APIs**
+**Current Status: Job Management Complete! Moving to Proposals**
 
 ---
 
@@ -68,10 +68,10 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `POST /api/jobs` - Client posts a new job ✅ **COMPLETED**
 - [x] `GET /api/jobs/{jobId}` - Get job details ✅ **COMPLETED**
 - [x] `PUT /api/jobs/{jobId}` - Update job (scope, budget, requirements) ✅ **COMPLETED**
-- [ ] `DELETE /api/jobs/{jobId}` - Cancel/close job posting
-- [ ] `GET /api/jobs/client/{clientId}` - Get all jobs posted by a client
-- [ ] `GET /api/jobs/search` - Search jobs by stack, budget, timeline
-- [ ] `POST /api/jobs/{jobId}/attachments` - Upload job specs, wireframes, datasets
+- [x] `DELETE /api/jobs/{jobId}` - Cancel/close job posting ✅ **COMPLETED**
+- [x] `GET /api/jobs/client/{clientId}` - Get all jobs posted by a client ✅ **COMPLETED**
+- [x] `GET /api/jobs/search` - Search jobs by stack, budget, timeline ✅ **COMPLETED**
+- [x] `POST /api/jobs/{jobId}/attachments` - Upload job specs, wireframes, datasets ✅ **COMPLETED**
 
 ### Proposal Management (Freelancer Side)
 - [ ] `POST /api/proposals` - Freelancer submits proposal for a job
@@ -157,7 +157,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 |---------|----------|----------------|------------|-------------------|
 | Auth Service | ✅ | ✅ | 🟡 (3/13) | ❌ |
 | Gig Service | ✅ | ✅ | ✅ (15/15) | ❌ |
-| Job Proposal Service | ✅ | ❌ | 🟡 (3/17) | ❌ |
+| Job Proposal Service | ✅ | ❌ | 🟡 (7/17) | ❌ |
 | Contract Service | ❌ | ❌ | ❌ (0/7) | ❌ |
 | Payment Service | ❌ | ❌ | ❌ (0/5) | ❌ |
 
