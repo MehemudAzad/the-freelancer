@@ -6,12 +6,10 @@ import com.thefreelancer.microservices.job_proposal.dto.ProposalUpdateDto;
 import com.thefreelancer.microservices.job_proposal.model.Job;
 import com.thefreelancer.microservices.job_proposal.model.Proposal;
 import org.mapstruct.*;
-import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 
 @Mapper(componentModel = "spring")
-@Component
 public interface ProposalMapper {
     
     @Mapping(target = "id", ignore = true)
