@@ -1,0 +1,109 @@
+package com.thefreelancer.microservices.gateway.filter;
+
+import com.thefreelancer.microservices.gateway.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import java.util.Arrays;
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class AuthenticationInterceptor implements HandlerInterceptor {
+
+    private final JwtUtil jwtUtil;
+
+    // Public endpoints that don't require authentication
+    private final List<String> publicEndpoints = Arrays.asList(
+        "/api/auth/register",
+        "/api/auth/register-basic", 
+        "/api/auth/login",
+        "/api/auth/refresh",
+        "/api/gigs/search"  // Public search
+    );
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String requestURI = request.getRequestURI();
+        String method = request.getMethod();
+        
+        log.debug("Processing request: {} {}", method, requestURI);
+        
+        // Allow OPTIONS requests (CORS preflight)
+        if ("OPTIONS".equals(method)) {
+            return true;
+        }
+        
+        // Check if this is a public endpoint
+        if (isPublicEndpoint(requestURI, method)) {
+            log.debug("Public endpoint, allowing access: {}", requestURI);
+            return true;
+        }
+        
+        // Extract Authorization header
+        String authHeader = request.getHeader("Authorization");
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.warn("Missing or invalid Authorization header for protected endpoint: {}", requestURI);
+            setErrorResponse(response, "Missing or invalid Authorization header", HttpStatus.UNAUTHORIZED);
+            return false;
+        }
+        
+        String token = authHeader.substring(7);
+        
+        try {
+            // Validate JWT
+            if (!jwtUtil.isTokenValid(token)) {
+                log.warn("Invalid or expired token for endpoint: {}", requestURI);
+                setErrorResponse(response, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
+                return false;
+            }
+            
+            // Extract user information and add to request attributes
+            Long userId = jwtUtil.extractUserId(token);
+            String email = jwtUtil.extractEmail(token);
+            String role = jwtUtil.extractRole(token);
+            
+            log.debug("Authentication successful for user: {} ({})", email, userId);
+            
+            // Add user context to request attributes (will be forwarded to downstream services)
+            request.setAttribute("X-User-Id", userId.toString());
+            request.setAttribute("X-User-Email", email);
+            request.setAttribute("X-User-Role", role);
+            
+            return true;
+            
+        } catch (Exception e) {
+            log.error("Token validation failed for endpoint {}: {}", requestURI, e.getMessage());
+            setErrorResponse(response, "Token validation failed: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
+            return false;
+        }
+    }
+    
+    private boolean isPublicEndpoint(String requestURI, String method) {
+        // Check exact matches first
+        if (publicEndpoints.stream().anyMatch(requestURI::startsWith)) {
+            return true;
+        }
+        
+        // Special case: GET /api/gigs/{id} is public (individual gig details)
+        if ("GET".equals(method) && requestURI.matches("/api/gigs/\\d+")) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    private void setErrorResponse(HttpServletResponse response, String message, HttpStatus status) throws Exception {
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(String.format("{\"error\": \"%s\", \"status\": %d}", message, status.value()));
+    }
+}

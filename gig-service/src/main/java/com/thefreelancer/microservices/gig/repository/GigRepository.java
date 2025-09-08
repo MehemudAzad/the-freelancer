@@ -13,6 +13,8 @@ public interface GigRepository extends JpaRepository<Gig, Long> {
     
     List<Gig> findByProfileId(Long profileId);
     
+    List<Gig> findByProfileIdAndStatus(Long profileId, Gig.Status status);
+    
     List<Gig> findByStatus(Gig.Status status);
     
     List<Gig> findByCategory(String category);

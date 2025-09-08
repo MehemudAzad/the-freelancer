@@ -58,6 +58,28 @@ public class GigService {
                 .map(gigMapper::toResponseDto)
                 .toList();
     }
+
+    public List<GigResponseDto> getMyGigs(Long authenticatedUserId, String status) {
+        log.info("Fetching my gigs for authenticated userId: {} with status filter: {}", authenticatedUserId, status);
+        
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                Gig.Status gigStatus = Gig.Status.valueOf(status.toUpperCase());
+                return gigRepository.findByProfileIdAndStatus(authenticatedUserId, gigStatus)
+                        .stream()
+                        .map(gigMapper::toResponseDto)
+                        .toList();
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid status filter: {}", status);
+                throw new RuntimeException("Invalid status: " + status);
+            }
+        } else {
+            return gigRepository.findByProfileId(authenticatedUserId)
+                    .stream()
+                    .map(gigMapper::toResponseDto)
+                    .toList();
+        }
+    }
     
     public List<GigResponseDto> getActiveGigs() {
         log.info("Fetching all active gigs");
@@ -82,6 +104,29 @@ public class GigService {
         
         return gigRepository.findActiveGigsByTags(tags)
                 .stream()
+                .map(gigMapper::toResponseDto)
+                .toList();
+    }
+
+    public List<GigResponseDto> searchGigs(String category, List<String> tags, Long freelancerId) {
+        log.info("Searching gigs with category: {}, tags: {}, freelancerId: {}", category, tags, freelancerId);
+        
+        List<Gig> gigs;
+        
+        if (freelancerId != null) {
+            // If freelancer_id is specified, get gigs for that freelancer only
+            // But only return ACTIVE gigs to respect privacy (draft/paused gigs are private)
+            gigs = gigRepository.findByProfileIdAndStatus(freelancerId, Gig.Status.ACTIVE);
+            log.info("Found {} active gigs for freelancer: {}", gigs.size(), freelancerId);
+        } else if (category != null && !category.trim().isEmpty()) {
+            gigs = gigRepository.findActiveGigsByCategory(category);
+        } else if (tags != null && !tags.isEmpty()) {
+            gigs = gigRepository.findActiveGigsByTags(tags);
+        } else {
+            gigs = gigRepository.findByStatus(Gig.Status.ACTIVE);
+        }
+        
+        return gigs.stream()
                 .map(gigMapper::toResponseDto)
                 .toList();
     }

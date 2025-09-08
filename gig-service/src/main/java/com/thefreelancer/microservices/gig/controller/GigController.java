@@ -65,20 +65,12 @@ public class GigController {
     @GetMapping("/search")
     public ResponseEntity<List<GigResponseDto>> searchGigs(
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) List<String> tags) {
+            @RequestParam(required = false) List<String> tags,
+            @RequestParam(required = false) Long freelancerId) {
         
-        log.info("GET /api/gigs/search - Searching gigs with category: {}, tags: {}", category, tags);
+        log.info("GET /api/gigs/search - Searching gigs with category: {}, tags: {}, freelancerId: {}", category, tags, freelancerId);
         
-        List<GigResponseDto> gigs;
-        
-        if (category != null && !category.trim().isEmpty()) {
-            gigs = gigService.getGigsByCategory(category);
-        } else if (tags != null && !tags.isEmpty()) {
-            gigs = gigService.searchGigsByTags(tags);
-        } else {
-            gigs = gigService.getActiveGigs();
-        }
-        
+        List<GigResponseDto> gigs = gigService.searchGigs(category, tags, freelancerId);
         return ResponseEntity.ok(gigs);
     }
     
@@ -117,6 +109,34 @@ public class GigController {
         } else {
             log.warn("Gig not found with ID: {}", gigId);
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/my-gigs")
+    public ResponseEntity<List<GigResponseDto>> getMyGigs(
+            @RequestParam(required = false) String status,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.info("GET /api/gigs/my-gigs - Fetching authenticated user's gigs with status: {}", status);
+        
+        if (userIdHeader == null) {
+            log.warn("Authentication required for my-gigs endpoint");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
+            List<GigResponseDto> myGigs = gigService.getMyGigs(authenticatedUserId, status);
+            log.info("Found {} gigs for authenticated user: {}", myGigs.size(), authenticatedUserId);
+            return ResponseEntity.ok(myGigs);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            log.error("Error fetching my gigs: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 }
