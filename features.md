@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 25 / 52 APIs Completed (48.1%)**
+## 📊 **Overall Progress: 26 / 52 APIs Completed (50.0%)**
 
-**Current Status: Job Management Complete! Moving to Proposals**
+**Current Status: Gig & Job Management Complete! Role-based Authorization Added**
 
 ---
 
@@ -35,24 +35,31 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 ## 🎨 **Gig Service APIs** (Port: 8082)
 
 ### Profile Management
-- [x] `GET /api/profiles/{userId}` - Get freelancer profile by user ID ✅ **COMPLETED**
-- [x] `PUT /api/profiles/{userId}` - Update freelancer profile ✅ **COMPLETED**
-- [x] `POST /api/profiles/{userId}/badges` - Add a skill badge to profile ✅ **COMPLETED**
-- [x] `DELETE /api/profiles/{userId}/badges/{badgeId}` - Remove a badge ✅ **COMPLETED**
+- [x] `GET /api/profiles/{userId}` - Get freelancer profile by user ID (public) ✅ **COMPLETED**
+- [x] `PUT /api/profiles/me` - Update authenticated user's profile ✅ **COMPLETED**
+- [x] `POST /api/profiles/me/badges` - Add a skill badge to authenticated user's profile ✅ **COMPLETED**
+- [x] `DELETE /api/profiles/me/badges/{badgeId}` - Remove a badge from authenticated user's profile ✅ **COMPLETED**
+- [x] `GET /api/profiles/me/badges` - Get all badges for authenticated user ✅ **COMPLETED**
 
 ### Gig Management
-- [x] `POST /api/gigs` - Create a new gig (service offering) ✅ **COMPLETED**
-- [x] `GET /api/gigs/{gigId}` - Get specific gig details ✅ **COMPLETED**
-- [x] `PUT /api/gigs/{gigId}` - Update gig (title, description, status) ✅ **COMPLETED**
-- [x] `DELETE /api/gigs/{gigId}` - Delete/archive a gig ✅ **COMPLETED**
-- [x] `GET /api/gigs/user/{userId}` - Get all gigs by a freelancer ✅ **COMPLETED**
-- [x] `GET /api/gigs/search` - Search gigs by category, skills, price range ✅ **COMPLETED**
+- [x] `POST /api/gigs` - Create a new gig (FREELANCER role required) ✅ **COMPLETED**
+- [x] `GET /api/gigs/{gigId}` - Get specific gig details (public) ✅ **COMPLETED**
+- [x] `PUT /api/gigs/{gigId}` - Update gig (title, description, status) ⚠️ **INSECURE - USE MY-GIGS**
+- [x] `DELETE /api/gigs/{gigId}` - Delete/archive a gig ⚠️ **INSECURE - USE MY-GIGS**
+- [x] `GET /api/gigs/user/{userId}` - Get all gigs by a freelancer (public) ✅ **COMPLETED**
+- [x] `GET /api/gigs/search` - Search gigs by category, tags, freelancerId (public) ✅ **COMPLETED**
+- [x] `GET /api/gigs/my-gigs` - Get authenticated user's gigs (with optional status filter) ✅ **COMPLETED**
+- [x] `PUT /api/gigs/my-gigs/{gigId}` - Update authenticated user's gig ✅ **COMPLETED**
+- [x] `DELETE /api/gigs/my-gigs/{gigId}` - Delete authenticated user's gig ✅ **COMPLETED**
 
 ### Gig Packages (Pricing Tiers)
-- [x] `POST /api/gigs/{gigId}/packages` - Add pricing package (Basic/Standard/Premium) ✅ **COMPLETED**
-- [x] `PUT /api/gigs/{gigId}/packages/{packageId}` - Update package pricing/features ✅ **COMPLETED**
-- [x] `DELETE /api/gigs/{gigId}/packages/{packageId}` - Remove a pricing package ✅ **COMPLETED**
-- [x] `GET /api/gigs/{gigId}/packages` - Get all packages for a gig ✅ **COMPLETED**
+- [x] `POST /api/gigs/{gigId}/packages` - Add pricing package ⚠️ **INSECURE - USE MY-GIGS**
+- [x] `PUT /api/gigs/{gigId}/packages/{packageId}` - Update package pricing/features ⚠️ **INSECURE - USE MY-GIGS**
+- [x] `DELETE /api/gigs/{gigId}/packages/{packageId}` - Remove a pricing package ⚠️ **INSECURE - USE MY-GIGS**
+- [x] `GET /api/gigs/{gigId}/packages` - Get all packages for a gig (public) ✅ **COMPLETED**
+- [x] `POST /api/gigs/my-gigs/{gigId}/packages` - Add package to authenticated user's gig ✅ **COMPLETED**
+- [x] `PUT /api/gigs/my-gigs/{gigId}/packages/{packageId}` - Update authenticated user's package ✅ **COMPLETED**
+- [x] `DELETE /api/gigs/my-gigs/{gigId}/packages/{packageId}` - Delete authenticated user's package ✅ **COMPLETED**
 
 ### Gig Media (Portfolio)
 - [ ] `POST /api/gigs/{gigId}/media` - Upload portfolio images/videos

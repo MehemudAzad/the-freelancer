@@ -40,63 +40,125 @@ public class ProfileController {
         }
     }
     
-    @PutMapping("/{userId}")
-    public ResponseEntity<ProfileResponseDto> updateProfile(
-            @PathVariable Long userId,
-            @Valid @RequestBody ProfileUpdateDto updateDto) {
+    @PutMapping("/me")
+    public ResponseEntity<ProfileResponseDto> updateMyProfile(
+            @Valid @RequestBody ProfileUpdateDto updateDto,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
         
-        log.info("PUT /api/profiles/{} - Updating profile", userId);
+        log.info("PUT /api/profiles/me - Updating authenticated user's profile");
         
-        Optional<ProfileResponseDto> updatedProfile = profileService.updateProfile(userId, updateDto);
-        
-        if (updatedProfile.isPresent()) {
-            log.info("Profile successfully updated for userId: {}", userId);
-            return ResponseEntity.ok(updatedProfile.get());
-        } else {
-            log.warn("Profile not found for userId: {}", userId);
-            return ResponseEntity.notFound().build();
+        // Check authentication
+        if (userIdHeader == null) {
+            log.warn("Authentication required for updating profile");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-    }
-    
-    @PostMapping("/{userId}/badges")
-    public ResponseEntity<BadgeResponseDto> addBadge(
-            @PathVariable Long userId,
-            @Valid @RequestBody BadgeCreateDto badgeCreateDto) {
-        
-        log.info("POST /api/profiles/{}/badges - Adding badge", userId);
         
         try {
+            Long userId = Long.parseLong(userIdHeader);
+            log.info("Updating profile for authenticated user: {}", userId);
+            
+            Optional<ProfileResponseDto> updatedProfile = profileService.updateProfile(userId, updateDto);
+            
+            if (updatedProfile.isPresent()) {
+                log.info("Profile successfully updated for userId: {}", userId);
+                return ResponseEntity.ok(updatedProfile.get());
+            } else {
+                log.warn("Profile not found for userId: {}", userId);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    @PostMapping("/me/badges")
+    public ResponseEntity<BadgeResponseDto> addBadgeToMyProfile(
+            @Valid @RequestBody BadgeCreateDto badgeCreateDto,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.info("POST /api/profiles/me/badges - Adding badge to authenticated user's profile");
+        
+        // Check authentication
+        if (userIdHeader == null) {
+            log.warn("Authentication required for adding badges");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            Long userId = Long.parseLong(userIdHeader);
+            log.info("Adding badge for authenticated user: {}", userId);
+            
             BadgeResponseDto badge = badgeService.addBadgeToProfile(userId, badgeCreateDto);
             log.info("Badge successfully added for userId: {}", userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(badge);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (RuntimeException e) {
-            log.warn("Failed to add badge for userId {}: {}", userId, e.getMessage());
+            log.warn("Failed to add badge for userId {}: {}", userIdHeader, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
-    
-    @DeleteMapping("/{userId}/badges/{badgeId}")
-    public ResponseEntity<Void> removeBadge(
-            @PathVariable Long userId,
-            @PathVariable Long badgeId) {
+
+    @DeleteMapping("/me/badges/{badgeId}")
+    public ResponseEntity<Void> removeBadgeFromMyProfile(
+            @PathVariable Long badgeId,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
         
-        log.info("DELETE /api/profiles/{}/badges/{} - Removing badge", userId, badgeId);
+        log.info("DELETE /api/profiles/me/badges/{} - Removing badge from authenticated user's profile", badgeId);
+        
+        // Check authentication
+        if (userIdHeader == null) {
+            log.warn("Authentication required for removing badges");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         
         try {
+            Long userId = Long.parseLong(userIdHeader);
+            log.info("Removing badge {} for authenticated user: {}", badgeId, userId);
+            
             badgeService.removeBadgeFromProfile(userId, badgeId);
             log.info("Badge successfully removed for userId: {}", userId);
             return ResponseEntity.noContent().build();
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (RuntimeException e) {
-            log.warn("Failed to remove badge for userId {}: {}", userId, e.getMessage());
+            log.warn("Failed to remove badge for userId {}: {}", userIdHeader, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
-    
-    @GetMapping("/{userId}/badges")
-    public ResponseEntity<List<BadgeResponseDto>> getUserBadges(@PathVariable Long userId) {
-        log.info("GET /api/profiles/{}/badges - Fetching user badges", userId);
+
+    @GetMapping("/me/badges")
+    public ResponseEntity<List<BadgeResponseDto>> getMyBadges(
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
         
-        List<BadgeResponseDto> badges = badgeService.getUserBadges(userId);
-        return ResponseEntity.ok(badges);
+        log.info("GET /api/profiles/me/badges - Fetching authenticated user's badges");
+        
+        // Check authentication
+        if (userIdHeader == null) {
+            log.warn("Authentication required for fetching user badges");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            Long userId = Long.parseLong(userIdHeader);
+            log.info("Fetching badges for authenticated user: {}", userId);
+            
+            List<BadgeResponseDto> badges = badgeService.getUserBadges(userId);
+            return ResponseEntity.ok(badges);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 }

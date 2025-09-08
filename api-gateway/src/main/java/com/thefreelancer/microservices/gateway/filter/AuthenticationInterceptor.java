@@ -25,7 +25,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         "/api/auth/register-basic", 
         "/api/auth/login",
         "/api/auth/refresh",
-        "/api/gigs/search"  // Public search
+        "/api/gigs/search",  // Public search
+        "/swagger-ui",       // Swagger UI
+        "/api-docs",         // OpenAPI docs
+        "/v3/api-docs"       // OpenAPI v3 docs
     );
 
     @Override

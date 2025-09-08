@@ -31,6 +31,13 @@ public class Routes {
 	}
 
 	@Bean
+	public RouterFunction<ServerResponse> profileServiceRoute() {
+		return GatewayRouterFunctions.route("profile-service")
+				.route(RequestPredicates.path("/api/profiles/**"), this::forwardToGigService)
+				.build();
+	}
+
+	@Bean
 	public RouterFunction<ServerResponse> jobProposalServiceRoute() {
 		return GatewayRouterFunctions.route("job-proposal-service")
 				.route(RequestPredicates.path("/api/jobs/**"), this::forwardToJobProposalService)
