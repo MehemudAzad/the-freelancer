@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 26 / 52 APIs Completed (50.0%)**
+## 📊 **Overall Progress: 31 / 52 APIs Completed (59.6%)**
 
-**Current Status: Gig & Job Management Complete! Role-based Authorization Added**
+**Current Status: Proposal Management APIs Secured! FREELANCER Role Authorization Added**
 
 ---
 
@@ -70,23 +70,37 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ## 💼 **Job Proposal Service APIs** (Port: 8083)
 
-### Job Management (Client Side)
+### Public Discovery (No Auth Required)
+- [x] `GET /api/jobs` - Browse/search all jobs (public discovery) ✅ **COMPLETED**
+- [x] `GET /api/jobs/{jobId}` - Get job details (public) ✅ **COMPLETED** 
+- [x] `GET /api/jobs/user/{userId}` - Get public jobs by user (for portfolio) ✅ **COMPLETED**
 
-- [x] `POST /api/jobs` - Client posts a new job ✅ **COMPLETED**
-- [x] `GET /api/jobs/{jobId}` - Get job details ✅ **COMPLETED**
-- [x] `PUT /api/jobs/{jobId}` - Update job (scope, budget, requirements) ✅ **COMPLETED**
-- [x] `DELETE /api/jobs/{jobId}` - Cancel/close job posting ✅ **COMPLETED**
-- [x] `GET /api/jobs/client/{clientId}` - Get all jobs posted by a client ✅ **COMPLETED**
-- [x] `GET /api/jobs/search` - Search jobs by stack, budget, timeline ✅ **COMPLETED**
-- [x] `POST /api/jobs/{jobId}/attachments` - Upload job specs, wireframes, datasets ✅ **COMPLETED**
+### Job Management (Client Side - Secure)
+- [x] `POST /api/jobs` - Client posts a new job (CLIENT role required) ✅ **COMPLETED**
+- [x] `GET /api/jobs/my-jobs` - Get my posted jobs (authenticated client) ✅ **COMPLETED**
+- [x] `PUT /api/jobs/my-jobs/{jobId}` - Update MY job (scope, budget, requirements) ✅ **COMPLETED**
+- [x] `DELETE /api/jobs/my-jobs/{jobId}` - Cancel/close MY job posting ✅ **COMPLETED**
+- [ ] `GET /api/jobs/my-jobs/{jobId}/proposals` - Get proposals for MY job (client view)
+- [ ] `POST /api/jobs/{jobId}/attachments` - Upload job specs, wireframes, datasets
 
-### Proposal Management (Freelancer Side)
-- [ ] `POST /api/proposals` - Freelancer submits proposal for a job
-- [ ] `GET /api/proposals/{proposalId}` - Get proposal details
-- [ ] `PUT /api/proposals/{proposalId}` - Update proposal (cover letter, pricing)
-- [ ] `DELETE /api/proposals/{proposalId}` - Withdraw proposal
-- [ ] `GET /api/proposals/job/{jobId}` - Get all proposals for a job (client view)
-- [ ] `GET /api/proposals/freelancer/{freelancerId}` - Get all proposals by freelancer
+### Legacy Endpoints (Insecure - Deprecated)
+- [x] `PUT /api/jobs/{jobId}` - Update job ⚠️ **INSECURE - USE MY-JOBS**
+- [x] `DELETE /api/jobs/{jobId}` - Delete job ⚠️ **INSECURE - USE MY-JOBS**
+- [x] `GET /api/jobs/client/{clientId}` - Get client jobs ⚠️ **INSECURE - USE MY-JOBS**
+
+### Proposal Management (Freelancer Side - Secure)
+- [x] `GET /api/proposals/my-proposals` - Get my submitted proposals (authenticated freelancer) ✅ **COMPLETED**
+- [x] `POST /api/proposals/my-proposals` - Submit new proposal (FREELANCER role required) ✅ **COMPLETED**
+- [x] `PUT /api/proposals/my-proposals/{proposalId}` - Update MY proposal ✅ **COMPLETED**
+- [x] `DELETE /api/proposals/my-proposals/{proposalId}` - Withdraw MY proposal ✅ **COMPLETED**
+- [x] `GET /api/proposals/{proposalId}` - View proposal details (job owner + proposal owner) ✅ **COMPLETED**
+
+### Legacy Proposal Endpoints (Insecure - Deprecated) 
+- [ ] `POST /api/proposals` - Submit proposal ⚠️ **INSECURE - USE MY-PROPOSALS**
+- [ ] `PUT /api/proposals/{proposalId}` - Update proposal ⚠️ **INSECURE - USE MY-PROPOSALS**
+- [ ] `DELETE /api/proposals/{proposalId}` - Withdraw proposal ⚠️ **INSECURE - USE MY-PROPOSALS**
+- [ ] `GET /api/proposals/job/{jobId}` - Get proposals for job ⚠️ **INSECURE - USE MY-JOBS**
+- [ ] `GET /api/proposals/freelancer/{freelancerId}` - Get proposals by freelancer ⚠️ **INSECURE - USE MY-PROPOSALS**
 
 ### Proposal Milestones
 - [ ] `POST /api/proposals/{proposalId}/milestones` - Add milestone to proposal
