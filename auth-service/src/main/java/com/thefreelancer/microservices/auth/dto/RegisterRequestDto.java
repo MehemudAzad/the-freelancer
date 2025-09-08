@@ -22,4 +22,7 @@ public class RegisterRequestDto {
     private String handle;
     private String country;
     private String timezone;
+    
+    // Role field - accepts "CLIENT" or "FREELANCER", defaults to "FREELANCER" if not provided
+    private String role = "FREELANCER";
 }

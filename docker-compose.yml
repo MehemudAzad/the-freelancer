@@ -60,8 +60,8 @@
   #   image: postgres:16-alpine
   #   container_name: auth-postgres-db
   #   environment:
-  #     - POSTGRES_USER=authuser
-  #     - POSTGRES_PASSWORD=yourstrongpassword
+  #     - POSTGRES_USER=admin
+  #     - POSTGRES_PASSWORD=password
   #     - POSTGRES_DB=auth_db
   #   ports:
   #     - "5433:5432"
@@ -74,8 +74,8 @@
   #   image: postgres:16-alpine
   #   container_name: gig-postgres-db
   #   environment:
-  #     - POSTGRES_USER=giguser
-  #     - POSTGRES_PASSWORD=yourstrongpassword
+  #     - POSTGRES_USER=admin
+  #     - POSTGRES_PASSWORD=password
   #     - POSTGRES_DB=gig_db
   #   ports:
   #     - "5434:5432"

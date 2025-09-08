@@ -24,17 +24,37 @@ public class GigController {
     
     @PostMapping
     public ResponseEntity<GigResponseDto> createGig(
-            @RequestParam Long userId,
-            @Valid @RequestBody GigCreateDto gigCreateDto) {
+            @Valid @RequestBody GigCreateDto gigCreateDto,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
         
-        log.info("POST /api/gigs - Creating gig for userId: {}", userId);
+        log.info("POST /api/gigs - Creating gig");
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for creating gigs");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        // Check authorization - only freelancers can create gigs
+        if (!"FREELANCER".equalsIgnoreCase(userRole)) {
+            log.warn("Access denied: Only freelancers can create gigs. User role: {}", userRole);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         
         try {
+            Long userId = Long.parseLong(userIdHeader);
+            log.info("Creating gig for authenticated freelancer userId: {}", userId);
+            
             GigResponseDto gig = gigService.createGig(userId, gigCreateDto);
             log.info("Gig successfully created with ID: {} for userId: {}", gig.getId(), userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(gig);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (RuntimeException e) {
-            log.warn("Failed to create gig for userId {}: {}", userId, e.getMessage());
+            log.warn("Failed to create gig for userId {}: {}", userIdHeader, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

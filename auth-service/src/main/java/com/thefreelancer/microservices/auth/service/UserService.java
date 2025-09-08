@@ -41,6 +41,20 @@ public class UserService {
         }
 
         // Create new user entity
+        // Parse and validate the role
+        User.Role userRole;
+        try {
+            userRole = User.Role.valueOf(registerRequest.getRole().toUpperCase());
+            // Only allow CLIENT and FREELANCER roles for registration
+            if (userRole != User.Role.CLIENT && userRole != User.Role.FREELANCER) {
+                log.warn("Invalid role for registration: {}, defaulting to FREELANCER", registerRequest.getRole());
+                userRole = User.Role.FREELANCER;
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid role provided: {}, defaulting to FREELANCER", registerRequest.getRole());
+            userRole = User.Role.FREELANCER;
+        }
+        
         User user = User.builder()
                 .email(registerRequest.getEmail())
                 .passwordHash(passwordEncoder.encode(registerRequest.getPassword()))
@@ -48,7 +62,7 @@ public class UserService {
                 .handle(registerRequest.getHandle())
                 .country(registerRequest.getCountry())
                 .timezone(registerRequest.getTimezone())
-                .role(User.Role.FREELANCER) // Default role
+                .role(userRole)
                 .build();
 
         // Save user to database
