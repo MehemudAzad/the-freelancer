@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 31 / 52 APIs Completed (59.6%)**
+## 📊 **Overall Progress: 58 / 95 APIs Completed (61.1%)**
 
-**Current Status: Proposal Management APIs Secured! FREELANCER Role Authorization Added**
+**Current Status: New Architecture! Contract Management in Job-Proposal Service + Workspace Service for Collaboration**
 
 ---
 
@@ -13,22 +13,15 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ### Authentication
 - [x] `POST /api/auth/register` - User registration ✅ **COMPLETED**
-- [ ] `POST /api/auth/login` - User login (generate JWT)
-- [ ] `POST /api/auth/refresh` - Refresh JWT token
-- [ ] `POST /api/auth/logout` - Invalidate session
+- [ ] `POST /api/auth/login` - User login (generate JWT) ✅ **COMPLETED**
+- [ ] `POST /api/auth/refresh` - Refresh JWT token ✅ **COMPLETED**
+- [ ] `POST /api/auth/logout` - Invalidate session ✅ **COMPLETED**
 - [ ] `POST /api/auth/forgot-password` - Send password reset email
 - [ ] `POST /api/auth/reset-password` - Reset password with token
 
-### User Management
+### User Lookup (Core)
 - [x] `GET /api/auth/users/{id}` - Get user by ID ✅ **COMPLETED**
 - [x] `GET /api/auth/users/email/{email}` - Get user by email ✅ **COMPLETED**
-- [ ] `PUT /api/auth/users/{id}` - Update user info
-- [ ] `PUT /api/auth/users/{id}/password` - Change password
-- [ ] `DELETE /api/auth/users/{id}` - Deactivate user account
-
-### Session Management
-- [ ] `GET /api/auth/sessions` - Get active sessions for user
-- [ ] `DELETE /api/auth/sessions/{sessionId}` - Revoke specific session
 
 ---
 
@@ -44,8 +37,6 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 ### Gig Management
 - [x] `POST /api/gigs` - Create a new gig (FREELANCER role required) ✅ **COMPLETED**
 - [x] `GET /api/gigs/{gigId}` - Get specific gig details (public) ✅ **COMPLETED**
-- [x] `PUT /api/gigs/{gigId}` - Update gig (title, description, status) ⚠️ **INSECURE - USE MY-GIGS**
-- [x] `DELETE /api/gigs/{gigId}` - Delete/archive a gig ⚠️ **INSECURE - USE MY-GIGS**
 - [x] `GET /api/gigs/user/{userId}` - Get all gigs by a freelancer (public) ✅ **COMPLETED**
 - [x] `GET /api/gigs/search` - Search gigs by category, tags, freelancerId (public) ✅ **COMPLETED**
 - [x] `GET /api/gigs/my-gigs` - Get authenticated user's gigs (with optional status filter) ✅ **COMPLETED**
@@ -53,9 +44,6 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `DELETE /api/gigs/my-gigs/{gigId}` - Delete authenticated user's gig ✅ **COMPLETED**
 
 ### Gig Packages (Pricing Tiers)
-- [x] `POST /api/gigs/{gigId}/packages` - Add pricing package ⚠️ **INSECURE - USE MY-GIGS**
-- [x] `PUT /api/gigs/{gigId}/packages/{packageId}` - Update package pricing/features ⚠️ **INSECURE - USE MY-GIGS**
-- [x] `DELETE /api/gigs/{gigId}/packages/{packageId}` - Remove a pricing package ⚠️ **INSECURE - USE MY-GIGS**
 - [x] `GET /api/gigs/{gigId}/packages` - Get all packages for a gig (public) ✅ **COMPLETED**
 - [x] `POST /api/gigs/my-gigs/{gigId}/packages` - Add package to authenticated user's gig ✅ **COMPLETED**
 - [x] `PUT /api/gigs/my-gigs/{gigId}/packages/{packageId}` - Update authenticated user's package ✅ **COMPLETED**
@@ -83,10 +71,12 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [ ] `GET /api/jobs/my-jobs/{jobId}/proposals` - Get proposals for MY job (client view)
 - [ ] `POST /api/jobs/{jobId}/attachments` - Upload job specs, wireframes, datasets
 
-### Legacy Endpoints (Insecure - Deprecated)
-- [x] `PUT /api/jobs/{jobId}` - Update job ⚠️ **INSECURE - USE MY-JOBS**
-- [x] `DELETE /api/jobs/{jobId}` - Delete job ⚠️ **INSECURE - USE MY-JOBS**
-- [x] `GET /api/jobs/client/{clientId}` - Get client jobs ⚠️ **INSECURE - USE MY-JOBS**
+### Job Milestones (Client Created - Secure)
+- [x] `GET /api/jobs/{jobId}/milestones` - Get job milestones (public discovery) ✅ **COMPLETED**
+- [x] `POST /api/jobs/my-jobs/{jobId}/milestones` - Add milestone to MY job (CLIENT role) ✅ **COMPLETED**
+- [x] `GET /api/jobs/my-jobs/{jobId}/milestones` - Get milestones for MY job (CLIENT role) ✅ **COMPLETED**
+- [x] `PUT /api/jobs/my-jobs/{jobId}/milestones/{milestoneId}` - Update milestone in MY job ✅ **COMPLETED**
+- [x] `DELETE /api/jobs/my-jobs/{jobId}/milestones/{milestoneId}` - Delete milestone from MY job ✅ **COMPLETED**
 
 ### Proposal Management (Freelancer Side - Secure)
 - [x] `GET /api/proposals/my-proposals` - Get my submitted proposals (authenticated freelancer) ✅ **COMPLETED**
@@ -95,17 +85,31 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `DELETE /api/proposals/my-proposals/{proposalId}` - Withdraw MY proposal ✅ **COMPLETED**
 - [x] `GET /api/proposals/{proposalId}` - View proposal details (job owner + proposal owner) ✅ **COMPLETED**
 
-### Legacy Proposal Endpoints (Insecure - Deprecated) 
-- [ ] `POST /api/proposals` - Submit proposal ⚠️ **INSECURE - USE MY-PROPOSALS**
-- [ ] `PUT /api/proposals/{proposalId}` - Update proposal ⚠️ **INSECURE - USE MY-PROPOSALS**
-- [ ] `DELETE /api/proposals/{proposalId}` - Withdraw proposal ⚠️ **INSECURE - USE MY-PROPOSALS**
-- [ ] `GET /api/proposals/job/{jobId}` - Get proposals for job ⚠️ **INSECURE - USE MY-JOBS**
-- [ ] `GET /api/proposals/freelancer/{freelancerId}` - Get proposals by freelancer ⚠️ **INSECURE - USE MY-PROPOSALS**
-
 ### Proposal Milestones
-- [ ] `POST /api/proposals/{proposalId}/milestones` - Add milestone to proposal
-- [ ] `PUT /api/proposals/{proposalId}/milestones/{milestoneId}` - Update milestone details
-- [ ] `DELETE /api/proposals/{proposalId}/milestones/{milestoneId}` - Remove milestone
+- [x] `POST /api/proposals/{proposalId}/milestones` - Add milestone to proposal ✅ **COMPLETED**
+- [x] `GET /api/proposals/{proposalId}/milestones` - Get proposal milestones ✅ **COMPLETED**
+- [x] `PUT /api/proposals/{proposalId}/milestones/{milestoneId}` - Update milestone details ✅ **COMPLETED**
+- [x] `DELETE /api/proposals/{proposalId}/milestones/{milestoneId}` - Remove milestone ✅ **COMPLETED**
+
+### Job Milestones (Template)
+- [x] `POST /api/jobs/{jobId}/milestones` - Add milestone template to job ✅ **COMPLETED**
+- [x] `GET /api/jobs/{jobId}/milestones` - Get job milestone templates ✅ **COMPLETED**
+- [x] `PUT /api/jobs/{jobId}/milestones/{milestoneId}` - Update milestone template ✅ **COMPLETED**
+- [x] `DELETE /api/jobs/{jobId}/milestones/{milestoneId}` - Remove milestone template ✅ **COMPLETED**
+
+### Contract Management (New Architecture!)
+- [ ] `POST /api/contracts` - Create contract from accepted proposal
+- [ ] `GET /api/contracts/{contractId}` - Get contract details
+- [ ] `GET /api/contracts/my-contracts` - Get user's contracts (CLIENT/FREELANCER)
+- [ ] `PUT /api/contracts/{contractId}/status` - Update contract status (active/paused/completed)
+
+### Contract Milestones
+- [ ] `POST /api/contracts/{contractId}/milestones` - Add milestone to active contract
+- [ ] `GET /api/contracts/{contractId}/milestones` - Get contract milestones
+- [ ] `PUT /api/milestones/{milestoneId}/submit` - Freelancer submits milestone deliverable
+- [ ] `PUT /api/milestones/{milestoneId}/accept` - Client accepts milestone
+- [ ] `PUT /api/milestones/{milestoneId}/reject` - Client rejects milestone with feedback
+- [ ] `PUT /api/milestones/{milestoneId}/status` - Update milestone status
 
 ### Invitations
 - [ ] `POST /api/invites` - Client invites specific freelancer to job
@@ -115,16 +119,38 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ---
 
-## 🤝 **Contract Service APIs** (Port: 8084) - Future Implementation
+## 🏢 **Workspace Service APIs** (Port: 8084) - New Collaboration Service!
 
-### Contract Management
-- [ ] `POST /api/contracts` - Create contract from accepted proposal
-- [ ] `GET /api/contracts/{contractId}` - Get contract details
-- [ ] `PUT /api/contracts/{contractId}/status` - Update contract status (active/paused)
-- [ ] `POST /api/contracts/{contractId}/milestones` - Add milestone to active contract
-- [ ] `PUT /api/milestones/{milestoneId}/submit` - Freelancer submits milestone
-- [ ] `PUT /api/milestones/{milestoneId}/accept` - Client accepts milestone
-- [ ] `PUT /api/milestones/{milestoneId}/reject` - Client rejects milestone
+### Room Management
+- [x] `GET /api/workspaces/contract/{contractId}` - Get workspace for contract ✅ **COMPLETED**
+- [x] `POST /api/workspaces/rooms` - Create workspace room (triggered by contract creation) ✅ **COMPLETED**
+- [x] `PUT /api/workspaces/rooms/{roomId}/settings` - Update room settings ✅ **COMPLETED**
+- [x] `PUT /api/workspaces/rooms/{roomId}/status` - Archive/close workspace ✅ **COMPLETED**
+
+### Real-time Messaging  
+- [x] `POST /api/workspaces/rooms/{roomId}/messages` - Send message to room ✅ **COMPLETED**
+- [x] `GET /api/workspaces/rooms/{roomId}/messages` - Get message history with pagination ✅ **COMPLETED**
+- [x] `PUT /api/workspaces/rooms/{roomId}/messages/{messageId}` - Edit message ✅ **COMPLETED**
+- [x] `DELETE /api/workspaces/rooms/{roomId}/messages/{messageId}` - Delete message ✅ **COMPLETED**
+- [x] `GET /api/workspaces/rooms/{roomId}/messages/search` - Search messages ✅ **COMPLETED**
+
+### File Collaboration
+- [ ] `POST /api/workspaces/rooms/{roomId}/files` - Upload file to room
+- [ ] `GET /api/workspaces/rooms/{roomId}/files` - Get room files by category
+- [ ] `PUT /api/workspaces/rooms/{roomId}/files/{fileId}` - Update file metadata  
+- [ ] `DELETE /api/workspaces/rooms/{roomId}/files/{fileId}` - Delete file
+
+### Task Management (Kanban Board)
+- [ ] `GET /api/workspaces/rooms/{roomId}/tasks` - Get task board
+- [ ] `POST /api/workspaces/rooms/{roomId}/tasks` - Create/update task
+- [ ] `PUT /api/workspaces/rooms/{roomId}/tasks/reorder` - Reorder tasks (drag & drop)
+
+### Calendar & Events
+- [ ] `GET /api/workspaces/rooms/{roomId}/events` - Get calendar events
+- [ ] `POST /api/workspaces/rooms/{roomId}/events` - Create/schedule event
+
+### WebSocket (Real-time) 
+- [ ] `WS /api/workspaces/rooms/{roomId}/live` - Real-time room connection
 
 ---
 
@@ -141,20 +167,22 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ## 🎯 **Implementation Phases**
 
-### **Phase 1: Core User Journey** (Priority: HIGH)
-1. Complete Auth Service (login, JWT)
-2. Basic Profile management in Gig Service
-3. Job posting and proposal submission in Job Service
+### **Phase 1: Core Business Logic** (Priority: HIGH)
+1. Complete Auth Service (login, JWT, session management)
+2. Finish Job Proposal Service (contract creation, milestone management)
+3. Basic Workspace Service (room creation, messaging foundation)
 
-### **Phase 2: Business Logic** (Priority: MEDIUM)
-4. Contract creation workflow
-5. Payment and escrow integration
-6. Milestone submission and acceptance
+### **Phase 2: Collaboration & Workflow** (Priority: MEDIUM)
+4. Real-time messaging and file sharing in Workspace Service
+5. Milestone submission and acceptance workflow
+6. Task management and calendar features
+7. Payment and escrow integration
 
 ### **Phase 3: Advanced Features** (Priority: LOW)
-7. Search functionality across services
-8. File upload and media management
-9. Invitation and notification systems
+8. Advanced search and matching algorithms
+9. Notification system across all services
+10. Analytics and reporting dashboards
+11. Mobile API optimizations
 
 ---
 
@@ -164,11 +192,15 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `UserCreatedEvent` - Auth Service → Gig Service ✅ **COMPLETED**
 
 ### Planned Events
-- [ ] `JobPostedEvent` - Job Service → Notification Service
+- [ ] `JobPostedEvent` - Job Service → Notification Service  
 - [ ] `ProposalSubmittedEvent` - Job Service → Notification Service
-- [ ] `ProposalAcceptedEvent` - Job Service → Contract Service
-- [ ] `MilestoneAcceptedEvent` - Contract Service → Payment Service
+- [ ] `ProposalAcceptedEvent` - Job Service → Workspace Service (create room)
+- [ ] `ContractCreatedEvent` - Job Service → Workspace Service (setup collaboration)
+- [ ] `MilestoneSubmittedEvent` - Job Service → Notification Service
+- [ ] `MilestoneAcceptedEvent` - Job Service → Payment Service
 - [ ] `PaymentCompletedEvent` - Payment Service → Notification Service
+- [ ] `MessageSentEvent` - Workspace Service → Notification Service
+- [ ] `FileUploadedEvent` - Workspace Service → Notification Service
 
 ---
 
@@ -176,10 +208,10 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 | Service | Database | Event Listener | Basic CRUD | Advanced Features |
 |---------|----------|----------------|------------|-------------------|
-| Auth Service | ✅ | ✅ | 🟡 (3/13) | ❌ |
-| Gig Service | ✅ | ✅ | ✅ (15/15) | ❌ |
-| Job Proposal Service | ✅ | ❌ | 🟡 (7/17) | ❌ |
-| Contract Service | ❌ | ❌ | ❌ (0/7) | ❌ |
+| Auth Service | ✅ | ✅ | 🟡 (3/8) | ❌ |
+| Gig Service | ✅ | ✅ | ✅ (11/11) | ❌ |
+| Job Proposal Service | ✅ | ❌ | 🟡 (23/28) | ❌ |
+| Workspace Service | ✅ | ❌ | 🟡 (9/18) | ❌ |
 | Payment Service | ❌ | ❌ | ❌ (0/5) | ❌ |
 
 **Legend:**
@@ -198,12 +230,18 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 ---
 
 ## 🚀 **Next Steps**
-1. Implement JWT-based authentication in Auth Service
-2. Create Profile controller and service in Gig Service
-3. Implement basic Job CRUD operations in Job Proposal Service
-4. Add validation and error handling across all services
-5. Implement file upload functionality for attachments and media
+
+1. **Contract Management**: Implement contract creation from accepted proposals in Job Proposal Service
+2. **Workspace Setup**: Create workspace rooms automatically when contracts are created
+3. **Real-time Collaboration**: Implement WebSocket connections for live messaging and file sharing
+4. **Milestone Workflow**: Build the complete milestone submission → review → acceptance flow
+5. **Payment Integration**: Connect Stripe for escrow and automated payouts
+6. **File Management**: Implement secure file upload/download with access controls
+7. **Task Management**: Build Kanban board functionality for project tracking
+8. **Calendar Integration**: Add meeting scheduling and deadline tracking
+9. **Notification System**: Implement real-time notifications across all services
+10. **Search & Discovery**: Enhanced job and freelancer matching algorithms
 
 ---
 
-**Last Updated**: September 8, 2025
+**Last Updated**: September 9, 2025 - New Architecture with Workspace Service

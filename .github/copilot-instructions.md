@@ -7,6 +7,15 @@
 1. **`features.md`** - Complete API implementation tracker with checkboxes
 2. **`instructions.md`** - Development guidelines and architecture documentation
 
+### **🚨 MANDATORY: After implementing ANY APIs or features:**
+1. ✅ **IMMEDIATELY** update `features.md` to mark completed APIs as `[x]`
+2. ✅ Add the **COMPLETED** status next to the description  
+3. ✅ Update the overall progress counter (e.g., "58/95 APIs Completed")
+4. ✅ Update the service health status table with new completion counts
+5. ✅ Follow the implementation guidelines in `instructions.md`
+
+**⚠️ CRITICAL REMINDER: Never implement APIs without updating features.md tracking!**
+
 ### **When completing ANY API or task:**
 1. ✅ Mark the API as completed in `features.md` by changing `[ ]` to `[x]`
 2. ✅ Add the **COMPLETED** status next to the description  

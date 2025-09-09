@@ -2,9 +2,11 @@ package com.thefreelancer.microservices.workspace_service.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
 
@@ -13,15 +15,20 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Message {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
+
+    @Column(name = "room_id", insertable = false, updatable = false)
+    private String roomId; // For easier queries
 
     @Column(name = "sender_id", nullable = false)
     private String senderId; // User ID from Auth Service
@@ -35,7 +42,10 @@ public class Message {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reply_to_id")
-    private Message replyTo; // For threaded conversations
+    private Message replyToMessage; // For threaded conversations
+
+    @Column(name = "reply_to_id", insertable = false, updatable = false)
+    private String replyToId; // For easier queries
 
     @Column(name = "attachments", columnDefinition = "jsonb")
     private String attachments; // JSON metadata for file attachments

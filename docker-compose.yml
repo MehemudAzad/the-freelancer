@@ -1,6 +1,6 @@
-# version: '3.8'
+version: '3.8'
 
-# services:
+services:
   # Zookeeper - Required for Kafka
   # zookeeper:
   #   image: confluentinc/cp-zookeeper:7.5.0
@@ -95,3 +95,16 @@
   #     - "5435:5432"
   #   volumes:
   #     - ./job-proposal-service/postgres-data:/var/lib/postgresql/data
+
+  # Workspace Service Database
+  workspace-postgres:
+    image: postgres:16-alpine
+    container_name: workspace-postgres-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=workspace_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./workspace-service/postgres-data:/var/lib/postgresql/data
