@@ -3,7 +3,7 @@ package com.thefreelancer.microservices.job_proposal.service;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalMilestoneCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalMilestoneResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalMilestoneUpdateDto;
-import com.thefreelancer.microservices.job_proposal.entity.ProposalMilestone;
+import com.thefreelancer.microservices.job_proposal.model.ProposalMilestone;
 import com.thefreelancer.microservices.job_proposal.mapper.ProposalMilestoneMapper;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalMilestoneRepository;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalRepository;

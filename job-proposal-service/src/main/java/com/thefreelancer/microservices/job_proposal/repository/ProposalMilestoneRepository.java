@@ -1,6 +1,6 @@
 package com.thefreelancer.microservices.job_proposal.repository;
 
-import com.thefreelancer.microservices.job_proposal.entity.ProposalMilestone;
+import com.thefreelancer.microservices.job_proposal.model.ProposalMilestone;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

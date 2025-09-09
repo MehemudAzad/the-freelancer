@@ -3,9 +3,7 @@ package com.thefreelancer.microservices.job_proposal.controller;
 import com.thefreelancer.microservices.job_proposal.dto.JobCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.JobResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.JobUpdateDto;
-import com.thefreelancer.microservices.job_proposal.dto.ProposalResponseDto;
 import com.thefreelancer.microservices.job_proposal.service.JobService;
-import com.thefreelancer.microservices.job_proposal.service.ProposalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,7 +28,6 @@ import java.util.Optional;
 public class JobController {
     
     private final JobService jobService;
-    private final ProposalService proposalService;
     
     // ====================
     // PUBLIC DISCOVERY APIs (No authentication required)
@@ -241,52 +238,6 @@ public class JobController {
         } catch (RuntimeException e) {
             log.warn("Failed to delete job {}: {}", jobId, e.getMessage());
             return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @Operation(summary = "Get proposals for my job", description = "Get all proposals submitted for my posted job (CLIENT only)")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Proposals retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Authentication required"),
-        @ApiResponse(responseCode = "403", description = "Access denied - not your job"),
-        @ApiResponse(responseCode = "404", description = "Job not found")
-    })
-    @GetMapping("/my-jobs/{jobId}/proposals")
-    public ResponseEntity<List<ProposalResponseDto>> getProposalsForMyJob(
-            @Parameter(description = "ID of the job to get proposals for") @PathVariable Long jobId,
-            @RequestParam(required = false) String status,
-            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
-        
-        log.info("GET /api/jobs/my-jobs/{}/proposals - Getting proposals for authenticated client's job", jobId);
-        
-        // Check authentication
-        if (userIdHeader == null || userRole == null) {
-            log.warn("Authentication required for my-jobs proposals endpoint");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        // Check authorization - only clients can view proposals for their jobs
-        if (!"CLIENT".equalsIgnoreCase(userRole)) {
-            log.warn("Access denied: Only clients can view proposals for their jobs. User role: {}", userRole);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        
-        try {
-            Long authenticatedUserId = Long.parseLong(userIdHeader);
-            
-            // TODO: Service should validate job ownership
-            List<ProposalResponseDto> proposals = proposalService.getProposalsForJob(jobId);
-            log.info("Found {} proposals for job: {}", proposals.size(), jobId);
-            
-            return ResponseEntity.ok(proposals);
-        } catch (NumberFormatException e) {
-            log.error("Invalid user ID format: {}", userIdHeader);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (RuntimeException e) {
-            log.error("Error fetching proposals for job {}: {}", jobId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 }
