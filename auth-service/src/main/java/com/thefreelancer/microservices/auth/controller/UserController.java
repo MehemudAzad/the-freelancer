@@ -1,5 +1,8 @@
 package com.thefreelancer.microservices.auth.controller;
 
+import com.thefreelancer.microservices.auth.client.GigServiceClient;
+import com.thefreelancer.microservices.auth.dto.ProfileResponseDto;
+import com.thefreelancer.microservices.auth.dto.UserProfileDto;
 import com.thefreelancer.microservices.auth.dto.UserResponseDto;
 import com.thefreelancer.microservices.auth.service.UserService;
 import com.thefreelancer.microservices.auth.util.JwtUtil;
@@ -20,6 +23,7 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final GigServiceClient gigServiceClient;
 
     @GetMapping
     public ResponseEntity<UserResponseDto> getCurrentUser(HttpServletRequest request) {
@@ -77,16 +81,81 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserResponseDto> getUserProfile(HttpServletRequest request) {
+    public ResponseEntity<UserProfileDto> getUserProfile(HttpServletRequest request) {
+        // Extract user ID from request
+        Long userId = extractUserIdFromRequest(request);
+        if (userId == null) {
+            log.warn("No valid user ID found in request");
+            return ResponseEntity.badRequest().build();
+        }
+        
+        //! Get user data from Auth Service
+        Optional<UserResponseDto> userOpt = userService.getUserById(userId);
+        if (userOpt.isEmpty()) {
+            log.warn("User not found: {}", userId);
+            return ResponseEntity.notFound().build();
+        }
+        
+        UserResponseDto user = userOpt.get();
+        log.debug("Found user: {}", user.getEmail());
+        
+        //! Get profile data from Gig Service
+        Optional<ProfileResponseDto> profileOpt = gigServiceClient.getProfileByUserId(userId);
+        
+        // Build combined response
+        UserProfileDto.UserProfileDtoBuilder responseBuilder = UserProfileDto.builder()
+            .id(user.getId())
+            .email(user.getEmail())
+            .name(user.getName())
+            .role(user.getRole().name())
+            .isActive(user.isActive())
+            .createdAt(user.getCreatedAt());
+        
+        // Add profile data if available
+        if (profileOpt.isPresent()) {
+            ProfileResponseDto profile = profileOpt.get();
+            log.debug("Found profile for user: {}", userId);
+            
+            UserProfileDto.ProfileData profileData = UserProfileDto.ProfileData.builder()
+                .headline(profile.getHeadline())
+                .bio(profile.getBio())
+                .hourlyRateCents(profile.getHourlyRateCents())
+                .currency(profile.getCurrency())
+                .availability(profile.getAvailability())
+                .languages(profile.getLanguages())
+                .skills(profile.getSkills())
+                .locationText(profile.getLocationText())
+                .githubUsername(profile.getGithubUsername())
+                .gitlabUsername(profile.getGitlabUsername())
+                .websiteUrl(profile.getWebsiteUrl())
+                .linkedinUrl(profile.getLinkedinUrl())
+                .deliveryScore(profile.getDeliveryScore())
+                .reviewAvg(profile.getReviewAvg())
+                .reviewsCount(profile.getReviewsCount())
+                .createdAt(profile.getCreatedAt())
+                .updatedAt(profile.getUpdatedAt())
+                .build();
+            
+            responseBuilder.profile(profileData);
+        } else {
+            log.debug("No profile found for user: {}", userId);
+            // profile will be null, which is fine
+        }
+        
+        UserProfileDto response = responseBuilder.build();
+        log.info("Successfully retrieved user profile for user: {}", userId);
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    private Long extractUserIdFromRequest(HttpServletRequest request) {
         // Try to get user ID from X-User-Id header first (from gateway)
         String userIdHeader = request.getHeader("X-User-Id");
         if (userIdHeader != null && !userIdHeader.isEmpty()) {
             try {
                 Long userId = Long.parseLong(userIdHeader);
                 log.debug("Found user ID from header: {}", userId);
-                Optional<UserResponseDto> user = userService.getUserById(userId);
-                return user.map(ResponseEntity::ok)
-                       .orElse(ResponseEntity.notFound().build());
+                return userId;
             } catch (NumberFormatException e) {
                 log.warn("Invalid user ID in header: {}", userIdHeader);
             }
@@ -96,7 +165,7 @@ public class UserController {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.warn("No Authorization header or X-User-Id header found");
-            return ResponseEntity.badRequest().build();
+            return null;
         }
         
         try {
@@ -105,16 +174,14 @@ public class UserController {
             log.debug("Extracted user ID from JWT: {}", userId);
             
             if (jwtUtil.isTokenValid(token, userId)) {
-                Optional<UserResponseDto> user = userService.getUserById(userId);
-                return user.map(ResponseEntity::ok)
-                       .orElse(ResponseEntity.notFound().build());
+                return userId;
             } else {
                 log.warn("Invalid JWT token for user ID: {}", userId);
-                return ResponseEntity.status(401).build();
+                return null;
             }
         } catch (Exception e) {
             log.error("Error processing JWT token", e);
-            return ResponseEntity.badRequest().build();
+            return null;
         }
     }
 }

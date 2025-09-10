@@ -97,6 +97,11 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- Spring WebFlux for reactive web client -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webflux</artifactId>
+		</dependency>
 		<!-- Spring Boot Starter for testing -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
