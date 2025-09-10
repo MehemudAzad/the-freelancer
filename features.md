@@ -3,7 +3,7 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 63 / 95 APIs Completed (66.3%)**
+## 📊 **Overall Progress: 73 / 95 APIs Completed (76.8%)**
 
 **Current Status: New Architecture! Contract Management in Job-Proposal Service + Workspace Service for Collaboration**
 
@@ -98,18 +98,18 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `DELETE /api/jobs/{jobId}/milestones/{milestoneId}` - Remove milestone template ✅ **COMPLETED**
 
 ### Contract Management (New Architecture!)
-- [ ] `POST /api/contracts` - Create contract from accepted proposal
-- [ ] `GET /api/contracts/{contractId}` - Get contract details
-- [ ] `GET /api/contracts/my-contracts` - Get user's contracts (CLIENT/FREELANCER)
-- [ ] `PUT /api/contracts/{contractId}/status` - Update contract status (active/paused/completed)
+- [x] `POST /api/contracts` - Create contract from accepted proposal ✅ **COMPLETED**
+- [x] `GET /api/contracts/{contractId}` - Get contract details ✅ **COMPLETED**
+- [x] `GET /api/contracts/my-contracts` - Get user's contracts (CLIENT/FREELANCER) ✅ **COMPLETED**
+- [x] `PUT /api/contracts/{contractId}/status` - Update contract status (active/paused/completed) ✅ **COMPLETED**
 
 ### Contract Milestones
-- [ ] `POST /api/contracts/{contractId}/milestones` - Add milestone to active contract
-- [ ] `GET /api/contracts/{contractId}/milestones` - Get contract milestones
-- [ ] `PUT /api/milestones/{milestoneId}/submit` - Freelancer submits milestone deliverable
-- [ ] `PUT /api/milestones/{milestoneId}/accept` - Client accepts milestone
-- [ ] `PUT /api/milestones/{milestoneId}/reject` - Client rejects milestone with feedback
-- [ ] `PUT /api/milestones/{milestoneId}/status` - Update milestone status
+- [x] `POST /api/contracts/{contractId}/milestones` - Add milestone to active contract ✅ **COMPLETED**
+- [x] `GET /api/contracts/{contractId}/milestones` - Get contract milestones ✅ **COMPLETED**
+- [x] `PUT /api/milestones/{milestoneId}/submit` - Freelancer submits milestone deliverable ✅ **COMPLETED**
+- [x] `PUT /api/milestones/{milestoneId}/accept` - Client accepts milestone ✅ **COMPLETED**
+- [x] `PUT /api/milestones/{milestoneId}/reject` - Client rejects milestone with feedback ✅ **COMPLETED**
+- [x] `PUT /api/milestones/{milestoneId}/status` - Update milestone status ✅ **COMPLETED**
 
 ### Invitations
 - [ ] `POST /api/invites` - Client invites specific freelancer to job

@@ -60,6 +60,6 @@ public class Proposal {
     private List<ProposalMilestone> milestones;
     
     public enum ProposalStatus {
-        SUBMITTED, WITHDRAWN, DECLINED, ACCEPTED
+        SUBMITTED, WITHDRAWN, DECLINED, ACCEPTED, CONTRACTED
     }
 }
