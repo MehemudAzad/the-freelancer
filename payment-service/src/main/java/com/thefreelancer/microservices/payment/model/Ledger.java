@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Entity
 @Table(name = "ledger")
@@ -20,7 +21,7 @@ public class Ledger {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TransactionType type;
+    private LedgerType type;
     
     @Column(name = "source_ref")
     private String sourceRef;
@@ -34,14 +35,17 @@ public class Ledger {
     @Column(nullable = false, length = 3)
     private String currency;
     
-    @Column(columnDefinition = "TEXT")
-    private String meta; // JSON string for additional metadata
+    @ElementCollection
+    @CollectionTable(name = "ledger_meta", joinColumns = @JoinColumn(name = "ledger_id"))
+    @MapKeyColumn(name = "meta_key")
+    @Column(name = "meta_value")
+    private Map<String, String> meta;
     
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
-    public enum TransactionType {
-        CHARGE, TRANSFER, REFUND, FEE, REVERSE_TRANSFER
+    public enum LedgerType {
+        CHARGE, TRANSFER, REFUND, FEE, REVERSE_TRANSFER, DISPUTE
     }
 }

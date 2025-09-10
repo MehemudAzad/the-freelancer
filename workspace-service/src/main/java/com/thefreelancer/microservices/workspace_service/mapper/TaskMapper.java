@@ -22,7 +22,7 @@ public interface TaskMapper {
     
     List<TaskResponseDto> toResponseDtoList(List<Task> tasks);
     
-    @Mapping(target = "priority", source = "priority", qualifiedByName = "stringToPriority")
+    @Mapping(target = "priority", source = "createDto.priority", qualifiedByName = "stringToPriority")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "room", ignore = true)
     @Mapping(target = "roomId", source = "roomId")
@@ -31,10 +31,10 @@ public interface TaskMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "status", constant = "TODO")
-    Task toEntity(TaskCreateDto createDto, @Param("roomId") Long roomId, @Param("createdBy") String createdBy);
+    Task toEntity(TaskCreateDto createDto, Long roomId, String createdBy);
     
-    @Mapping(target = "status", source = "status", qualifiedByName = "stringToStatus")
-    @Mapping(target = "priority", source = "priority", qualifiedByName = "stringToPriority")
+    @Mapping(target = "status", source = "updateDto.status", qualifiedByName = "stringToStatus")
+    @Mapping(target = "priority", source = "updateDto.priority", qualifiedByName = "stringToPriority")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "room", ignore = true)
     @Mapping(target = "roomId", ignore = true)

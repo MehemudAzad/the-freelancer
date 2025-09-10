@@ -45,6 +45,6 @@ public class Escrow {
     private LocalDateTime updatedAt;
     
     public enum EscrowStatus {
-        HELD, RELEASED, REFUNDED, DISPUTED
+        HELD, RELEASED, REFUNDED, DISPUTED, FAILED, CANCELED
     }
 }

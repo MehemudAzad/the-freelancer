@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface LedgerRepository extends JpaRepository<Ledger, String> {
     
-    List<Ledger> findByType(Ledger.TransactionType type);
+    List<Ledger> findByType(Ledger.LedgerType type);
     
     List<Ledger> findBySourceRef(String sourceRef);
     

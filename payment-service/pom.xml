@@ -44,11 +44,11 @@
 		</dependency>
 		
 		<!-- Stripe SDK for payments -->
-		<dependency>
-			<groupId>com.stripe</groupId>
-			<artifactId>stripe-java</artifactId>
-			<version>26.13.0</version>
-		</dependency>
+		 <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>22.29.0</version>
+        </dependency>
 		
 		<!-- Flyway for database migrations -->
 		<dependency>

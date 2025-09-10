@@ -1,4 +1,4 @@
-package com.thefreelancer.microservices.jobproposal.config;
+package com.thefreelancer.microservices.job_proposal.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;

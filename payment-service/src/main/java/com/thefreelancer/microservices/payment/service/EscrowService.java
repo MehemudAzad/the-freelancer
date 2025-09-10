@@ -30,6 +30,7 @@ public class EscrowService {
     
     private final EscrowRepository escrowRepository;
     private final PayoutRepository payoutRepository;
+    private final RefundRepository refundRepository;
     private final LedgerRepository ledgerRepository;
     private final StripeService stripeService;
     
@@ -65,7 +66,7 @@ public class EscrowService {
             
             // Record in ledger
             recordLedgerEntry(
-                Ledger.TransactionType.CHARGE,
+                Ledger.LedgerType.CHARGE,
                 null,
                 paymentIntent.getId(),
                 createDto.getAmountCents(),
@@ -137,7 +138,7 @@ public class EscrowService {
             
             // Record in ledger
             recordLedgerEntry(
-                Ledger.TransactionType.TRANSFER,
+                Ledger.LedgerType.TRANSFER,
                 escrow.getPaymentIntentId(),
                 transfer.getId(),
                 escrow.getAmountCents() - platformFee,
@@ -147,7 +148,7 @@ public class EscrowService {
             
             // Record platform fee
             recordLedgerEntry(
-                Ledger.TransactionType.FEE,
+                Ledger.LedgerType.FEE,
                 escrow.getPaymentIntentId(),
                 "platform",
                 platformFee,
@@ -197,9 +198,11 @@ public class EscrowService {
                 .status(Refund.RefundStatus.INITIATED)
                 .build();
             
+            refundRepository.save(refund);
+            
             // Record in ledger
             recordLedgerEntry(
-                Ledger.TransactionType.REFUND,
+                Ledger.LedgerType.REFUND,
                 escrow.getPaymentIntentId(),
                 stripeRefund.getId(),
                 refundDto.getAmountCents(),
@@ -240,7 +243,7 @@ public class EscrowService {
             .build();
     }
     
-    private void recordLedgerEntry(Ledger.TransactionType type, String sourceRef, String destRef, 
+    private void recordLedgerEntry(Ledger.LedgerType type, String sourceRef, String destRef, 
                                  Long amountCents, String currency, String description) {
         Ledger ledgerEntry = Ledger.builder()
             .id(UUID.randomUUID().toString())
@@ -249,7 +252,7 @@ public class EscrowService {
             .destRef(destRef)
             .amountCents(amountCents)
             .currency(currency)
-            .meta(description)
+            .meta(java.util.Map.of("description", description))
             .build();
         
         ledgerRepository.save(ledgerEntry);
