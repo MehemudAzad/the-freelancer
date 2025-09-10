@@ -31,7 +31,8 @@ public class MessageService {
         log.info("Sending message to room: {} from user: {}", roomId, senderId);
         
         // Validate room exists and user has access
-        Room room = roomRepository.findById(roomId)
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
         validateRoomAccess(room, senderId);
@@ -68,7 +69,8 @@ public class MessageService {
         log.info("Getting message history for room: {} by user: {}", roomId, userId);
         
         // Validate room access
-        Room room = roomRepository.findById(roomId)
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         validateRoomAccess(room, userId);
         
@@ -105,7 +107,8 @@ public class MessageService {
         log.info("Editing message: {} in room: {} by user: {}", messageId, roomId, userId);
         
         // Validate room access
-        Room room = roomRepository.findById(roomId)
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         validateRoomAccess(room, userId);
         
@@ -142,7 +145,8 @@ public class MessageService {
         log.info("Deleting message: {} in room: {} by user: {}", messageId, roomId, userId);
         
         // Validate room access
-        Room room = roomRepository.findById(roomId)
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         validateRoomAccess(room, userId);
         
@@ -175,7 +179,8 @@ public class MessageService {
         log.info("Searching messages in room: {} for term: '{}' by user: {}", roomId, searchTerm, userId);
         
         // Validate room access
-        Room room = roomRepository.findById(roomId)
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         validateRoomAccess(room, userId);
         
@@ -208,7 +213,8 @@ public class MessageService {
     public MessageResponseDto createSystemMessage(String roomId, String content) {
         log.info("Creating system message in room: {}", roomId);
         
-        Room room = roomRepository.findById(roomId)
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
         Message systemMessage = Message.builder()
