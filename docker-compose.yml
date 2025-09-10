@@ -97,14 +97,27 @@ services:
   #     - ./job-proposal-service/postgres-data:/var/lib/postgresql/data
 
   # Workspace Service Database
-  workspace-postgres:
+  # workspace-postgres:
+  #   image: postgres:16-alpine
+  #   container_name: workspace-postgres-db
+  #   environment:
+  #     - POSTGRES_USER=admin
+  #     - POSTGRES_PASSWORD=password
+  #     - POSTGRES_DB=workspace_db
+  #   ports:
+  #     - "5436:5432"
+  #   volumes:
+  #     - ./workspace-service/postgres-data:/var/lib/postgresql/data
+
+  # Payment Service Database
+  payment-postgres:
     image: postgres:16-alpine
-    container_name: workspace-postgres-db
+    container_name: payment-postgres-db
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=workspace_db
+      - POSTGRES_DB=payment_db
     ports:
-      - "5436:5432"
+      - "5437:5432"
     volumes:
-      - ./workspace-service/postgres-data:/var/lib/postgresql/data
+      - ./payment-service/postgres-data:/var/lib/postgresql/data

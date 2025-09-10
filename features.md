@@ -3,7 +3,7 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 58 / 95 APIs Completed (61.1%)**
+## 📊 **Overall Progress: 63 / 95 APIs Completed (66.3%)**
 
 **Current Status: New Architecture! Contract Management in Job-Proposal Service + Workspace Service for Collaboration**
 
@@ -154,14 +154,15 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ---
 
-## 💰 **Payment/Escrow Service APIs** (Port: 8085) - Future Implementation
+## 💰 **Payment/Escrow Service APIs** (Port: 8085)
 
-### Payment Management
-- [ ] `POST /api/escrow/fund` - Client funds milestone (Stripe)
-- [ ] `POST /api/escrow/release` - Release funds to freelancer
-- [ ] `POST /api/escrow/refund` - Refund to client
-- [ ] `GET /api/escrow/milestone/{milestoneId}` - Get escrow status
-- [ ] `POST /api/webhooks/stripe` - Stripe webhook handler
+### Escrow Management
+- [x] `POST /api/payments/escrow/fund` - Client funds milestone (Stripe) ✅ **COMPLETED**
+- [x] `POST /api/payments/escrow/milestone/{milestoneId}/release` - Release funds to freelancer ✅ **COMPLETED**
+- [x] `POST /api/payments/escrow/refund` - Refund to client ✅ **COMPLETED**
+- [x] `GET /api/payments/escrow/milestone/{milestoneId}` - Get escrow status ✅ **COMPLETED**
+- [x] `GET /api/payments/escrow/status/{status}` - Get escrows by status ✅ **COMPLETED**
+- [ ] `POST /api/payments/webhooks/stripe` - Stripe webhook handler
 
 ---
 
@@ -212,7 +213,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 | Gig Service | ✅ | ✅ | ✅ (11/11) | ❌ |
 | Job Proposal Service | ✅ | ❌ | 🟡 (23/28) | ❌ |
 | Workspace Service | ✅ | ❌ | 🟡 (9/18) | ❌ |
-| Payment Service | ❌ | ❌ | ❌ (0/5) | ❌ |
+| Payment Service | ✅ | ❌ | 🟡 (5/6) | ❌ |
 
 **Legend:**
 - ✅ Completed
