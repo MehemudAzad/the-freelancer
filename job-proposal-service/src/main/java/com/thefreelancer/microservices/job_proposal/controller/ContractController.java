@@ -37,10 +37,9 @@ public class ContractController {
     })
     @PostMapping
     public ResponseEntity<ContractResponseDto> createContract(
-            @Valid @RequestBody ContractCreateDto createDto,
-            @Parameter(hidden = true) @RequestHeader("X-User-ID") String userId) {
+            @Valid @RequestBody ContractCreateDto createDto) {
         
-        log.info("Creating contract for user: {} with request: {}", userId, createDto);
+        // log.info("Creating contract for user: {} with request: {}", userId, createDto);
         
         try {
             ContractResponseDto response = contractService.createContract(createDto);

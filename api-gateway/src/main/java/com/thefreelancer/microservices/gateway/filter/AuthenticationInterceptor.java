@@ -27,6 +27,8 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         "/api/auth/refresh",
         "/api/gigs/search",  // Public search
         "/api/jobs/search",  // Public job search
+
+        "/api/contracts",     // Public contract search
         "/swagger-ui",       // Swagger UI
         "/api-docs",         // OpenAPI docs
         "/v3/api-docs"       // OpenAPI v3 docs

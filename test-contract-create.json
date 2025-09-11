@@ -1,0 +1,18 @@
+{
+  "jobId": 1,
+  "proposalId": 1,
+  "startDate": "2025-09-15",
+  "endDate": "2025-12-15",
+  "terms": {
+    "paymentSchedule": "milestone-based",
+    "workingHours": "9 AM - 6 PM EST",
+    "communicationMethod": "Slack for daily updates, weekly video calls",
+    "deliveryMethod": "GitHub pull requests",
+    "revisionRounds": "2 rounds of revisions included",
+    "lateDeliveryPenalty": "5% reduction per day",
+    "earlyDeliveryBonus": "10% bonus for delivery 1 week early",
+    "intellectualProperty": "Client owns all IP upon final payment",
+    "confidentialityAgreement": "Standard NDA applies",
+    "disputeResolution": "Platform mediation followed by arbitration"
+  }
+}

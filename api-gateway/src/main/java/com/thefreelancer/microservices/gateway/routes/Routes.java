@@ -42,9 +42,11 @@ public class Routes {
 		return GatewayRouterFunctions.route("job-proposal-service")
 				.route(RequestPredicates.path("/api/jobs/**"), this::forwardToJobProposalService)
 				.route(RequestPredicates.path("/api/proposals/**"), this::forwardToJobProposalService)
+				.route(RequestPredicates.path("/api/contracts/**"), this::forwardToJobProposalService)
 				.build();
-	}
+			}
 
+	
 	private ServerResponse forwardToAuthService(ServerRequest request) {
 		return forwardWithUserContext(request, AUTH_SERVICE_URL);
 	}

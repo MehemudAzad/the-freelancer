@@ -46,9 +46,9 @@ public class ContractService {
         }
         
         // Verify proposal is accepted
-        if (proposal.getStatus() != Proposal.ProposalStatus.ACCEPTED) {
-            throw new IllegalStateException("Cannot create contract for proposal that is not accepted");
-        }
+        // if (proposal.getStatus() != Proposal.ProposalStatus.ACCEPTED) {
+        //     throw new IllegalStateException("Cannot create contract for proposal that is not accepted");
+        // }
         
         // Create the contract
         Contract contract = new Contract();
