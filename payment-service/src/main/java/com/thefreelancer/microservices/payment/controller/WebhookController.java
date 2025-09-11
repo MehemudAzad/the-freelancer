@@ -1,10 +1,8 @@
 package com.thefreelancer.microservices.payment.controller;
 
 import com.stripe.exception.SignatureVerificationException;
-import com.stripe.exception.StripeException;
 import com.stripe.model.*;
 import com.stripe.net.Webhook;
-import com.thefreelancer.microservices.payment.service.EscrowService;
 import com.thefreelancer.microservices.payment.service.WebhookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,12 +56,12 @@ public class WebhookController {
                     webhookService.handleTransferCreated(event);
                     break;
                     
-                case "transfer.paid":
-                    webhookService.handleTransferPaid(event);
+                case "transfer.reversed":
+                    webhookService.handleTransferReversed(event);
                     break;
                     
-                case "transfer.failed":
-                    webhookService.handleTransferFailed(event);
+                case "transfer.updated":
+                    webhookService.handleTransferUpdated(event);
                     break;
                     
                 case "charge.dispute.created":

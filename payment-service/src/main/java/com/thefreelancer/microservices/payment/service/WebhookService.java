@@ -163,11 +163,20 @@ public class WebhookService {
                 payout.setDestinationAccountId(transfer.getDestination());
                 payout.setAmountCents(transfer.getAmount());
                 payout.setCurrency(transfer.getCurrency());
-                payout.setStatus(Payout.PayoutStatus.INITIATED);
+                payout.setStatus(Payout.PayoutStatus.PAID); // Transfer created means it's being processed/paid
                 payout.setCreatedAt(LocalDateTime.now());
                 
                 payoutRepository.save(payout);
-                log.info("Created payout record for transfer: {}", transfer.getId());
+                log.info("Created payout record for transfer: {} with status PAID", transfer.getId());
+                
+                // Update escrow status to RELEASED since transfer is being processed
+                escrowRepository.findByMilestoneId(milestoneId)
+                    .ifPresent(escrow -> {
+                        escrow.setStatus(Escrow.EscrowStatus.RELEASED);
+                        escrow.setUpdatedAt(LocalDateTime.now());
+                        escrowRepository.save(escrow);
+                        log.info("Updated escrow status to RELEASED for milestone: {}", milestoneId);
+                    });
                 
                 // Create ledger entry
                 createLedgerEntry(
@@ -185,38 +194,38 @@ public class WebhookService {
         }
     }
 
-    /**
-     * Handle transfer completion (payout completed)
+        /**
+     * Handle transfer reversed (formerly transfer.paid - repurposed for reversals)
      */
     @Transactional
-    public void handleTransferPaid(Event event) {
+    public void handleTransferReversed(Event event) {
         try {
             Transfer transfer = (Transfer) event.getDataObjectDeserializer()
                 .getObject().orElseThrow(() -> new RuntimeException("Failed to deserialize transfer"));
 
-            // Update payout status
+            // Update payout status to FAILED due to reversal
             payoutRepository.findByTransferId(transfer.getId())
                 .ifPresentOrElse(
                     payout -> {
-                        payout.setStatus(Payout.PayoutStatus.PAID);
+                        payout.setStatus(Payout.PayoutStatus.FAILED);
                         payout.setUpdatedAt(LocalDateTime.now());
                         payoutRepository.save(payout);
-                        log.info("Updated payout status to PAID for transfer: {}", transfer.getId());
+                        log.warn("Updated payout status to FAILED due to reversal for transfer: {}", transfer.getId());
                         
-                        // Update escrow status to RELEASED
+                        // Update escrow status back to HELD
                         escrowRepository.findByMilestoneId(payout.getMilestoneId())
                             .ifPresent(escrow -> {
-                                escrow.setStatus(Escrow.EscrowStatus.RELEASED);
+                                escrow.setStatus(Escrow.EscrowStatus.HELD);
                                 escrow.setUpdatedAt(LocalDateTime.now());
                                 escrowRepository.save(escrow);
-                                log.info("Updated escrow status to RELEASED for milestone: {}", payout.getMilestoneId());
+                                log.warn("Updated escrow status back to HELD due to transfer reversal for milestone: {}", payout.getMilestoneId());
                             });
                     },
                     () -> log.warn("Payout not found for transfer: {}", transfer.getId())
                 );
             
         } catch (Exception e) {
-            log.error("Error handling transfer.paid", e);
+            log.error("Error handling transfer.reversed", e);
         }
     }
 
@@ -243,6 +252,32 @@ public class WebhookService {
             
         } catch (Exception e) {
             log.error("Error handling transfer.failed", e);
+        }
+    }
+
+    /**
+     * Handle transfer updated (description or metadata changes)
+     */
+    @Transactional
+    public void handleTransferUpdated(Event event) {
+        try {
+            Transfer transfer = (Transfer) event.getDataObjectDeserializer()
+                .getObject().orElseThrow(() -> new RuntimeException("Failed to deserialize transfer"));
+
+            log.info("Transfer updated: {} with description: {}", transfer.getId(), transfer.getDescription());
+            
+            // Usually no action needed for metadata updates, just log for audit trail
+            createLedgerEntry(
+                Ledger.LedgerType.TRANSFER,
+                transfer.getId(),
+                transfer.getDestination(),
+                0L, // No amount change for updates
+                transfer.getCurrency(),
+                Map.of("event_type", "transfer.updated", "transfer_id", transfer.getId())
+            );
+            
+        } catch (Exception e) {
+            log.error("Error handling transfer.updated", e);
         }
     }
 

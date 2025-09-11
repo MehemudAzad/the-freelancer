@@ -17,8 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public class JobCreateDto {
     
-    @NotNull(message = "Client ID is required")
-    private Long clientId;
+    // clientId should come from authentication headers, not from request body
     
     @NotBlank(message = "Title is required")
     @Size(min = 5, max = 200, message = "Title must be between 5 and 200 characters")

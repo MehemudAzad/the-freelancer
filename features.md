@@ -162,7 +162,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `POST /api/payments/escrow/refund` - Refund to client ✅ **COMPLETED**
 - [x] `GET /api/payments/escrow/milestone/{milestoneId}` - Get escrow status ✅ **COMPLETED**
 - [x] `GET /api/payments/escrow/status/{status}` - Get escrows by status ✅ **COMPLETED**
-- [ ] `POST /api/payments/webhooks/stripe` - Stripe webhook handler
+- [x] `POST /api/payments/webhooks/stripe` - Stripe webhook handler (payment_intent.succeeded, payment_intent.payment_failed, transfer.created, transfer.reversed, transfer.updated, account.updated, charge.dispute.created) ✅ **COMPLETED**
 
 ---
 
@@ -213,7 +213,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 | Gig Service | ✅ | ✅ | ✅ (11/11) | ❌ |
 | Job Proposal Service | ✅ | ❌ | 🟡 (23/28) | ❌ |
 | Workspace Service | ✅ | ❌ | 🟡 (9/18) | ❌ |
-| Payment Service | ✅ | ❌ | 🟡 (5/6) | ❌ |
+| Payment Service | ✅ | ❌ | ✅ (6/6) | ❌ |
 
 **Legend:**
 - ✅ Completed

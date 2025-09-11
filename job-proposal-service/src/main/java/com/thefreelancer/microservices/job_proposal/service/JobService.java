@@ -24,8 +24,8 @@ public class JobService {
     private final JobMapper jobMapper;
     
     @Transactional
-    public JobResponseDto createJob(JobCreateDto createDto) {
-        log.info("Creating job for clientId: {}", createDto.getClientId());
+    public JobResponseDto createJob(JobCreateDto createDto, Long clientId) {
+        log.info("Creating job for clientId: {}", clientId);
         
         // Validate budget range
         if (createDto.getMinBudgetCents() != null && createDto.getMaxBudgetCents() != null) {
@@ -33,17 +33,16 @@ public class JobService {
                 throw new RuntimeException("Minimum budget cannot be greater than maximum budget");
             }
         }
-        
+
         Job job = jobMapper.toEntity(createDto);
+        job.setClientId(clientId); // Set clientId from authentication
         job.setStatus(Job.JobStatus.DRAFT); // New jobs start as draft
         
         Job savedJob = jobRepository.save(job);
-        log.info("Successfully created job with ID: {} for clientId: {}", savedJob.getId(), createDto.getClientId());
+        log.info("Successfully created job with ID: {} for clientId: {}", savedJob.getId(), clientId);
         
         return jobMapper.toResponseDto(savedJob);
-    }
-    
-    public Optional<JobResponseDto> getJobById(Long jobId) {
+    }    public Optional<JobResponseDto> getJobById(Long jobId) {
         log.info("Fetching job with ID: {}", jobId);
         
         return jobRepository.findById(jobId)

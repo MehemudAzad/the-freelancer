@@ -120,10 +120,8 @@ public class JobController {
             Long authenticatedUserId = Long.parseLong(userIdHeader);
             log.info("Creating job for authenticated client userId: {}", authenticatedUserId);
             
-            // Override the clientId in the DTO with the authenticated user's ID
-            jobCreateDto.setClientId(authenticatedUserId);
-            
-            JobResponseDto job = jobService.createJob(jobCreateDto);
+            // Pass the clientId from authentication to the service
+            JobResponseDto job = jobService.createJob(jobCreateDto, authenticatedUserId);
             log.info("Job successfully created with ID: {} for clientId: {}", job.getId(), job.getClientId());
             return ResponseEntity.status(HttpStatus.CREATED).body(job);
         } catch (NumberFormatException e) {
