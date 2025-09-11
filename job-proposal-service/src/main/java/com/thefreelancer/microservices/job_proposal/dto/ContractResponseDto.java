@@ -19,8 +19,8 @@ public class ContractResponseDto {
     private Long jobId;
     private String jobTitle;
     private Long proposalId;
-    private String clientId;
-    private String freelancerId;
+    private Long clientId;
+    private Long freelancerId;
     private BigInteger totalAmountCents;
     private String currency;
     private Contract.ContractStatus status;

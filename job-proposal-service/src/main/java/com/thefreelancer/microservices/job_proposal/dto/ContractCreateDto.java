@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -20,4 +21,6 @@ public class ContractCreateDto {
     
     private LocalDate startDate;
     private LocalDate endDate;
+    
+    private Map<String, Object> terms;
 }

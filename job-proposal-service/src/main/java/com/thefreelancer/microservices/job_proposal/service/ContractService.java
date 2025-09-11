@@ -1,6 +1,8 @@
 package com.thefreelancer.microservices.job_proposal.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thefreelancer.microservices.job_proposal.dto.*;
+import com.thefreelancer.microservices.job_proposal.exception.ResourceNotFoundException;
 import com.thefreelancer.microservices.job_proposal.model.*;
 import com.thefreelancer.microservices.job_proposal.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -9,96 +11,73 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ContractService {
-
+    
     private final ContractRepository contractRepository;
     private final ContractMilestoneRepository contractMilestoneRepository;
     private final JobRepository jobRepository;
     private final ProposalRepository proposalRepository;
-    private final ProposalMilestoneRepository proposalMilestoneRepository;
+    private final ObjectMapper objectMapper;
 
     /**
-     * Create a contract from an accepted proposal
+     * Create a new contract from an accepted proposal
      */
-    @Transactional
-    public ContractResponseDto createContract(ContractCreateDto createDto, String userId) {
-        log.info("Creating contract for job: {} and proposal: {}", createDto.getJobId(), createDto.getProposalId());
-
-        // Validate job exists and user is the client
-        Job job = jobRepository.findById(createDto.getJobId())
-            .orElseThrow(() -> new IllegalArgumentException("Job not found"));
+    public ContractResponseDto createContract(ContractCreateDto request) {
+        // Validate the job and proposal exist and match
+        Job job = jobRepository.findById(request.getJobId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + request.getJobId()));
         
-        if (!job.getClientId().equals(userId)) {
-            throw new IllegalArgumentException("Only job owner can create contract");
-        }
-
-        // Validate proposal exists and is accepted
-        Proposal proposal = proposalRepository.findById(createDto.getProposalId())
-            .orElseThrow(() -> new IllegalArgumentException("Proposal not found"));
+        Proposal proposal = proposalRepository.findById(request.getProposalId())
+                .orElseThrow(() -> new ResourceNotFoundException("Proposal not found with id: " + request.getProposalId()));
         
-        if (!proposal.getJob().getId().equals(createDto.getJobId())) {
+        // Verify the proposal belongs to the job
+        if (!proposal.getJob().getId().equals(job.getId())) {
             throw new IllegalArgumentException("Proposal does not belong to the specified job");
         }
         
+        // Verify job is still open
+        if (job.getStatus() != Job.JobStatus.OPEN) {
+            throw new IllegalStateException("Cannot create contract for job that is not open");
+        }
+        
+        // Verify proposal is accepted
         if (proposal.getStatus() != Proposal.ProposalStatus.ACCEPTED) {
-            throw new IllegalArgumentException("Only accepted proposals can be converted to contracts");
+            throw new IllegalStateException("Cannot create contract for proposal that is not accepted");
         }
-
-        // Check if contract already exists
-        if (contractRepository.existsByJobId(createDto.getJobId())) {
-            throw new IllegalArgumentException("Contract already exists for this job");
-        }
-
-        // Create contract
+        
+        // Create the contract
         Contract contract = new Contract();
         contract.setJob(job);
         contract.setProposal(proposal);
         contract.setClientId(job.getClientId());
         contract.setFreelancerId(proposal.getFreelancerId());
-        contract.setTotalAmountCents(proposal.getTotalCents());
-        contract.setCurrency(proposal.getCurrency());
         contract.setStatus(Contract.ContractStatus.ACTIVE);
-        contract.setStartDate(createDto.getStartDate() != null ? createDto.getStartDate() : LocalDate.now());
-        contract.setEndDate(createDto.getEndDate());
-
+        contract.setStartDate(LocalDate.now());
+        contract.setEndDate(request.getEndDate());
+        contract.setPaymentModel(Contract.PaymentModel.FIXED); // Default to fixed, can be updated later
+        
+        // Set terms as JSON
+        if (request.getTerms() != null) {
+            try {
+                contract.setTermsJson(objectMapper.writeValueAsString(request.getTerms()));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to serialize contract terms", e);
+            }
+        }
+        
         Contract savedContract = contractRepository.save(contract);
-
-        // Create contract milestones from proposal milestones
-        List<ProposalMilestone> proposalMilestones = proposalMilestoneRepository.findByProposalIdOrderByOrderIndexAsc(proposal.getId());
-        List<ContractMilestone> contractMilestones = IntStream.range(0, proposalMilestones.size())
-            .mapToObj(i -> {
-                ProposalMilestone pm = proposalMilestones.get(i);
-                ContractMilestone cm = new ContractMilestone();
-                cm.setContract(savedContract);
-                cm.setTitle(pm.getTitle());
-                cm.setDescription(pm.getDescription());
-                cm.setAmountCents(pm.getAmountCents());
-                cm.setCurrency(pm.getCurrency());
-                cm.setDueDate(pm.getDueDate());
-                cm.setOrderIndex(i + 1);
-                cm.setStatus(ContractMilestone.MilestoneStatus.FUNDING_REQUIRED);
-                return cm;
-            })
-            .toList();
-
-        contractMilestoneRepository.saveAll(contractMilestones);
-
-        // Update proposal status to CONTRACTED
-        proposal.setStatus(Proposal.ProposalStatus.CONTRACTED);
-        proposalRepository.save(proposal);
-
-        log.info("Contract created successfully: {}", savedContract.getId());
-        return convertToResponseDto(savedContract, true);
-    }
-
-    /**
+        
+        // Update job status to IN_PROGRESS
+        job.setStatus(Job.JobStatus.IN_PROGRESS);
+        jobRepository.save(job);
+        
+        return convertToResponseDto(savedContract, false);
+    }    /**
      * Get contract by ID
      */
     public ContractResponseDto getContract(Long contractId, String userId) {
@@ -116,7 +95,7 @@ public class ContractService {
     /**
      * Get user's contracts
      */
-    public List<ContractResponseDto> getUserContracts(String userId) {
+    public List<ContractResponseDto> getUserContracts(Long userId) {
         List<Contract> contracts = contractRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return contracts.stream()
             .map(contract -> convertToResponseDto(contract, false))

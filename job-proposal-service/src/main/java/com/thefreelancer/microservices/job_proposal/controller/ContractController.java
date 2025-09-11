@@ -43,7 +43,7 @@ public class ContractController {
         log.info("Creating contract for user: {} with request: {}", userId, createDto);
         
         try {
-            ContractResponseDto response = contractService.createContract(createDto, userId);
+            ContractResponseDto response = contractService.createContract(createDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             log.warn("Contract creation failed: {}", e.getMessage());
@@ -92,8 +92,12 @@ public class ContractController {
         log.info("Getting contracts for user: {}", userId);
         
         try {
-            List<ContractResponseDto> response = contractService.getUserContracts(userId);
+            Long userIdLong = Long.parseLong(userId);
+            List<ContractResponseDto> response = contractService.getUserContracts(userIdLong);
             return ResponseEntity.ok(response);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid user ID format: {}", userId);
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             log.error("Error getting user contracts", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

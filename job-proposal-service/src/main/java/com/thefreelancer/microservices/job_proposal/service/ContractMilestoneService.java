@@ -217,6 +217,14 @@ public class ContractMilestoneService {
                 milestone.setRejectedAt(null);
                 milestone.setRejectionReason(null);
                 break;
+            case PENDING:
+            case FUNDING_REQUIRED:
+            case FUNDED:
+            case DISPUTED:
+            case PAID:
+                // These status changes are typically handled by payment service
+                // No specific timestamp updates needed here
+                break;
         }
 
         ContractMilestone savedMilestone = contractMilestoneRepository.save(milestone);

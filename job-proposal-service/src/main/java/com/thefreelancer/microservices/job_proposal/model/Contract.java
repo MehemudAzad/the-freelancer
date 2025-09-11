@@ -32,10 +32,10 @@ public class Contract {
     private Proposal proposal;
 
     @Column(name = "client_id", nullable = false)
-    private String clientId;
+    private Long clientId;
 
     @Column(name = "freelancer_id", nullable = false)
-    private String freelancerId;
+    private Long freelancerId;
 
     @Column(name = "total_amount_cents", nullable = false)
     private BigInteger totalAmountCents;
@@ -52,6 +52,13 @@ public class Contract {
 
     @Column(name = "end_date")
     private LocalDate endDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_model", nullable = false)
+    private PaymentModel paymentModel = PaymentModel.FIXED;
+
+    @Column(name = "terms_json", columnDefinition = "TEXT")
+    private String termsJson;
 
     @OneToMany(mappedBy = "contract", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ContractMilestone> milestones;
@@ -70,5 +77,10 @@ public class Contract {
         COMPLETED,
         CANCELLED,
         DISPUTED
+    }
+    
+    public enum PaymentModel {
+        FIXED,
+        HOURLY
     }
 }

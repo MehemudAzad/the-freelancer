@@ -57,17 +57,17 @@ public interface ContractMilestoneRepository extends JpaRepository<ContractMiles
      * Find milestones by freelancer (through contract)
      */
     @Query("SELECT cm FROM ContractMilestone cm WHERE cm.contract.freelancerId = :freelancerId ORDER BY cm.dueDate ASC")
-    List<ContractMilestone> findByFreelancerIdOrderByDueDateAsc(@Param("freelancerId") String freelancerId);
+    List<ContractMilestone> findByFreelancerIdOrderByDueDateAsc(@Param("freelancerId") Long freelancerId);
     
     /**
      * Find milestones by client (through contract)
      */
     @Query("SELECT cm FROM ContractMilestone cm WHERE cm.contract.clientId = :clientId ORDER BY cm.dueDate ASC")
-    List<ContractMilestone> findByClientIdOrderByDueDateAsc(@Param("clientId") String clientId);
+    List<ContractMilestone> findByClientIdOrderByDueDateAsc(@Param("clientId") Long clientId);
     
     /**
      * Find submitted milestones for review
      */
     @Query("SELECT cm FROM ContractMilestone cm WHERE cm.contract.clientId = :clientId AND cm.status = 'SUBMITTED' ORDER BY cm.submittedAt ASC")
-    List<ContractMilestone> findSubmittedMilestonesForClient(@Param("clientId") String clientId);
+    List<ContractMilestone> findSubmittedMilestonesForClient(@Param("clientId") Long clientId);
 }
