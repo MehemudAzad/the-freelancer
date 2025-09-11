@@ -21,7 +21,6 @@ public class ProposalMilestoneResponseDto {
     private String currency;
     private LocalDate dueDate;
     private Integer orderIndex;
-    private String dod; // Definition of Done
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -30,6 +30,4 @@ public class ProposalMilestoneCreateDto {
     private LocalDate dueDate;
     
     private Integer orderIndex;
-    
-    private String dod; // Definition of Done (JSON or text)
 }

@@ -106,8 +106,18 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             return true;
         }
         
-        // Special case: Job milestones endpoints are public (GET and POST)
+        // Special case: Job milestones endpoints are public (GET only)
         if ("GET".equals(method) && requestURI.matches("/api/jobs/\\d+/milestones")) {
+            return true;
+        }
+
+        // Special case: Proposal milestones endpoints are public (GET only)
+        if ("GET".equals(method) && requestURI.matches("/api/proposals/\\d+/milestones")) {
+            return true;
+        }
+
+        // Special case: Individual proposal milestone details are public (GET only)
+        if ("GET".equals(method) && requestURI.matches("/api/proposals/\\d+/milestones/\\d+")) {
             return true;
         }
 

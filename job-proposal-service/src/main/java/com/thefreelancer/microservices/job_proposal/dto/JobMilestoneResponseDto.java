@@ -33,9 +33,6 @@ public class JobMilestoneResponseDto {
     @Schema(description = "Order index for sorting", example = "1")
     private Integer orderIndex;
 
-    @Schema(description = "Definition of Done checklist", example = "[\"High-fidelity mockups for all pages\", \"Interactive prototype\", \"Design system documentation\"]")
-    private String dod;
-
     @Schema(description = "Creation timestamp")
     private LocalDateTime createdAt;
 

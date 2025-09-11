@@ -22,5 +22,4 @@ public class ProposalMilestoneUpdateDto {
     private String currency;
     private LocalDate dueDate;
     private Integer orderIndex;
-    private String dod; // Definition of Done
 }

@@ -14,7 +14,8 @@ public class JobMilestoneCreateDto {
     @Schema(description = "Milestone title", example = "UI/UX Design & Wireframes", required = true)
     private String title;
 
-    @Schema(description = "Detailed description", example = "Create user interface mockups and wireframes for all main pages")
+    @Schema(description = "Detailed description with acceptance criteria", 
+            example = "Create user interface mockups and wireframes for all main pages including:\n• High-fidelity mockups for all pages\n• Interactive prototype\n• Design system documentation")
     private String description;
 
     @Positive(message = "Suggested amount must be positive")
@@ -31,7 +32,4 @@ public class JobMilestoneCreateDto {
     @NotNull(message = "Order index is required")
     @Schema(description = "Order index for sorting", example = "1", required = true)
     private Integer orderIndex;
-
-    @Schema(description = "Definition of Done checklist", example = "[\"High-fidelity mockups for all pages\", \"Interactive prototype\", \"Design system documentation\"]")
-    private String dod;
 }

@@ -1,9 +1,8 @@
 {
   "title": "Backend API Development",
-  "description": "Develop RESTful APIs with authentication, user management, and data validation. Includes comprehensive testing and documentation.",
+  "description": "Develop RESTful APIs with authentication, user management, and core business logic for the freelancer platform including:\n\n• User authentication endpoints (register, login, logout)\n• User profile management APIs\n• Job posting and search functionality\n• Proposal submission system\n• Database schema with proper relationships\n• JWT token-based security\n• Input validation and error handling\n• API documentation with Swagger\n\nDeliverables:\n• Complete REST API implementation\n• Database migrations and seed data\n• Postman collection for testing\n• API documentation\n• Unit tests with >80% coverage\n• Docker containerization\n\nAcceptance Criteria:\n• All APIs return proper HTTP status codes\n• Authentication flow works end-to-end\n• Database queries are optimized\n• Error responses follow consistent format\n• Performance: APIs respond within 200ms\n• Security: No sensitive data in logs\n• Code review completed and approved",
   "amountCents": 250000,
   "currency": "USD", 
   "dueDate": "2024-02-15",
-  "orderIndex": 1,
-  "dod": "{\n  \"requirements\": [\n    \"All API endpoints implemented and tested\",\n    \"JWT authentication system working\",\n    \"Input validation on all endpoints\",\n    \"Swagger/OpenAPI documentation complete\",\n    \"Unit tests with 80%+ coverage\",\n    \"Postman collection provided\",\n    \"Database schema properly designed\",\n    \"Error handling implemented\"\n  ],\n  \"deliverables\": [\n    \"Complete backend source code\",\n    \"API documentation (Swagger)\",\n    \"Database migration scripts\",\n    \"Unit test suite\",\n    \"Deployment instructions\",\n    \"Postman collection for testing\"\n  ],\n  \"acceptanceCriteria\": [\n    \"All API endpoints return expected responses\",\n    \"Authentication prevents unauthorized access\",\n    \"Data validation works correctly\",\n    \"Performance tests pass (response time < 500ms)\",\n    \"Security scan shows no critical vulnerabilities\"\n  ]\n}"
+  "orderIndex": 1
 }

@@ -46,9 +46,6 @@ public class ProposalMilestone {
     @Column(name = "order_index")
     private Integer orderIndex;
     
-    @Column(columnDefinition = "TEXT")
-    private String dod; // Definition of Done as JSON string
-    
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

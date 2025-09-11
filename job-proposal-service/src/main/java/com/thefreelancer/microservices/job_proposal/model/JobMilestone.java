@@ -42,9 +42,6 @@ public class JobMilestone {
     @Column(name = "order_index", nullable = false)
     private Integer orderIndex = 0;
 
-    @Column(columnDefinition = "TEXT")
-    private String dod; // Definition of Done as JSON string
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

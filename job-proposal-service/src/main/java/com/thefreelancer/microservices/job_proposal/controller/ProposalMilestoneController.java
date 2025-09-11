@@ -76,10 +76,9 @@ public class ProposalMilestoneController {
         }
     }
 
-    @Operation(summary = "Get proposal milestones", description = "Get all milestones for a proposal")
+    @Operation(summary = "Get proposal milestones", description = "Get all milestones for a proposal (Public - no authentication required)")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Milestones retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Authentication required"),
         @ApiResponse(responseCode = "404", description = "Proposal not found")
     })
     @GetMapping("/{proposalId}/milestones")
@@ -89,28 +88,17 @@ public class ProposalMilestoneController {
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
             @RequestHeader(value = "X-User-Role", required = false) String userRole) {
         
-        log.info("GET /api/proposals/{}/milestones - Getting milestones for proposal", proposalId);
-        
-        // Check authentication (both job owner and proposal owner should be able to view)
-        if (userIdHeader == null || userRole == null) {
-            log.warn("Authentication required for viewing proposal milestones");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        log.info("GET /api/proposals/{}/milestones - Getting milestones for proposal (public access)", proposalId);
         
         try {
-            Long authenticatedUserId = Long.parseLong(userIdHeader);
-            
-            // TODO: Service should validate that user can view this proposal's milestones
+            // Public endpoint - no authentication required for viewing milestones
             List<ProposalMilestoneResponseDto> milestones = proposalMilestoneService.getMilestonesByProposalId(proposalId);
             log.info("Found {} milestones for proposal: {}", milestones.size(), proposalId);
             
             return ResponseEntity.ok(milestones);
-        } catch (NumberFormatException e) {
-            log.error("Invalid user ID format: {}", userIdHeader);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             log.error("Error fetching milestones for proposal {}: {}", proposalId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
