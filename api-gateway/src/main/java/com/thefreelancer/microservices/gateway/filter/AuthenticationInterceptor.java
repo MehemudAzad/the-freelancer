@@ -26,6 +26,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         "/api/auth/login",
         "/api/auth/refresh",
         "/api/gigs/search",  // Public search
+        "/api/jobs/search",  // Public job search
         "/swagger-ui",       // Swagger UI
         "/api-docs",         // OpenAPI docs
         "/v3/api-docs"       // OpenAPI v3 docs
@@ -99,6 +100,17 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         if ("GET".equals(method) && requestURI.matches("/api/gigs/\\d+")) {
             return true;
         }
+        
+        // Special case: GET /api/jobs/{id} is public (individual job details)
+        if ("GET".equals(method) && requestURI.matches("/api/jobs/\\d+")) {
+            return true;
+        }
+        
+        // Special case: Job milestones endpoints are public (GET and POST)
+        if ("GET".equals(method) && requestURI.matches("/api/jobs/\\d+/milestones")) {
+            return true;
+        }
+
         
         return false;
     }

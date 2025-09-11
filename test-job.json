@@ -1,0 +1,12 @@
+{
+  "title": "Build a Modern E-commerce Platform",
+  "description": "We need a full-stack e-commerce platform with React frontend, Node.js backend, and PostgreSQL database. The platform should include user authentication, product catalog, shopping cart, payment integration with Stripe, and admin dashboard.",
+  "stack": ["React", "Node.js", "PostgreSQL", "Stripe", "Express", "JavaScript", "HTML", "CSS"],
+  "budgetType": "FIXED",
+  "minBudgetCents": 500000,
+  "maxBudgetCents": 750000,
+  "currency": "USD",
+  "ndaRequired": true,
+  "ipAssignment": true,
+  "repoLink": "https://github.com/example/ecommerce-platform"
+}

@@ -46,7 +46,7 @@ public class ProposalMilestone {
     @Column(name = "order_index")
     private Integer orderIndex;
     
-    @Column(columnDefinition = "JSONB")
+    @Column(columnDefinition = "TEXT")
     private String dod; // Definition of Done as JSON string
     
     @CreationTimestamp

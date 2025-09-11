@@ -17,10 +17,10 @@ import java.math.BigInteger;
 public interface ProposalMilestoneMapper {
     
     /**
-     * Convert CreateDto to Entity
+     * Convert CreateDto to Entity (proposal will be set separately)
      */
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "proposal", source = "proposalId")
+    @Mapping(target = "proposal", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     ProposalMilestone toEntity(ProposalMilestoneCreateDto createDto);

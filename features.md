@@ -5,7 +5,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ## 📊 **Overall Progress: 73 / 95 APIs Completed (76.8%)**
 
-**Current Status: New Architecture! Contract Management in Job-Proposal Service + Workspace Service for Collaboration**
+**Current Status: API Gateway Configured! Public Job Access + Contract Management Completed**
 
 ---
 
@@ -71,10 +71,11 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [ ] `GET /api/jobs/my-jobs/{jobId}/proposals` - Get proposals for MY job (client view)
 - [ ] `POST /api/jobs/{jobId}/attachments` - Upload job specs, wireframes, datasets
 
-### Job Milestones (Client Created - Secure)
+### Job Milestones (Public Access Design)
+
 - [x] `GET /api/jobs/{jobId}/milestones` - Get job milestones (public discovery) ✅ **COMPLETED**
+- [x] `POST /api/jobs/{jobId}/milestones` - Add milestone to job (public access) ✅ **COMPLETED**
 - [x] `POST /api/jobs/my-jobs/{jobId}/milestones` - Add milestone to MY job (CLIENT role) ✅ **COMPLETED**
-- [x] `GET /api/jobs/my-jobs/{jobId}/milestones` - Get milestones for MY job (CLIENT role) ✅ **COMPLETED**
 - [x] `PUT /api/jobs/my-jobs/{jobId}/milestones/{milestoneId}` - Update milestone in MY job ✅ **COMPLETED**
 - [x] `DELETE /api/jobs/my-jobs/{jobId}/milestones/{milestoneId}` - Delete milestone from MY job ✅ **COMPLETED**
 
@@ -90,12 +91,6 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `GET /api/proposals/{proposalId}/milestones` - Get proposal milestones ✅ **COMPLETED**
 - [x] `PUT /api/proposals/{proposalId}/milestones/{milestoneId}` - Update milestone details ✅ **COMPLETED**
 - [x] `DELETE /api/proposals/{proposalId}/milestones/{milestoneId}` - Remove milestone ✅ **COMPLETED**
-
-### Job Milestones (Template)
-- [x] `POST /api/jobs/{jobId}/milestones` - Add milestone template to job ✅ **COMPLETED**
-- [x] `GET /api/jobs/{jobId}/milestones` - Get job milestone templates ✅ **COMPLETED**
-- [x] `PUT /api/jobs/{jobId}/milestones/{milestoneId}` - Update milestone template ✅ **COMPLETED**
-- [x] `DELETE /api/jobs/{jobId}/milestones/{milestoneId}` - Remove milestone template ✅ **COMPLETED**
 
 ### Contract Management (New Architecture!)
 - [x] `POST /api/contracts` - Create contract from accepted proposal ✅ **COMPLETED**
@@ -166,6 +161,23 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ---
 
+## 🔗 **API Gateway Configuration**
+
+### Authentication & Routing
+- [x] **JWT Authentication**: Token validation and user context forwarding ✅ **COMPLETED**
+- [x] **Public Endpoints**: Configured for public job viewing without authentication ✅ **COMPLETED**  
+- [x] **Route Forwarding**: Requests routed to appropriate microservices ✅ **COMPLETED**
+- [x] **Swagger Integration**: Centralized API documentation ✅ **COMPLETED**
+
+### Public Endpoints (No Auth Required)
+- [x] `GET /api/jobs/{id}` - Public job viewing ✅ **COMPLETED**
+- [x] `GET /api/jobs/search` - Public job search ✅ **COMPLETED**
+- [x] `GET /api/gigs/{id}` - Public gig viewing ✅ **COMPLETED**
+- [x] `GET /api/gigs/search` - Public gig search ✅ **COMPLETED**
+- [x] Auth endpoints (`/api/auth/register`, `/api/auth/login`, etc.) ✅ **COMPLETED**
+
+---
+
 ## 🎯 **Implementation Phases**
 
 ### **Phase 1: Core Business Logic** (Priority: HIGH)
@@ -209,6 +221,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 | Service | Database | Event Listener | Basic CRUD | Advanced Features |
 |---------|----------|----------------|------------|-------------------|
+| **API Gateway** | ✅ | N/A | ✅ (Routing) | ✅ (Auth) |
 | Auth Service | ✅ | ✅ | 🟡 (3/8) | ❌ |
 | Gig Service | ✅ | ✅ | ✅ (11/11) | ❌ |
 | Job Proposal Service | ✅ | ❌ | 🟡 (23/28) | ❌ |

@@ -15,9 +15,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ProposalMilestoneCreateDto {
     
-    @NotNull(message = "Proposal ID is required")
-    private Long proposalId;
-    
     @NotBlank(message = "Title is required")
     private String title;
     

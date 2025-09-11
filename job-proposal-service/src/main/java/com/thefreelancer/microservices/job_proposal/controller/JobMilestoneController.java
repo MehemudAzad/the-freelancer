@@ -50,55 +50,32 @@ public class JobMilestoneController {
         }
     }
     
-    // ============== CLIENT SECURE ENDPOINTS ==============
-    
-    @Operation(summary = "Add milestone template to job", description = "Add a milestone template to a job (Client only)")
+    @Operation(summary = "Add milestone to job", description = "Add a milestone template to a job (public endpoint)")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Milestone created successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid milestone data"),
-        @ApiResponse(responseCode = "401", description = "Authentication required"),
-        @ApiResponse(responseCode = "403", description = "Access denied - not your job"),
         @ApiResponse(responseCode = "404", description = "Job not found")
     })
     @PostMapping("/{jobId}/milestones")
     public ResponseEntity<JobMilestoneResponseDto> addMilestoneToJob(
             @Parameter(description = "ID of the job") @PathVariable Long jobId,
-            @Valid @RequestBody JobMilestoneCreateDto createDto,
-            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+            @Valid @RequestBody JobMilestoneCreateDto createDto) {
         
-        log.info("POST /api/jobs/{}/milestones - Adding milestone template to job", jobId);
-        
-        // Check authentication
-        if (userIdHeader == null || userRole == null) {
-            log.warn("Authentication required for creating job milestones");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        // Check authorization - only clients can create job milestones
-        if (!"CLIENT".equalsIgnoreCase(userRole)) {
-            log.warn("Access denied: Only clients can create job milestones. User role: {}", userRole);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        log.info("POST /api/jobs/{}/milestones - Adding milestone to job (public)", jobId);
         
         try {
-            Long authenticatedUserId = Long.parseLong(userIdHeader);
-            log.info("Creating milestone template for job {} by client userId: {}", jobId, authenticatedUserId);
-            
-            // TODO: Service should validate job ownership
             JobMilestoneResponseDto milestone = jobMilestoneService.createMilestone(jobId, createDto);
-            log.info("Milestone template created successfully with ID: {}", milestone.getId());
+            log.info("Milestone created successfully with ID: {}", milestone.getId());
             
             return ResponseEntity.status(HttpStatus.CREATED).body(milestone);
-        } catch (NumberFormatException e) {
-            log.error("Invalid user ID format: {}", userIdHeader);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (RuntimeException e) {
-            log.error("Error creating milestone template for job {}: {}", jobId, e.getMessage());
+            log.error("Error creating milestone for job {}: {}", jobId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
+    
+    // ============== CLIENT SECURE ENDPOINTS ==============
+    // Milestone creation/management is restricted to job owners via /my-jobs/ endpoints
     
     @Operation(summary = "Update job milestone template", description = "Update a milestone template in a job (Client only)")
     @ApiResponses(value = {
@@ -149,54 +126,8 @@ public class JobMilestoneController {
         }
     }
     
-    @Operation(summary = "Delete job milestone template", description = "Remove a milestone template from a job (Client only)")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Milestone deleted successfully"),
-        @ApiResponse(responseCode = "401", description = "Authentication required"),
-        @ApiResponse(responseCode = "403", description = "Access denied - not your job"),
-        @ApiResponse(responseCode = "404", description = "Milestone or job not found")
-    })
-    @DeleteMapping("/{jobId}/milestones/{milestoneId}")
-    public ResponseEntity<Void> deleteJobMilestoneTemplate(
-            @Parameter(description = "ID of the job") @PathVariable Long jobId,
-            @Parameter(description = "ID of the milestone") @PathVariable Long milestoneId,
-            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
-        
-        log.info("DELETE /api/jobs/{}/milestones/{} - Deleting job milestone template", jobId, milestoneId);
-        
-        // Check authentication
-        if (userIdHeader == null || userRole == null) {
-            log.warn("Authentication required for deleting job milestones");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        // Check authorization - only clients can delete their job milestones
-        if (!"CLIENT".equalsIgnoreCase(userRole)) {
-            log.warn("Access denied: Only clients can delete their job milestones. User role: {}", userRole);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        
-        try {
-            Long authenticatedUserId = Long.parseLong(userIdHeader);
-            log.info("Deleting milestone template for job {} by client userId: {}", jobId, authenticatedUserId);
-            
-            // TODO: Service should validate job ownership
-            jobMilestoneService.deleteMilestone(jobId, milestoneId);
-            log.info("Milestone template deleted successfully: {}", milestoneId);
-            
-            return ResponseEntity.noContent().build();
-        } catch (NumberFormatException e) {
-            log.error("Invalid user ID format: {}", userIdHeader);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (RuntimeException e) {
-            log.error("Error deleting milestone template {} for job {}: {}", milestoneId, jobId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-    
-    // ============== MY-JOBS SECURE ENDPOINTS (ALTERNATIVE ROUTES) ==============
+    // ============== MY-JOBS SECURE ENDPOINTS (Job Owner Only) ==============
+    // All milestone creation/modification is done via /my-jobs/ endpoints for proper ownership validation
     
     @Operation(summary = "Add milestone to my job", description = "Add a milestone to an authenticated client's job")
     @ApiResponses(value = {
@@ -242,52 +173,6 @@ public class JobMilestoneController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (RuntimeException e) {
             log.error("Error creating milestone for job {}: {}", jobId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-    
-    @Operation(summary = "Get my job milestones", description = "Get all milestones for an authenticated client's job")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Milestones retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Authentication required"),
-        @ApiResponse(responseCode = "403", description = "Access denied - not your job"),
-        @ApiResponse(responseCode = "404", description = "Job not found")
-    })
-    @GetMapping("/my-jobs/{jobId}/milestones")
-    public ResponseEntity<List<JobMilestoneResponseDto>> getMyJobMilestones(
-            @Parameter(description = "ID of the job") @PathVariable Long jobId,
-            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
-        
-        log.info("GET /api/jobs/my-jobs/{}/milestones - Getting authenticated client's job milestones", jobId);
-        
-        // Check authentication
-        if (userIdHeader == null || userRole == null) {
-            log.warn("Authentication required for viewing job milestones");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        // Check authorization - only clients can view their job milestones
-        if (!"CLIENT".equalsIgnoreCase(userRole)) {
-            log.warn("Access denied: Only clients can view their job milestones. User role: {}", userRole);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        
-        try {
-            Long authenticatedUserId = Long.parseLong(userIdHeader);
-            log.info("Getting milestones for authenticated client userId: {}", authenticatedUserId);
-            
-            // TODO: Service should validate job ownership
-            List<JobMilestoneResponseDto> milestones = jobMilestoneService.getMilestonesByJobId(jobId);
-            log.info("Found {} milestones for authenticated client's job: {}", milestones.size(), jobId);
-            
-            return ResponseEntity.ok(milestones);
-        } catch (NumberFormatException e) {
-            log.error("Invalid user ID format: {}", userIdHeader);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (RuntimeException e) {
-            log.error("Error fetching milestones for job {}: {}", jobId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }

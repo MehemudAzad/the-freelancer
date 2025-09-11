@@ -1,0 +1,9 @@
+{
+  "title": "Backend API Development",
+  "description": "Develop RESTful APIs with authentication, user management, and data validation. Includes comprehensive testing and documentation.",
+  "amountCents": 250000,
+  "currency": "USD", 
+  "dueDate": "2024-02-15",
+  "orderIndex": 1,
+  "dod": "{\n  \"requirements\": [\n    \"All API endpoints implemented and tested\",\n    \"JWT authentication system working\",\n    \"Input validation on all endpoints\",\n    \"Swagger/OpenAPI documentation complete\",\n    \"Unit tests with 80%+ coverage\",\n    \"Postman collection provided\",\n    \"Database schema properly designed\",\n    \"Error handling implemented\"\n  ],\n  \"deliverables\": [\n    \"Complete backend source code\",\n    \"API documentation (Swagger)\",\n    \"Database migration scripts\",\n    \"Unit test suite\",\n    \"Deployment instructions\",\n    \"Postman collection for testing\"\n  ],\n  \"acceptanceCriteria\": [\n    \"All API endpoints return expected responses\",\n    \"Authentication prevents unauthorized access\",\n    \"Data validation works correctly\",\n    \"Performance tests pass (response time < 500ms)\",\n    \"Security scan shows no critical vulnerabilities\"\n  ]\n}"
+}

@@ -60,13 +60,10 @@ public class ProposalMilestoneController {
         try {
             Long authenticatedUserId = Long.parseLong(userIdHeader);
             
-            // Set the proposal ID
-            milestoneCreateDto.setProposalId(proposalId);
-            
             log.info("Adding milestone to proposal: {} by user: {}", proposalId, authenticatedUserId);
             
             // TODO: Service should validate proposal ownership
-            ProposalMilestoneResponseDto milestone = proposalMilestoneService.createMilestone(milestoneCreateDto);
+            ProposalMilestoneResponseDto milestone = proposalMilestoneService.createMilestone(proposalId, milestoneCreateDto);
             log.info("Milestone created successfully with ID: {}", milestone.getId());
             
             return ResponseEntity.status(HttpStatus.CREATED).body(milestone);

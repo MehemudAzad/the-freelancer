@@ -4,9 +4,11 @@ import com.thefreelancer.microservices.job_proposal.dto.ProposalMilestoneCreateD
 import com.thefreelancer.microservices.job_proposal.dto.ProposalMilestoneResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalMilestoneUpdateDto;
 import com.thefreelancer.microservices.job_proposal.model.ProposalMilestone;
+import com.thefreelancer.microservices.job_proposal.model.Proposal;
 import com.thefreelancer.microservices.job_proposal.mapper.ProposalMilestoneMapper;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalMilestoneRepository;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalRepository;
+import com.thefreelancer.microservices.job_proposal.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,17 +27,19 @@ public class ProposalMilestoneService {
     private final ProposalRepository proposalRepository;
     private final ProposalMilestoneMapper proposalMilestoneMapper;
     
-    public ProposalMilestoneResponseDto createMilestone(ProposalMilestoneCreateDto createDto) {
-        log.info("Creating milestone for proposal: {}", createDto.getProposalId());
+    public ProposalMilestoneResponseDto createMilestone(Long proposalId, ProposalMilestoneCreateDto createDto) {
+        log.info("Creating milestone for proposal: {}", proposalId);
         
         // Validate proposal exists
-        if (!proposalRepository.existsById(createDto.getProposalId())) {
-            throw new RuntimeException("Proposal not found with ID: " + createDto.getProposalId());
-        }
+        Proposal proposal = proposalRepository.findById(proposalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Proposal not found with ID: " + proposalId));
         
         // TODO: Add validation for proposal ownership by authenticated user
         
+        // Create milestone entity from DTO
         ProposalMilestone milestone = proposalMilestoneMapper.toEntity(createDto);
+        milestone.setProposal(proposal); // Set the proposal relationship
+        
         ProposalMilestone savedMilestone = proposalMilestoneRepository.save(milestone);
         
         log.info("Milestone created successfully with ID: {}", savedMilestone.getId());
@@ -48,7 +52,7 @@ public class ProposalMilestoneService {
         
         // Validate proposal exists
         if (!proposalRepository.existsById(proposalId)) {
-            throw new RuntimeException("Proposal not found with ID: " + proposalId);
+            throw new ResourceNotFoundException("Proposal not found with ID: " + proposalId);
         }
         
         // TODO: Add validation for proposal access by authenticated user
@@ -65,7 +69,7 @@ public class ProposalMilestoneService {
         log.info("Updating milestone: {}", milestoneId);
         
         ProposalMilestone existingMilestone = proposalMilestoneRepository.findById(milestoneId)
-                .orElseThrow(() -> new RuntimeException("Milestone not found with ID: " + milestoneId));
+                .orElseThrow(() -> new ResourceNotFoundException("Milestone not found with ID: " + milestoneId));
         
         // TODO: Add validation for milestone ownership by authenticated user
         
@@ -80,7 +84,7 @@ public class ProposalMilestoneService {
         log.info("Deleting milestone: {}", milestoneId);
         
         ProposalMilestone existingMilestone = proposalMilestoneRepository.findById(milestoneId)
-                .orElseThrow(() -> new RuntimeException("Milestone not found with ID: " + milestoneId));
+                .orElseThrow(() -> new ResourceNotFoundException("Milestone not found with ID: " + milestoneId));
         
         // TODO: Add validation for milestone ownership by authenticated user
         
@@ -93,7 +97,7 @@ public class ProposalMilestoneService {
         log.info("Fetching milestone: {}", milestoneId);
         
         ProposalMilestone milestone = proposalMilestoneRepository.findById(milestoneId)
-                .orElseThrow(() -> new RuntimeException("Milestone not found with ID: " + milestoneId));
+                .orElseThrow(() -> new ResourceNotFoundException("Milestone not found with ID: " + milestoneId));
         
         return proposalMilestoneMapper.toResponseDto(milestone);
     }
