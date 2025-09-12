@@ -17,8 +17,15 @@ public class EscrowCreateDto {
     @NotNull(message = "Currency is required")
     private String currency;
     
+    // Client's payment information
+    private String clientStripeCustomerId;  // Optional if clientEmail provided
+    
     @NotNull(message = "Payment method ID is required")
     private String paymentMethodId;
     
     private String description;
+    
+    // Optional: For clients who don't have a Stripe customer yet
+    private String clientEmail;
+    private String clientName;
 }

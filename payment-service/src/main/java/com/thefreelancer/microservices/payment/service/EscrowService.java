@@ -44,13 +44,37 @@ public class EscrowService {
         }
         
         try {
-            // Create Payment Intent with Stripe
+            String customerId = createDto.getClientStripeCustomerId();
+            
+            // Create customer if not provided
+            if (customerId == null && createDto.getClientEmail() != null) {
+                var customer = stripeService.createCustomer(
+                    createDto.getClientEmail(), 
+                    createDto.getClientName()
+                );
+                customerId = customer.getId();
+            }
+            
+            if (customerId == null) {
+                throw new IllegalArgumentException("Either clientStripeCustomerId or clientEmail must be provided");
+            }
+            
+            // Attach payment method to customer if needed
+            stripeService.attachPaymentMethodToCustomer(createDto.getPaymentMethodId(), customerId);
+            
+            // Create and charge the payment intent (money is now held)
             PaymentIntent paymentIntent = stripeService.createEscrowPaymentIntent(
                 createDto.getMilestoneId(),
                 createDto.getAmountCents(),
                 createDto.getCurrency(),
+                customerId,
                 createDto.getPaymentMethodId()
             );
+            
+            // Verify payment was successful
+            if (!"succeeded".equals(paymentIntent.getStatus())) {
+                throw new RuntimeException("Payment failed with status: " + paymentIntent.getStatus());
+            }
             
             // Create escrow record
             Escrow escrow = Escrow.builder()
@@ -58,7 +82,7 @@ public class EscrowService {
                 .milestoneId(createDto.getMilestoneId())
                 .paymentIntentId(paymentIntent.getId())
                 .amountCents(createDto.getAmountCents())
-                .currency(createDto.getCurrency())
+                .currency(createDto.getCurrency().toUpperCase())
                 .status(Escrow.EscrowStatus.HELD)
                 .build();
             
@@ -74,7 +98,7 @@ public class EscrowService {
                 "Escrow created for milestone: " + createDto.getMilestoneId()
             );
             
-            log.info("Escrow created successfully: {}", savedEscrow.getId());
+            log.info("Escrow created successfully with payment charged: {}", savedEscrow.getId());
             
             return EscrowResponseDto.builder()
                 .id(savedEscrow.getId())
@@ -90,7 +114,7 @@ public class EscrowService {
                 
         } catch (StripeException e) {
             log.error("Stripe error creating escrow: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to create escrow: " + e.getMessage());
+            throw new RuntimeException("Payment processing failed: " + e.getUserMessage());
         }
     }
     

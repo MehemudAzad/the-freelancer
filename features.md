@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 73 / 95 APIs Completed (76.8%)**
+## 📊 **Overall Progress: 82 / 95 APIs Completed (86.3%)**
 
-**Current Status: API Gateway Configured! Public Job Access + Contract Management Completed**
+**Current Status: Payment Service Integration Complete! Real Stripe payments with escrow and API Gateway routing**
 
 ---
 
@@ -150,31 +150,50 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ---
 
-## 💰 **Payment/Escrow Service APIs** (Port: 8085)
+## 💰 **Payment/Escrow Service APIs** (Port: 8087)
 
-### Escrow Management
-- [x] `POST /api/payments/escrow/fund` - Client funds milestone (Stripe) ✅ **COMPLETED**
-- [x] `POST /api/payments/escrow/milestone/{milestoneId}/release` - Release funds to freelancer ✅ **COMPLETED**
+### Escrow Management (Real Payment Collection!)
+- [x] `POST /api/payments/escrow/fund` - Client funds milestone with real Stripe payment (4242 test card) ✅ **COMPLETED**
+- [x] `POST /api/payments/escrow/{escrowId}/release` - Release funds to freelancer's connected account ✅ **COMPLETED**
 - [x] `POST /api/payments/escrow/refund` - Refund to client ✅ **COMPLETED**
 - [x] `GET /api/payments/escrow/milestone/{milestoneId}` - Get escrow status ✅ **COMPLETED**
 - [x] `GET /api/payments/escrow/status/{status}` - Get escrows by status ✅ **COMPLETED**
-- [x] `POST /api/payments/webhooks/stripe` - Stripe webhook handler (payment_intent.succeeded, payment_intent.payment_failed, transfer.created, transfer.reversed, transfer.updated, account.updated, charge.dispute.created) ✅ **COMPLETED**
+
+### Stripe Connected Accounts (Freelancer Onboarding)
+- [x] `POST /api/payments/accounts/create` - Create Stripe Express account for freelancer ✅ **COMPLETED**
+- [x] `GET /api/payments/accounts/{accountId}` - Get connected account details ✅ **COMPLETED**
+- [x] `POST /api/payments/accounts/{accountId}/onboarding-link` - Generate onboarding link ✅ **COMPLETED**
+
+### Webhook Integration (Stripe Events)
+- [x] `POST /api/payments/webhooks/stripe` - Stripe webhook handler ✅ **COMPLETED**
+- [x] `GET /api/payments/webhooks/stripe/health` - Webhook health check ✅ **COMPLETED**
+
+**Payment Flow Now Works With:**
+- ✅ Real Stripe test card (4242 4242 4242 4242)
+- ✅ Automatic payment collection and escrow holding
+- ✅ Platform fee calculation (5% default)
+- ✅ Freelancer payout to connected accounts
+- ✅ Full ledger tracking and audit trail
 
 ---
 
 ## 🔗 **API Gateway Configuration**
 
 ### Authentication & Routing
+
 - [x] **JWT Authentication**: Token validation and user context forwarding ✅ **COMPLETED**
 - [x] **Public Endpoints**: Configured for public job viewing without authentication ✅ **COMPLETED**  
 - [x] **Route Forwarding**: Requests routed to appropriate microservices ✅ **COMPLETED**
 - [x] **Swagger Integration**: Centralized API documentation ✅ **COMPLETED**
+- [x] **Payment Service Routing**: Added `/api/payments/**` routing to payment service (8087) ✅ **COMPLETED**
 
 ### Public Endpoints (No Auth Required)
+
 - [x] `GET /api/jobs/{id}` - Public job viewing ✅ **COMPLETED**
 - [x] `GET /api/jobs/search` - Public job search ✅ **COMPLETED**
 - [x] `GET /api/gigs/{id}` - Public gig viewing ✅ **COMPLETED**
 - [x] `GET /api/gigs/search` - Public gig search ✅ **COMPLETED**
+- [x] `POST /api/payments/webhooks/**` - Stripe webhooks (external access) ✅ **COMPLETED**
 - [x] Auth endpoints (`/api/auth/register`, `/api/auth/login`, etc.) ✅ **COMPLETED**
 
 ---

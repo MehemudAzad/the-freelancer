@@ -40,9 +40,9 @@ public class StripeService {
     }
     
     /**
-     * Create Payment Intent for escrow (hold money)
+     * Create Payment Intent for escrow (hold money) - FIXED VERSION
      */
-    public PaymentIntent createEscrowPaymentIntent(Long milestoneId, Long amountCents, String currency, String paymentMethodId) throws StripeException {
+    public PaymentIntent createEscrowPaymentIntent(Long milestoneId, Long amountCents, String currency, String customerId, String paymentMethodId) throws StripeException {
         log.info("Creating escrow payment intent for milestone: {} amount: {}", milestoneId, amountCents);
         
         Map<String, String> metadata = new HashMap<>();
@@ -52,18 +52,51 @@ public class StripeService {
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
             .setAmount(amountCents)
             .setCurrency(currency)
-            .setPaymentMethod(paymentMethodId)
-            .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.MANUAL)
-            .setConfirmationMethod(PaymentIntentCreateParams.ConfirmationMethod.MANUAL)
-            .setConfirm(true)
+            .setCustomer(customerId)  // Client's Stripe customer ID
+            .setPaymentMethod(paymentMethodId)  // Client's payment method
+            .setConfirmationMethod(PaymentIntentCreateParams.ConfirmationMethod.AUTOMATIC)
+            .setConfirm(true)  // Charge immediately
+            .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.AUTOMATIC)  // Capture the payment
             .putAllMetadata(metadata)
             .build();
         
         PaymentIntent intent = PaymentIntent.create(params);
-        log.info("Created payment intent: {}", intent.getId());
+        log.info("Created and charged payment intent: {}", intent.getId());
         return intent;
     }
-    
+
+    /**
+     * Create a customer for the client if they don't have one
+     */
+    public Customer createCustomer(String email, String name) throws StripeException {
+        log.info("Creating Stripe customer for: {}", email);
+        
+        CustomerCreateParams params = CustomerCreateParams.builder()
+            .setEmail(email)
+            .setName(name)
+            .build();
+        
+        Customer customer = Customer.create(params);
+        log.info("Created customer: {}", customer.getId());
+        return customer;
+    }
+
+    /**
+     * Attach payment method to customer
+     */
+    public PaymentMethod attachPaymentMethodToCustomer(String paymentMethodId, String customerId) throws StripeException {
+        log.info("Attaching payment method {} to customer {}", paymentMethodId, customerId);
+        
+        PaymentMethod paymentMethod = PaymentMethod.retrieve(paymentMethodId);
+        PaymentMethodAttachParams params = PaymentMethodAttachParams.builder()
+            .setCustomer(customerId)
+            .build();
+        
+        PaymentMethod attachedPm = paymentMethod.attach(params);
+        log.info("Attached payment method successfully");
+        return attachedPm;
+    }
+
     /**
      * Capture payment intent (when funding escrow)
      */
