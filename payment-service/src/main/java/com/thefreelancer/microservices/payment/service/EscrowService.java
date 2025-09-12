@@ -130,10 +130,8 @@ public class EscrowService {
         }
         
         try {
-            // Capture the payment intent first (if not already captured)
-            stripeService.capturePaymentIntent(escrow.getPaymentIntentId());
-            
-            // Transfer to freelancer
+            // PaymentIntent was already captured during escrow creation
+            // Now just transfer to freelancer
             Transfer transfer = stripeService.releaseEscrowToFreelancer(
                 destinationAccountId,
                 escrow.getAmountCents(),
