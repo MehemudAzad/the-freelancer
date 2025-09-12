@@ -27,8 +27,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         "/api/auth/refresh",
         "/api/gigs/search",  // Public search
         "/api/jobs/search",  // Public job search
-
-        "/api/contracts",     // Public contract search
+        "/api/payments/webhooks", // Stripe webhooks (external)
         "/swagger-ui",       // Swagger UI
         "/api-docs",         // OpenAPI docs
         "/v3/api-docs"       // OpenAPI v3 docs
@@ -123,6 +122,18 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        // Special case: Payment webhook endpoints are public (for external services like Stripe)
+        if (requestURI.startsWith("/api/payments/webhooks/")) {
+            return true;
+        }
+
+        // Special case: Webhook health check endpoints are public
+        if ("GET".equals(method) && requestURI.matches("/api/payments/webhooks/.*/health")) {
+            return true;
+        }
+
+        // Add specific public contract endpoints if needed in the future
+        // For now, all contract endpoints require authentication
         
         return false;
     }

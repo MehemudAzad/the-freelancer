@@ -22,7 +22,6 @@ public class ContractResponseDto {
     private Long clientId;
     private Long freelancerId;
     private BigInteger totalAmountCents;
-    private String currency;
     private Contract.ContractStatus status;
     private LocalDate startDate;
     private LocalDate endDate;

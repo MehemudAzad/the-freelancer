@@ -3,7 +3,9 @@ package com.thefreelancer.microservices.job_proposal.service;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalUpdateDto;
+import com.thefreelancer.microservices.job_proposal.model.Job;
 import com.thefreelancer.microservices.job_proposal.model.Proposal;
+import com.thefreelancer.microservices.job_proposal.repository.JobRepository;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalRepository;
 import com.thefreelancer.microservices.job_proposal.mapper.ProposalMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class ProposalService {
     
     private final ProposalRepository proposalRepository;
+    private final JobRepository jobRepository;
     private final ProposalMapper proposalMapper;
     
     @Transactional(readOnly = true)
@@ -105,6 +108,25 @@ public class ProposalService {
     @Transactional(readOnly = true)
     public List<ProposalResponseDto> getProposalsForJob(Long jobId) {
         log.info("Fetching proposals for job: {}", jobId);
+        
+        List<Proposal> proposals = proposalRepository.findByJobIdOrderByCreatedAtDesc(jobId);
+        
+        return proposals.stream()
+                .map(proposalMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+    
+    @Transactional(readOnly = true)
+    public List<ProposalResponseDto> getProposalsForJobByClient(Long jobId, Long clientId) {
+        log.info("Fetching proposals for job: {} by client: {}", jobId, clientId);
+        
+        // First validate that the client owns the job
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        
+        if (!job.getClientId().equals(clientId)) {
+            throw new RuntimeException("Access denied: You can only view proposals for your own jobs");
+        }
         
         List<Proposal> proposals = proposalRepository.findByJobIdOrderByCreatedAtDesc(jobId);
         

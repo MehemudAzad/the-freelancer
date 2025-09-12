@@ -24,8 +24,6 @@ public class ContractMilestoneCreateDto {
     @Positive(message = "Amount must be positive")
     private BigInteger amountCents;
     
-    private String currency = "USD";
-    
     private LocalDate dueDate;
     
     private Integer orderIndex;

@@ -19,7 +19,6 @@ public class ContractMilestoneResponseDto {
     private String title;
     private String description;
     private BigInteger amountCents;
-    private String currency;
     private ContractMilestone.MilestoneStatus status;
     private LocalDate dueDate;
     private Integer orderIndex;

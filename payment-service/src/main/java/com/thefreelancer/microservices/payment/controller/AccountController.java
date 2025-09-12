@@ -5,6 +5,11 @@ import com.stripe.model.Account;
 import com.stripe.model.AccountLink;
 import com.thefreelancer.microservices.payment.dto.ConnectedAccountDto;
 import com.thefreelancer.microservices.payment.service.StripeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/payments/accounts")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Account Management", description = "APIs for managing Stripe connected accounts for freelancers")
 public class AccountController {
 
     private final StripeService stripeService;
@@ -23,6 +29,15 @@ public class AccountController {
     /**
      * Create Stripe Express account for freelancer
      */
+    @Operation(
+        summary = "Create Stripe Express account",
+        description = "Creates a Stripe Express connected account for a freelancer to receive payments"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Connected account created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request data"),
+        @ApiResponse(responseCode = "500", description = "Stripe API error")
+    })
     @PostMapping("/create")
     public ResponseEntity<ConnectedAccountDto> createConnectedAccount(
             @Valid @RequestBody ConnectedAccountDto accountDto) {

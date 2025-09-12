@@ -5,6 +5,11 @@ import com.thefreelancer.microservices.payment.dto.EscrowResponseDto;
 import com.thefreelancer.microservices.payment.dto.RefundCreateDto;
 import com.thefreelancer.microservices.payment.model.Escrow;
 import com.thefreelancer.microservices.payment.service.EscrowService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +23,7 @@ import java.util.List;
 @RequestMapping("/api/payments/escrow")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Escrow Management", description = "APIs for managing escrow funds, releases, and refunds")
 public class EscrowController {
     
     private final EscrowService escrowService;
@@ -25,6 +31,15 @@ public class EscrowController {
     /**
      * Create escrow (fund milestone)
      */
+    @Operation(
+        summary = "Create escrow for milestone funding",
+        description = "Creates an escrow account and charges the client's payment method to hold funds for a milestone"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Escrow created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request data"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PostMapping("/fund")
     public ResponseEntity<EscrowResponseDto> createEscrow(@Valid @RequestBody EscrowCreateDto createDto) {
         log.info("Creating escrow for milestone: {}", createDto.getMilestoneId());
@@ -44,10 +59,19 @@ public class EscrowController {
     /**
      * Release escrow to freelancer (when milestone is accepted)
      */
+    @Operation(
+        summary = "Release escrow funds",
+        description = "Releases held escrow funds to the freelancer's connected Stripe account when milestone is accepted"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Escrow released successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request or escrow not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PostMapping("/{escrowId}/release")
     public ResponseEntity<Void> releaseEscrow(
-            @PathVariable String escrowId,
-            @RequestParam String destinationAccountId) {
+            @Parameter(description = "Escrow ID to release") @PathVariable String escrowId,
+            @Parameter(description = "Stripe connected account ID of the freelancer") @RequestParam String destinationAccountId) {
         log.info("Releasing escrow: {} to account: {}", escrowId, destinationAccountId);
         
         try {

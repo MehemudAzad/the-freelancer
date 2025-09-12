@@ -85,6 +85,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `PUT /api/proposals/my-proposals/{proposalId}` - Update MY proposal ✅ **COMPLETED**
 - [x] `DELETE /api/proposals/my-proposals/{proposalId}` - Withdraw MY proposal ✅ **COMPLETED**
 - [x] `GET /api/proposals/{proposalId}` - View proposal details (job owner + proposal owner) ✅ **COMPLETED**
+- [x] `GET /api/proposals/job/{jobId}` - Get all proposals for a job (CLIENT role required) ✅ **COMPLETED**
 
 ### Proposal Milestones
 - [x] `POST /api/proposals/{proposalId}/milestones` - Add milestone to proposal ✅ **COMPLETED**
@@ -93,13 +94,13 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `DELETE /api/proposals/{proposalId}/milestones/{milestoneId}` - Remove milestone ✅ **COMPLETED**
 
 ### Contract Management (New Architecture!)
-- [x] `POST /api/contracts` - Create contract from accepted proposal ✅ **COMPLETED**
+- [x] `POST /api/contracts` - Create contract from accepted proposal (auto-creates milestones from proposal) ✅ **COMPLETED**
 - [x] `GET /api/contracts/{contractId}` - Get contract details ✅ **COMPLETED**
 - [x] `GET /api/contracts/my-contracts` - Get user's contracts (CLIENT/FREELANCER) ✅ **COMPLETED**
 - [x] `PUT /api/contracts/{contractId}/status` - Update contract status (active/paused/completed) ✅ **COMPLETED**
 
 ### Contract Milestones
-- [x] `POST /api/contracts/{contractId}/milestones` - Add milestone to active contract ✅ **COMPLETED**
+- [x] ~~`POST /api/contracts/{contractId}/milestones`~~ - ❌ **DEPRECATED** (Milestones auto-created from proposal)
 - [x] `GET /api/contracts/{contractId}/milestones` - Get contract milestones ✅ **COMPLETED**
 - [x] `PUT /api/milestones/{milestoneId}/submit` - Freelancer submits milestone deliverable ✅ **COMPLETED**
 - [x] `PUT /api/milestones/{milestoneId}/accept` - Client accepts milestone ✅ **COMPLETED**

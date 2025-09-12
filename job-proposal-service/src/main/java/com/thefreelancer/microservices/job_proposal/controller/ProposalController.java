@@ -261,4 +261,49 @@ public class ProposalController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
+    
+    @Operation(summary = "Get all proposals for a job", description = "Get all proposals submitted for a specific job (CLIENT access)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Proposals retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Access denied - CLIENT role required"),
+        @ApiResponse(responseCode = "404", description = "Job not found")
+    })
+    @GetMapping("/job/{jobId}")
+    public ResponseEntity<List<ProposalResponseDto>> getProposalsForJob(
+            @Parameter(description = "ID of the job to get proposals for") @PathVariable Long jobId,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.info("GET /api/proposals/job/{} - Fetching all proposals for job", jobId);
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for viewing job proposals");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        // Check authorization - only clients can view proposals for their jobs
+        if (!"CLIENT".equalsIgnoreCase(userRole)) {
+            log.warn("Access denied: Only clients can view proposals for jobs. User role: {}", userRole);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        try {
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
+            
+            // Get proposals for the job (service will validate job ownership)
+            List<ProposalResponseDto> proposals = proposalService.getProposalsForJobByClient(jobId, authenticatedUserId);
+            
+            log.info("Found {} proposals for job: {} for client: {}", proposals.size(), jobId, authenticatedUserId);
+            return ResponseEntity.ok(proposals);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            log.error("Error fetching proposals for job {}: {}", jobId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

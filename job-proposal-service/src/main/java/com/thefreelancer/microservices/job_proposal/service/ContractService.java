@@ -22,12 +22,16 @@ public class ContractService {
     private final ContractMilestoneRepository contractMilestoneRepository;
     private final JobRepository jobRepository;
     private final ProposalRepository proposalRepository;
+    private final ProposalMilestoneRepository proposalMilestoneRepository;
     private final ObjectMapper objectMapper;
 
     /**
      * Create a new contract from an accepted proposal
      */
+    @Transactional
     public ContractResponseDto createContract(ContractCreateDto request) {
+        log.info("Creating contract from proposal: {}", request.getProposalId());
+        
         // Validate the job and proposal exist and match
         Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + request.getJobId()));
@@ -45,21 +49,27 @@ public class ContractService {
             throw new IllegalStateException("Cannot create contract for job that is not open");
         }
         
-        // Verify proposal is accepted
-        // if (proposal.getStatus() != Proposal.ProposalStatus.ACCEPTED) {
-        //     throw new IllegalStateException("Cannot create contract for proposal that is not accepted");
-        // }
-        
         // Create the contract
         Contract contract = new Contract();
         contract.setJob(job);
         contract.setProposal(proposal);
         contract.setClientId(job.getClientId());
         contract.setFreelancerId(proposal.getFreelancerId());
+        
+        // Set total amount from the request or fallback to proposal total
+        if (request.getTotalAmountCents() != null) {
+            contract.setTotalAmountCents(java.math.BigInteger.valueOf(request.getTotalAmountCents()));
+        } else {
+            contract.setTotalAmountCents(proposal.getTotalCents());
+        }
+        
+        // Currency is always USD - set explicitly
+        contract.setCurrency("USD");
+        
         contract.setStatus(Contract.ContractStatus.ACTIVE);
-        contract.setStartDate(LocalDate.now());
+        contract.setStartDate(request.getStartDate() != null ? request.getStartDate() : LocalDate.now());
         contract.setEndDate(request.getEndDate());
-        contract.setPaymentModel(Contract.PaymentModel.FIXED); // Default to fixed, can be updated later
+        contract.setPaymentModel(Contract.PaymentModel.FIXED);
         
         // Set terms as JSON
         if (request.getTerms() != null) {
@@ -70,13 +80,47 @@ public class ContractService {
             }
         }
         
+        // Save the contract first
         Contract savedContract = contractRepository.save(contract);
+        log.info("Contract created with ID: {}", savedContract.getId());
+        
+        // Copy milestones from proposal to contract
+        List<ProposalMilestone> proposalMilestones = proposalMilestoneRepository.findByProposalIdOrderByOrderIndexAsc(proposal.getId());
+        
+        if (!proposalMilestones.isEmpty()) {
+            log.info("Copying {} milestones from proposal to contract", proposalMilestones.size());
+            
+            List<ContractMilestone> contractMilestones = proposalMilestones.stream()
+                .map(proposalMilestone -> {
+                    ContractMilestone contractMilestone = new ContractMilestone();
+                    contractMilestone.setContract(savedContract);
+                    contractMilestone.setTitle(proposalMilestone.getTitle());
+                    contractMilestone.setDescription(proposalMilestone.getDescription());
+                    contractMilestone.setAmountCents(proposalMilestone.getAmountCents());
+                    contractMilestone.setCurrency("USD"); // Always USD
+                    contractMilestone.setDueDate(proposalMilestone.getDueDate());
+                    contractMilestone.setOrderIndex(proposalMilestone.getOrderIndex());
+                    contractMilestone.setStatus(ContractMilestone.MilestoneStatus.PENDING);
+                    return contractMilestone;
+                })
+                .collect(java.util.stream.Collectors.toList());
+            
+            contractMilestoneRepository.saveAll(contractMilestones);
+            log.info("Successfully created {} contract milestones", contractMilestones.size());
+        } else {
+            log.warn("No milestones found in proposal {} - contract created without milestones", proposal.getId());
+        }
+        
+        // Update proposal status to CONTRACTED
+        proposal.setStatus(Proposal.ProposalStatus.CONTRACTED);
+        proposalRepository.save(proposal);
         
         // Update job status to IN_PROGRESS
         job.setStatus(Job.JobStatus.IN_PROGRESS);
         jobRepository.save(job);
         
-        return convertToResponseDto(savedContract, false);
+        log.info("Contract creation completed successfully: {}", savedContract.getId());
+        return convertToResponseDto(savedContract, true); // Include milestones in response
     }    /**
      * Get contract by ID
      */
@@ -84,8 +128,11 @@ public class ContractService {
         Contract contract = contractRepository.findById(contractId)
             .orElseThrow(() -> new IllegalArgumentException("Contract not found"));
 
+        // Convert String userId to Long for comparison
+        Long userIdLong = Long.parseLong(userId);
+
         // Check access - only client or freelancer can view
-        if (!contract.getClientId().equals(userId) && !contract.getFreelancerId().equals(userId)) {
+        if (!contract.getClientId().equals(userIdLong) && !contract.getFreelancerId().equals(userIdLong)) {
             throw new IllegalArgumentException("Access denied");
         }
 
@@ -111,9 +158,14 @@ public class ContractService {
 
         Contract contract = contractRepository.findById(contractId)
             .orElseThrow(() -> new IllegalArgumentException("Contract not found"));
-
-        // Check access - only client or freelancer can update
-        if (!contract.getClientId().equals(userId) && !contract.getFreelancerId().equals(userId)) {
+        log.info("user id {}", userId);
+        log.info("Fetched contract: {} with current status: {} clientId: {}", contractId, contract.getStatus(), contract.getClientId());
+        
+        // Convert String userId to Long for comparison
+        Long userIdLong = Long.parseLong(userId);
+        
+        // Check access - only client can update
+        if (!contract.getClientId().equals(userIdLong)) {
             throw new IllegalArgumentException("Access denied");
         }
 
@@ -139,7 +191,6 @@ public class ContractService {
         dto.setClientId(contract.getClientId());
         dto.setFreelancerId(contract.getFreelancerId());
         dto.setTotalAmountCents(contract.getTotalAmountCents());
-        dto.setCurrency(contract.getCurrency());
         dto.setStatus(contract.getStatus());
         dto.setStartDate(contract.getStartDate());
         dto.setEndDate(contract.getEndDate());
@@ -175,7 +226,6 @@ public class ContractService {
         dto.setTitle(milestone.getTitle());
         dto.setDescription(milestone.getDescription());
         dto.setAmountCents(milestone.getAmountCents());
-        dto.setCurrency(milestone.getCurrency());
         dto.setStatus(milestone.getStatus());
         dto.setDueDate(milestone.getDueDate());
         dto.setOrderIndex(milestone.getOrderIndex());

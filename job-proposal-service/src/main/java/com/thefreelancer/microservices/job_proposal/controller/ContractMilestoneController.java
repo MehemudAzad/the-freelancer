@@ -27,6 +27,9 @@ public class ContractMilestoneController {
 
     private final ContractMilestoneService contractMilestoneService;
 
+    // DEPRECATED: Milestones are now automatically created from proposal milestones when contract is created
+    // This endpoint is no longer needed as of the new contract creation flow
+    /*
     @Operation(summary = "Add milestone to contract")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Milestone added successfully"),
@@ -54,6 +57,7 @@ public class ContractMilestoneController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    */
 
     @Operation(summary = "Get contract milestones")
     @ApiResponses(value = {

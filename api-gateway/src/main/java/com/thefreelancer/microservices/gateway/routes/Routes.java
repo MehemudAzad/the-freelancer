@@ -15,6 +15,7 @@ public class Routes {
 	private static final String AUTH_SERVICE_URL = "http://localhost:8081";
 	private static final String GIG_SERVICE_URL = "http://localhost:8082";
 	private static final String JOB_PROPOSAL_SERVICE_URL = "http://localhost:8083";
+	private static final String PAYMENT_SERVICE_URL = "http://localhost:8087";
 
 	@Bean
 	public RouterFunction<ServerResponse> authServiceRoute() {
@@ -46,6 +47,13 @@ public class Routes {
 				.build();
 			}
 
+	@Bean
+	public RouterFunction<ServerResponse> paymentServiceRoute() {
+		return GatewayRouterFunctions.route("payment-service")
+				.route(RequestPredicates.path("/api/payments/**"), this::forwardToPaymentService)
+				.build();
+	}
+
 	
 	private ServerResponse forwardToAuthService(ServerRequest request) {
 		return forwardWithUserContext(request, AUTH_SERVICE_URL);
@@ -57,6 +65,10 @@ public class Routes {
 
 	private ServerResponse forwardToJobProposalService(ServerRequest request) {
 		return forwardWithUserContext(request, JOB_PROPOSAL_SERVICE_URL);
+	}
+
+	private ServerResponse forwardToPaymentService(ServerRequest request) {
+		return forwardWithUserContext(request, PAYMENT_SERVICE_URL);
 	}
 
 	private ServerResponse forwardWithUserContext(ServerRequest request, String targetUrl) {

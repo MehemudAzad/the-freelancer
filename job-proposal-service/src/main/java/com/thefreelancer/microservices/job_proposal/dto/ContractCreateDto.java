@@ -1,6 +1,7 @@
 package com.thefreelancer.microservices.job_proposal.dto;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,10 @@ public class ContractCreateDto {
     
     @NotNull(message = "Proposal ID is required")
     private Long proposalId;
+    
+    @NotNull(message = "Total amount is required")
+    @Positive(message = "Total amount must be positive")
+    private Long totalAmountCents;
     
     private LocalDate startDate;
     private LocalDate endDate;

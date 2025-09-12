@@ -4,6 +4,11 @@ import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.*;
 import com.stripe.net.Webhook;
 import com.thefreelancer.microservices.payment.service.WebhookService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/payments/webhooks")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Webhooks", description = "APIs for handling external webhook events from payment providers")
 public class WebhookController {
 
     private final WebhookService webhookService;
@@ -25,10 +31,19 @@ public class WebhookController {
     /**
      * Handle Stripe webhook events
      */
+    @Operation(
+        summary = "Handle Stripe webhook events",
+        description = "Receives and processes webhook events from Stripe for payment status updates"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Webhook processed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid signature or payload"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PostMapping("/stripe")
     public ResponseEntity<String> handleStripeWebhook(
-            @RequestBody String payload,
-            @RequestHeader("Stripe-Signature") String sigHeader) {
+            @Parameter(description = "Webhook payload from Stripe") @RequestBody String payload,
+            @Parameter(description = "Stripe signature header for verification") @RequestHeader("Stripe-Signature") String sigHeader) {
         
         log.info("Received Stripe webhook with signature: {}", sigHeader);
         
