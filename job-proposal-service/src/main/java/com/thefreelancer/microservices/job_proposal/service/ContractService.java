@@ -2,6 +2,8 @@ package com.thefreelancer.microservices.job_proposal.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thefreelancer.microservices.job_proposal.dto.*;
+import com.thefreelancer.microservices.job_proposal.dto.workspace.RoomCreateDto;
+import com.thefreelancer.microservices.job_proposal.dto.workspace.RoomResponseDto;
 import com.thefreelancer.microservices.job_proposal.exception.ResourceNotFoundException;
 import com.thefreelancer.microservices.job_proposal.model.*;
 import com.thefreelancer.microservices.job_proposal.repository.*;
@@ -24,6 +26,7 @@ public class ContractService {
     private final ProposalRepository proposalRepository;
     private final ProposalMilestoneRepository proposalMilestoneRepository;
     private final ObjectMapper objectMapper;
+    private final WorkspaceClient workspaceClient;
 
     /**
      * Create a new contract from an accepted proposal
@@ -118,6 +121,25 @@ public class ContractService {
         // Update job status to IN_PROGRESS
         job.setStatus(Job.JobStatus.IN_PROGRESS);
         jobRepository.save(job);
+        
+        // Create workspace room for the contract
+        try {
+            RoomCreateDto roomCreateDto = RoomCreateDto.builder()
+                .contractId(savedContract.getId())
+                .jobTitle(job.getTitle())
+                .clientId(savedContract.getClientId().toString())
+                .freelancerId(savedContract.getFreelancerId().toString())
+                .build();
+            
+            RoomResponseDto roomResponse = workspaceClient.createRoom(roomCreateDto);
+            log.info("Successfully created workspace room {} for contract {}", 
+                    roomResponse.getId(), savedContract.getId());
+        } catch (Exception e) {
+            log.error("Failed to create workspace room for contract {}: {}", 
+                    savedContract.getId(), e.getMessage(), e);
+            // Don't fail the contract creation if room creation fails
+            // The room can be created manually later if needed
+        }
         
         log.info("Contract creation completed successfully: {}", savedContract.getId());
         return convertToResponseDto(savedContract, true); // Include milestones in response

@@ -17,17 +17,9 @@ public interface FileRepository extends JpaRepository<File, Long> {
     @Query("SELECT f FROM File f WHERE f.room.id = :roomId ORDER BY f.createdAt DESC")
     Page<File> findByRoomIdOrderByCreatedAtDesc(@Param("roomId") Long roomId, Pageable pageable);
     
-    @Query("SELECT f FROM File f WHERE f.room.id = :roomId AND f.category = :category ORDER BY f.createdAt DESC")
-    Page<File> findByRoomIdAndCategoryOrderByCreatedAtDesc(
-        @Param("roomId") Long roomId, 
-        @Param("category") File.FileCategory category, 
-        Pageable pageable
-    );
-    
     @Query("SELECT f FROM File f WHERE f.room.id = :roomId AND " +
            "(LOWER(f.filename) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(f.originalFilename) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(f.description) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "LOWER(f.originalFilename) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "ORDER BY f.createdAt DESC")
     Page<File> findByRoomIdAndSearchOrderByCreatedAtDesc(
         @Param("roomId") Long roomId, 

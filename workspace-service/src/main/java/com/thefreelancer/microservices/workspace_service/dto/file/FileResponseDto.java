@@ -1,6 +1,5 @@
 package com.thefreelancer.microservices.workspace_service.dto.file;
 
-import com.thefreelancer.microservices.workspace_service.model.File;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,10 +18,12 @@ public class FileResponseDto {
     private String filename;
     private String originalFilename;
     private String url;
+    private String thumbnailUrl;
+    private String cloudinaryPublicId;
+    private String cloudinaryResourceType;
     private String contentType;
     private Long fileSize;
-    private File.FileCategory category;
-    private String description;
+    private Long milestoneId;
     private String checksum;
     private LocalDateTime createdAt;
 }

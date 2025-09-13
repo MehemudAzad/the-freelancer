@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final RoomRepository roomRepository;
     private final MessageMapper messageMapper;
+    private final SimpMessagingTemplate messagingTemplate;
     
     @Transactional
     public MessageResponseDto sendMessage(String roomId, String senderId, MessageCreateDto createDto) {
@@ -56,11 +58,19 @@ public class MessageService {
         
         Message savedMessage = messageRepository.save(message);
         
-        // TODO: Publish WebSocket event for real-time updates
-        // TODO: Send push notification if other user is offline
+        // Convert to response DTO
+        MessageResponseDto messageResponse = messageMapper.toResponseDto(savedMessage);
+        
+        // Publish WebSocket event for real-time updates
+        try {
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/messages", messageResponse);
+            log.debug("Broadcasted message {} to WebSocket topic for room {}", savedMessage.getId(), roomId);
+        } catch (Exception e) {
+            log.error("Failed to broadcast message via WebSocket: {}", e.getMessage(), e);
+        }
         
         log.info("Message sent successfully with ID: {}", savedMessage.getId());
-        return messageMapper.toResponseDto(savedMessage);
+        return messageResponse;
     }
     
     @Transactional(readOnly = true)
@@ -231,6 +241,91 @@ public class MessageService {
         
         log.info("System message created with ID: {}", savedMessage.getId());
         return messageMapper.toResponseDto(savedMessage);
+    }
+    
+    // ===== REAL-TIME CHAT METHODS =====
+    
+    public void sendTypingIndicator(String roomId, TypingStatusDto typingStatus) {
+        log.debug("Broadcasting typing indicator for user {} in room {}", typingStatus.getUserId(), roomId);
+        
+        // Validate room access
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
+            .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
+        validateRoomAccess(room, typingStatus.getUserId());
+        
+        // Set timestamp
+        typingStatus.setTimestamp(System.currentTimeMillis());
+        
+        // Broadcast via WebSocket
+        try {
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/typing", typingStatus);
+            log.debug("Broadcasted typing indicator for user {} in room {}", typingStatus.getUserId(), roomId);
+        } catch (Exception e) {
+            log.error("Failed to broadcast typing indicator: {}", e.getMessage(), e);
+        }
+    }
+    
+    @Transactional
+    public void markMessagesAsRead(String roomId, List<String> messageIds, String userId) {
+        log.info("Marking {} messages as read for user {} in room {}", messageIds.size(), userId, roomId);
+        
+        // Validate room access
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
+            .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
+        validateRoomAccess(room, userId);
+        
+        // For each message, broadcast read receipt
+        for (String messageId : messageIds) {
+            try {
+                // Verify message exists and belongs to this room
+                Message message = messageRepository.findById(messageId)
+                    .orElseThrow(() -> new IllegalArgumentException("Message not found: " + messageId));
+                
+                if (!message.getRoomId().equals(roomId)) {
+                    throw new IllegalArgumentException("Message does not belong to this room");
+                }
+                
+                // Don't mark own messages as read
+                if (message.getSenderId().equals(userId)) {
+                    continue;
+                }
+                
+                // Broadcast read receipt via WebSocket
+                MessageReadReceiptDto readReceipt = MessageReadReceiptDto.builder()
+                    .messageId(messageId)
+                    .userId(userId)
+                    .readAt(LocalDateTime.now())
+                    .build();
+                
+                messagingTemplate.convertAndSend("/topic/room/" + roomId + "/read", readReceipt);
+                log.debug("Broadcasted read receipt for message {} by user {}", messageId, userId);
+                
+            } catch (Exception e) {
+                log.error("Failed to process read receipt for message {}: {}", messageId, e.getMessage(), e);
+            }
+        }
+    }
+    
+    @Transactional(readOnly = true)
+    public long getUnreadMessageCount(String roomId, String userId) {
+        log.debug("Getting unread message count for user {} in room {}", userId, roomId);
+        
+        // Validate room access
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
+            .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
+        validateRoomAccess(room, userId);
+        
+        // For now, return 0 as we don't have read tracking in database yet
+        // In a full implementation, you would track read receipts in a separate table
+        // and count messages sent after the user's last read timestamp
+        
+        // Example implementation:
+        // return messageRepository.countUnreadMessages(roomId, userId, lastReadTimestamp);
+        
+        return 0L; // Placeholder
     }
     
     private void validateRoomAccess(Room room, String userId) {

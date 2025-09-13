@@ -41,7 +41,7 @@ public class Room {
     private List<Message> messages;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<WorkspaceFile> files;
+    private List<File> files;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<WorkspaceTask> tasks;

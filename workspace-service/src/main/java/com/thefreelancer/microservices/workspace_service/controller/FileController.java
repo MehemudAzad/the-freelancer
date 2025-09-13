@@ -1,9 +1,9 @@
 package com.thefreelancer.microservices.workspace_service.controller;
 
+import com.thefreelancer.microservices.workspace_service.dto.file.FileMultipartUploadDto;
 import com.thefreelancer.microservices.workspace_service.dto.file.FileResponseDto;
 import com.thefreelancer.microservices.workspace_service.dto.file.FileUpdateDto;
 import com.thefreelancer.microservices.workspace_service.dto.file.FileUploadDto;
-import com.thefreelancer.microservices.workspace_service.model.File;
 import com.thefreelancer.microservices.workspace_service.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,8 +15,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Slf4j
 @RestController
@@ -43,20 +47,41 @@ public class FileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
+    @PostMapping(value = "/multipart", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload file to room (Multipart)", description = "Upload a new file to a workspace room using multipart form data")
+    @ApiResponse(responseCode = "201", description = "File uploaded successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid file or file too large")
+    @ApiResponse(responseCode = "404", description = "Room not found")
+    public ResponseEntity<FileResponseDto> uploadFileMultipart(
+            @Parameter(description = "Room ID") @PathVariable Long roomId,
+            @Parameter(description = "File to upload") @RequestParam("file") MultipartFile file,
+            HttpServletRequest request) throws IOException {
+        
+        Long uploaderId = extractUserIdFromRequest(request);
+        log.info("Multipart file upload request for room {} by user {}", roomId, uploaderId);
+        
+        // Create DTO
+        FileMultipartUploadDto uploadDto = FileMultipartUploadDto.builder()
+            .file(file)
+            .build();
+        
+        FileResponseDto response = fileService.uploadFileToCloudinary(roomId, uploaderId, uploadDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    
     @GetMapping
     @Operation(summary = "Get room files", description = "Get paginated list of files in a room with optional filtering")
     @ApiResponse(responseCode = "200", description = "Files retrieved successfully")
     @ApiResponse(responseCode = "404", description = "Room not found")
     public ResponseEntity<Page<FileResponseDto>> getRoomFiles(
             @Parameter(description = "Room ID") @PathVariable Long roomId,
-            @Parameter(description = "Filter by file category") @RequestParam(required = false) File.FileCategory category,
-            @Parameter(description = "Search in filename and description") @RequestParam(required = false) String search,
+            @Parameter(description = "Search in filename") @RequestParam(required = false) String search,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting files for room {}, category: {}, search: {}", roomId, category, search);
+        log.debug("Getting files for room {}, search: {}", roomId, search);
         
-        Page<FileResponseDto> files = fileService.getRoomFiles(roomId, category, search, page, size);
+        Page<FileResponseDto> files = fileService.getRoomFiles(roomId, search, page, size);
         return ResponseEntity.ok(files);
     }
     

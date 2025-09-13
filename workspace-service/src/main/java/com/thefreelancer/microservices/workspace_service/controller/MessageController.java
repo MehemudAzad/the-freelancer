@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/workspaces/rooms")
 @RequiredArgsConstructor
@@ -231,6 +233,134 @@ public class MessageController {
         } catch (RuntimeException e) {
             log.error("Error searching messages in room {}: {}", roomId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    // ===== REAL-TIME CHAT APIS =====
+    
+    @Operation(summary = "Send typing indicator", description = "Send typing indicator to room participants")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Typing indicator sent successfully"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Access denied - not a room participant"),
+        @ApiResponse(responseCode = "404", description = "Room not found")
+    })
+    @PostMapping("/{roomId}/typing")
+    public ResponseEntity<Void> sendTypingIndicator(
+            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
+            @Valid @RequestBody TypingStatusDto typingStatus,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.debug("POST /api/workspaces/rooms/{}/typing - Sending typing indicator", roomId);
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for typing indicators");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            String authenticatedUserId = userIdHeader;
+            typingStatus.setUserId(authenticatedUserId);
+            typingStatus.setRoomId(roomId);
+            
+            // Broadcast typing indicator via WebSocket
+            messageService.sendTypingIndicator(roomId, typingStatus);
+            
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid typing indicator request for room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            log.error("Error sending typing indicator to room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    @Operation(summary = "Mark messages as read", description = "Mark messages as read and send read receipts")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Messages marked as read successfully"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Access denied - not a room participant"),
+        @ApiResponse(responseCode = "404", description = "Room or messages not found")
+    })
+    @PostMapping("/{roomId}/read")
+    public ResponseEntity<Void> markMessagesAsRead(
+            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
+            @Parameter(description = "Message IDs to mark as read") @RequestBody List<String> messageIds,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.info("POST /api/workspaces/rooms/{}/read - Marking {} messages as read", roomId, messageIds.size());
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for marking messages as read");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            String authenticatedUserId = userIdHeader;
+            messageService.markMessagesAsRead(roomId, messageIds, authenticatedUserId);
+            
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid read receipt request for room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            log.error("Error marking messages as read in room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    @Operation(summary = "Get unread message count", description = "Get count of unread messages in room")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Unread count retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Access denied - not a room participant"),
+        @ApiResponse(responseCode = "404", description = "Room not found")
+    })
+    @GetMapping("/{roomId}/unread-count")
+    public ResponseEntity<UnreadCountDto> getUnreadMessageCount(
+            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.debug("GET /api/workspaces/rooms/{}/unread-count - Getting unread message count", roomId);
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for unread count");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            String authenticatedUserId = userIdHeader;
+            long unreadCount = messageService.getUnreadMessageCount(roomId, authenticatedUserId);
+            
+            UnreadCountDto response = new UnreadCountDto(roomId, unreadCount);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid unread count request for room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            log.error("Error getting unread count for room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    // Inner DTO for unread count response
+    public static class UnreadCountDto {
+        public String roomId;
+        public long count;
+        
+        public UnreadCountDto(String roomId, long count) {
+            this.roomId = roomId;
+            this.count = count;
         }
     }
 }

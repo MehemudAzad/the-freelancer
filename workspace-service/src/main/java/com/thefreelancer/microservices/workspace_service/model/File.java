@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "files")
+@Table(name = "workspace_files") // Use the more descriptive name
 public class File {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +33,15 @@ public class File {
 
     @Column(nullable = false)
     private String url;
+    
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+    
+    @Column(name = "cloudinary_public_id")
+    private String cloudinaryPublicId;
+    
+    @Column(name = "cloudinary_resource_type")
+    private String cloudinaryResourceType;
 
     @Column(name = "content_type")
     private String contentType;
@@ -40,20 +49,12 @@ public class File {
     @Column(name = "file_size")
     private Long fileSize;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private FileCategory category;
-
-    @Column(length = 500)
-    private String description;
+    @Column(name = "milestone_id")
+    private Long milestoneId; // Optional: link to specific contract milestone
 
     private String checksum;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    public enum FileCategory {
-        DOCUMENT, IMAGE, CODE, DESIGN, OTHER
-    }
 }

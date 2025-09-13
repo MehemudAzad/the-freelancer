@@ -1,8 +1,6 @@
 package com.thefreelancer.microservices.workspace_service.dto.file;
 
-import com.thefreelancer.microservices.workspace_service.model.File;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,9 +26,5 @@ public class FileUploadDto {
     @Positive(message = "File size must be positive")
     private Long fileSize;
 
-    @NotNull(message = "Category is required")
-    private File.FileCategory category;
-
-    private String description;
     private String checksum;
 }
