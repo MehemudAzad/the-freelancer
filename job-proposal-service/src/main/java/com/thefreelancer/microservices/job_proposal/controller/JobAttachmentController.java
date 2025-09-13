@@ -4,7 +4,6 @@ import com.thefreelancer.microservices.job_proposal.dto.JobAttachmentCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.JobAttachmentResponseDto;
 import com.thefreelancer.microservices.job_proposal.model.JobAttachment;
 import com.thefreelancer.microservices.job_proposal.service.JobAttachmentService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -21,18 +21,19 @@ public class JobAttachmentController {
     
     private final JobAttachmentService jobAttachmentService;
     
-    @PostMapping("/{jobId}/attachments")
+    @PostMapping(value = "/{jobId}/attachments", consumes = {"multipart/form-data"})
     public ResponseEntity<JobAttachmentResponseDto> createJobAttachment(
             @PathVariable Long jobId,
-            @Valid @RequestBody JobAttachmentCreateDto createDto) {
-        
-        log.info("POST /api/jobs/{}/attachments - Creating attachment with kind: {}", jobId, createDto.getKind());
-        
+            @RequestPart(name = "file") org.springframework.web.multipart.MultipartFile file,
+            @RequestPart(name = "metadata", required = false) JobAttachmentCreateDto createDto) {
+
+        log.info("POST /api/jobs/{}/attachments - Uploading file: {}", jobId, file.getOriginalFilename());
+
         try {
-            JobAttachmentResponseDto attachment = jobAttachmentService.createJobAttachment(jobId, createDto);
+            JobAttachmentResponseDto attachment = jobAttachmentService.createJobAttachment(jobId, file, createDto == null ? new JobAttachmentCreateDto() : createDto);
             log.info("Attachment successfully created with ID: {} for jobId: {}", attachment.getId(), jobId);
             return ResponseEntity.status(HttpStatus.CREATED).body(attachment);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | IOException e) {
             log.warn("Failed to create attachment for jobId {}: {}", jobId, e.getMessage());
             return ResponseEntity.badRequest().build();
         }

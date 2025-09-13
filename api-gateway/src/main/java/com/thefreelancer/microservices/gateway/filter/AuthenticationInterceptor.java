@@ -118,6 +118,16 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        // Special case: Job attachments by kind should be public (GET only)
+        if ("GET".equals(method) && requestURI.matches("/api/jobs/\\d+/attachments/\\w+")) {
+            return true;
+        }
+
+        // Special case: Job attachments list should be public (GET only)
+        if ("GET".equals(method) && requestURI.matches("/api/jobs/\\d+/attachments")) {
+            return true;
+        }
+
         // Special case: Proposal milestones endpoints are public (GET only)
         if ("GET".equals(method) && requestURI.matches("/api/proposals/\\d+/milestones")) {
             return true;

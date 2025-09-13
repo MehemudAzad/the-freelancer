@@ -14,14 +14,13 @@ import java.math.BigInteger;
 @AllArgsConstructor
 public class JobAttachmentCreateDto {
     
-    @NotNull(message = "Attachment kind is required")
     private JobAttachment.AttachmentKind kind;
     
-    @NotBlank(message = "URL is required")
     private String url;
     
-    @NotBlank(message = "Filename is required")
     private String filename;
     
     private BigInteger bytes;
+    
+    private String checksum;
 }

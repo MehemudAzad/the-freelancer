@@ -17,5 +17,9 @@ public class JobAttachmentResponseDto {
     private String url;
     private String filename;
     private BigInteger bytes;
+    private String contentType;
+    private String cloudinaryPublicId;
+    private String cloudinaryResourceType;
+    private String checksum;
     private LocalDateTime createdAt;
 }

@@ -16,6 +16,10 @@ public interface JobAttachmentMapper {
     
     @Mapping(target = "jobId", source = "job.id")
     @Mapping(target = "kind", source = "kind", qualifiedByName = "kindToString")
+    @Mapping(target = "contentType", source = "contentType")
+    @Mapping(target = "cloudinaryPublicId", source = "cloudinaryPublicId")
+    @Mapping(target = "cloudinaryResourceType", source = "cloudinaryResourceType")
+    @Mapping(target = "checksum", source = "checksum")
     JobAttachmentResponseDto toResponseDto(JobAttachment jobAttachment);
     
     @Mapping(target = "id", ignore = true)

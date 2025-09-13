@@ -35,6 +35,17 @@ public class JobAttachment {
     private String filename;
     
     private BigInteger bytes;
+
+    @Column(name = "content_type")
+    private String contentType;
+
+    @Column(name = "cloudinary_public_id")
+    private String cloudinaryPublicId;
+
+    @Column(name = "cloudinary_resource_type")
+    private String cloudinaryResourceType;
+
+    private String checksum;
     
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

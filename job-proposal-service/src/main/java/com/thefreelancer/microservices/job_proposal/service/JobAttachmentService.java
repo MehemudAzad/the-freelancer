@@ -12,8 +12,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.thefreelancer.microservices.job_proposal.service.CloudinaryService.CloudinaryUploadResult;
 
 @Service
 @RequiredArgsConstructor
@@ -23,25 +30,53 @@ public class JobAttachmentService {
     private final JobAttachmentRepository jobAttachmentRepository;
     private final JobRepository jobRepository;
     private final JobAttachmentMapper jobAttachmentMapper;
+    private final CloudinaryService cloudinaryService;
     
     @Transactional
-    public JobAttachmentResponseDto createJobAttachment(Long jobId, JobAttachmentCreateDto createDto) {
-        log.info("Creating attachment for jobId: {} with kind: {}", jobId, createDto.getKind());
-        
+    public JobAttachmentResponseDto createJobAttachment(Long jobId, MultipartFile file, JobAttachmentCreateDto createDto) throws IOException {
+        log.info("Creating attachment for jobId: {} with file: {}", jobId, file.getOriginalFilename());
+
         // Check if job exists
         Optional<Job> jobOpt = jobRepository.findById(jobId);
         if (jobOpt.isEmpty()) {
             throw new RuntimeException("Job not found with ID: " + jobId);
         }
-        
+
         Job job = jobOpt.get();
-        
+
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be empty");
+        }
+
+        // Upload to Cloudinary
+        String folder = "jobs/" + jobId + "/files";
+        CloudinaryUploadResult uploadResult = cloudinaryService.uploadFile(file, folder);
+
+        // Compute checksum (sha256)
+        String checksum = null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(file.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) sb.append(String.format("%02x", b));
+            checksum = sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            log.warn("SHA-256 algorithm not available, skipping checksum");
+        }
+
         JobAttachment attachment = jobAttachmentMapper.toEntity(createDto);
         attachment.setJob(job);
-        
+        attachment.setUrl(uploadResult.getSecureUrl());
+        attachment.setCloudinaryPublicId(uploadResult.getPublicId());
+        attachment.setCloudinaryResourceType(uploadResult.getResourceType());
+        attachment.setContentType(file.getContentType());
+    long fileSizeLong = uploadResult.getBytes() != null ? uploadResult.getBytes().longValue() : file.getSize();
+    attachment.setBytes(java.math.BigInteger.valueOf(fileSizeLong));
+        attachment.setChecksum(checksum);
+
         JobAttachment savedAttachment = jobAttachmentRepository.save(attachment);
         log.info("Successfully created attachment with ID: {} for jobId: {}", savedAttachment.getId(), jobId);
-        
+
         return jobAttachmentMapper.toResponseDto(savedAttachment);
     }
     
@@ -81,6 +116,15 @@ public class JobAttachmentService {
             throw new RuntimeException("Attachment " + attachmentId + " does not belong to job: " + jobId);
         }
         
+        // Try deleting from Cloudinary if we have a public id
+        if (attachment.getCloudinaryPublicId() != null) {
+            try {
+                cloudinaryService.deleteFile(attachment.getCloudinaryPublicId(), attachment.getCloudinaryResourceType() != null ? attachment.getCloudinaryResourceType() : "raw");
+            } catch (Exception e) {
+                log.warn("Failed to delete file from Cloudinary: {}", e.getMessage());
+            }
+        }
+
         jobAttachmentRepository.deleteById(attachmentId);
         log.info("Successfully deleted attachment with ID: {}", attachmentId);
         return true;
