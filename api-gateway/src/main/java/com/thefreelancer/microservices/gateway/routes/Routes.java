@@ -52,8 +52,10 @@ public class Routes {
 	public RouterFunction<ServerResponse> workspaceServiceRoute() {
 		return GatewayRouterFunctions.route("workspace-service")
 				.route(RequestPredicates.path("/api/workspaces/**"), this::forwardToWorkspaceService)
+				.route(RequestPredicates.path("/api/direct-messages/**"), this::forwardToWorkspaceService)
 				.build();
 	}
+	
 
 	@Bean
 	public RouterFunction<ServerResponse> paymentServiceRoute() {

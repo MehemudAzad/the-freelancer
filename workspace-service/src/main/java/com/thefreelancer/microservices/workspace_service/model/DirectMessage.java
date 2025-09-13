@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.time.LocalDateTime;
 
@@ -45,10 +48,11 @@ public class DirectMessage {
     private DirectMessage replyToMessage; // For threaded conversations
 
     @Column(name = "reply_to_id", insertable = false, updatable = false)
-    private String replyToId; // For easier queries
+    private Long replyToId; // For easier queries (maps to bigint)
 
     @Column(name = "attachments", columnDefinition = "jsonb")
-    private String attachments; // JSON metadata for file attachments
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode attachments; // JSON metadata for file attachments (stored as jsonb)
 
     @Column(name = "is_read", nullable = false)
     @Builder.Default

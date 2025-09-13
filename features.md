@@ -3,7 +3,7 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 82 / 95 APIs Completed (86.3%)**
+## 📊 **Overall Progress: 83 / 96 APIs Completed (86.5%)**
 
 **Current Status: Payment Service Integration Complete! Real Stripe payments with escrow and API Gateway routing**
 
@@ -22,6 +22,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 ### User Lookup (Core)
 - [x] `GET /api/auth/users/{id}` - Get user by ID ✅ **COMPLETED**
 - [x] `GET /api/auth/users/email/{email}` - Get user by email ✅ **COMPLETED**
+- [x] `GET /api/auth/public/users/username/{handle}` - Get user by username/handle (public) ✅ **COMPLETED**
 
 ---
 

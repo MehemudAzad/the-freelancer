@@ -92,6 +92,18 @@ public class UserService {
                 .map(UserResponseDto::fromUser);
     }
 
+    public Optional<UserResponseDto> getUserByHandle(String handle) {
+        // Try exact match first
+        Optional<User> exact = userRepository.findByHandle(handle);
+        if (exact.isPresent()) {
+            return exact.map(UserResponseDto::fromUser);
+        }
+
+        // Fallback: case-insensitive prefix match (returns first match)
+        Optional<User> prefix = userRepository.findTopByHandleIgnoreCaseStartingWith(handle);
+        return prefix.map(UserResponseDto::fromUser);
+    }
+
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }

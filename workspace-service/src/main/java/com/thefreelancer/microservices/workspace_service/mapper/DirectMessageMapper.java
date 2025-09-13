@@ -24,12 +24,12 @@ public class DirectMessageMapper {
         }
         
         List<DirectMessageResponseDto.MessageAttachmentDto> attachmentDtos = null;
-        if (message.getAttachments() != null) {
+        if (message.getAttachments() != null && !message.getAttachments().isNull()) {
             try {
                 List<DirectMessageCreateDto.MessageAttachmentDto> attachments = 
-                    objectMapper.readValue(message.getAttachments(), 
+                    objectMapper.convertValue(message.getAttachments(), 
                         new TypeReference<List<DirectMessageCreateDto.MessageAttachmentDto>>() {});
-                
+
                 attachmentDtos = attachments.stream()
                     .map(this::toResponseAttachmentDto)
                     .collect(Collectors.toList());
@@ -61,12 +61,13 @@ public class DirectMessageMapper {
             return null;
         }
         
-        String attachmentsJson = null;
+        // convert attachments list to JsonNode for jsonb column
+        com.fasterxml.jackson.databind.JsonNode attachmentsNode = null;
         if (createDto.getAttachments() != null && !createDto.getAttachments().isEmpty()) {
             try {
-                attachmentsJson = objectMapper.writeValueAsString(createDto.getAttachments());
+                attachmentsNode = objectMapper.valueToTree(createDto.getAttachments());
             } catch (Exception e) {
-                log.warn("Failed to serialize message attachments: {}", e.getMessage());
+                log.warn("Failed to convert message attachments to JsonNode: {}", e.getMessage());
             }
         }
         
@@ -75,10 +76,20 @@ public class DirectMessageMapper {
             .receiverId(createDto.getReceiverId())
             .content(createDto.getContent())
             .messageType(Message.MessageType.valueOf(createDto.getMessageType()))
-            .replyToId(createDto.getReplyToId())
-            .attachments(attachmentsJson);
+            .replyToId(parseReplyToId(createDto.getReplyToId()))
+            .attachments(attachmentsNode);
         
         return builder.build();
+    }
+
+    private Long parseReplyToId(String replyToId) {
+        if (replyToId == null) return null;
+        try {
+            return Long.valueOf(replyToId);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid replyToId '{}', ignoring: {}", replyToId, e.getMessage());
+            return null;
+        }
     }
     
     public DirectMessage updateEntity(DirectMessage existingMessage, String newContent) {

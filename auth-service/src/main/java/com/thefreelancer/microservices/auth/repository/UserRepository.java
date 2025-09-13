@@ -10,4 +10,6 @@ import com.thefreelancer.microservices.auth.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
+    Optional<User> findByHandle(String handle);
+    Optional<User> findTopByHandleIgnoreCaseStartingWith(String handlePrefix);
 }

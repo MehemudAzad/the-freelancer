@@ -52,8 +52,8 @@ public class DirectMessageService {
             message.setReplyToMessage(replyToMessage);
         }
         
-        // Save message
-        DirectMessage savedMessage = directMessageRepository.save(message);
+    // Save message and flush so @CreationTimestamp (createdAt) is populated before mapping
+    DirectMessage savedMessage = directMessageRepository.saveAndFlush(message);
         log.info("Direct message sent successfully with ID: {}", savedMessage.getId());
         
         // Convert to response DTO

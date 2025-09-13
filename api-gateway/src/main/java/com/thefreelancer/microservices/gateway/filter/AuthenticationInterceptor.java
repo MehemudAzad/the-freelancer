@@ -24,6 +24,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         "/api/auth/register",
         "/api/auth/register-basic", 
         "/api/auth/login",
+    "/api/auth/public/users",
         "/api/auth/refresh",
         "/api/gigs/search",  // Public search
         "/api/jobs/search",  // Public job search

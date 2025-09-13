@@ -21,12 +21,12 @@ public class MessageMapper {
         }
         
         List<MessageResponseDto.MessageAttachmentDto> attachmentDtos = null;
-        if (message.getAttachments() != null) {
+        if (message.getAttachments() != null && !message.getAttachments().isNull()) {
             try {
                 List<MessageCreateDto.MessageAttachmentDto> attachments = 
-                    objectMapper.readValue(message.getAttachments(), 
+                    objectMapper.convertValue(message.getAttachments(), 
                         new TypeReference<List<MessageCreateDto.MessageAttachmentDto>>() {});
-                
+
                 attachmentDtos = attachments.stream()
                     .map(this::toAttachmentResponseDto)
                     .collect(Collectors.toList());
@@ -54,10 +54,10 @@ public class MessageMapper {
     }
     
     public Message toEntity(MessageCreateDto createDto, String roomId, String senderId) {
-        String attachmentsJson = null;
+        com.fasterxml.jackson.databind.JsonNode attachmentsNode = null;
         if (createDto.getAttachments() != null && !createDto.getAttachments().isEmpty()) {
             try {
-                attachmentsJson = objectMapper.writeValueAsString(createDto.getAttachments());
+                attachmentsNode = objectMapper.valueToTree(createDto.getAttachments());
             } catch (Exception e) {
                 // Log error and continue without attachments
                 System.err.println("Error serializing message attachments: " + e.getMessage());
@@ -69,8 +69,8 @@ public class MessageMapper {
             .senderId(senderId)
             .content(createDto.getContent())
             .messageType(Message.MessageType.valueOf(createDto.getMessageType().toUpperCase()))
-            .replyToId(createDto.getReplyToId())
-            .attachments(attachmentsJson)
+            .replyToId(parseReplyToId(createDto.getReplyToId()))
+            .attachments(attachmentsNode)
             .build();
     }
     
@@ -96,5 +96,15 @@ public class MessageMapper {
             return "System";
         }
         return "User " + senderId; // Temporary placeholder
+    }
+
+    private Long parseReplyToId(String replyToId) {
+        if (replyToId == null) return null;
+        try {
+            return Long.valueOf(replyToId);
+        } catch (NumberFormatException e) {
+            // If the incoming id is not a number, ignore and return null
+            return null;
+        }
     }
 }
