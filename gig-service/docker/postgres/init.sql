@@ -74,6 +74,46 @@ CREATE TABLE IF NOT EXISTS profile_badges (
     expires_at              TIMESTAMP WITH TIME ZONE
 );
 
+-- Create reviews table
+CREATE TABLE IF NOT EXISTS reviews (
+    id                      BIGSERIAL PRIMARY KEY,
+    gig_id                  BIGINT NOT NULL REFERENCES gigs(id) ON DELETE CASCADE,
+    freelancer_id           BIGINT NOT NULL, -- References User.id from auth-service
+    reviewer_id             BIGINT NOT NULL, -- References User.id from auth-service
+    job_id                  VARCHAR(255), -- References job from job-proposal-service (optional)
+    contract_id             VARCHAR(255), -- References contract from job-proposal-service (optional)
+    
+    -- Rating categories (1-5 scale)
+    overall_rating          INTEGER NOT NULL CHECK (overall_rating >= 1 AND overall_rating <= 5),
+    quality_rating          INTEGER NOT NULL CHECK (quality_rating >= 1 AND quality_rating <= 5),
+    communication_rating    INTEGER NOT NULL CHECK (communication_rating >= 1 AND communication_rating <= 5),
+    timeliness_rating       INTEGER NOT NULL CHECK (timeliness_rating >= 1 AND timeliness_rating <= 5),
+    professionalism_rating  INTEGER NOT NULL CHECK (professionalism_rating >= 1 AND professionalism_rating <= 5),
+    
+    -- Review content
+    title                   VARCHAR(100),
+    comment                 TEXT NOT NULL,
+    
+    -- Review metadata
+    review_type             VARCHAR(50) DEFAULT 'GIG_REVIEW' CHECK (review_type IN ('GIG_REVIEW', 'PROFILE_REVIEW', 'JOB_REVIEW')),
+    status                  VARCHAR(50) DEFAULT 'PUBLISHED' CHECK (status IN ('DRAFT', 'PUBLISHED', 'HIDDEN', 'DELETED', 'PENDING_REVIEW')),
+    is_anonymous            BOOLEAN DEFAULT FALSE,
+    would_recommend         BOOLEAN DEFAULT TRUE,
+    
+    -- Moderation and interaction
+    is_flagged              BOOLEAN DEFAULT FALSE,
+    flag_reason             TEXT,
+    helpful_votes           INTEGER DEFAULT 0,
+    freelancer_response     TEXT,
+    freelancer_response_at  TIMESTAMP WITH TIME ZONE,
+    
+    created_at              TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at              TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Constraints
+    UNIQUE(gig_id, reviewer_id) -- Prevent duplicate reviews per gig/reviewer
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_gigs_profile_id ON gigs(profile_id);
 CREATE INDEX IF NOT EXISTS idx_gigs_status ON gigs(status);
@@ -81,6 +121,14 @@ CREATE INDEX IF NOT EXISTS idx_gigs_category ON gigs(category);
 CREATE INDEX IF NOT EXISTS idx_gig_packages_gig_id ON gig_packages(gig_id);
 CREATE INDEX IF NOT EXISTS idx_gig_media_gig_id ON gig_media(gig_id);
 CREATE INDEX IF NOT EXISTS idx_profile_badges_user_id ON profile_badges(user_id);
+
+-- Review indexes for performance
+CREATE INDEX IF NOT EXISTS idx_reviews_gig_id ON reviews(gig_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_reviews_freelancer_id ON reviews(freelancer_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_reviews_reviewer_id ON reviews(reviewer_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_reviews_gig_rating ON reviews(gig_id, overall_rating);
+CREATE INDEX IF NOT EXISTS idx_reviews_freelancer_rating ON reviews(freelancer_id, overall_rating);
 
 -- Insert some sample data for testing
 INSERT INTO profiles (user_id, headline, bio, hourly_rate_cents, currency, availability, skills, location_text) 

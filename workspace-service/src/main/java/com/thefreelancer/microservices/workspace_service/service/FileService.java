@@ -35,25 +35,25 @@ public class FileService {
     private final FileMapper fileMapper;
     private final CloudinaryService cloudinaryService;
     
-    @Transactional
-    public FileResponseDto uploadFile(Long roomId, Long uploaderId, FileUploadDto uploadDto) {
-        log.info("Uploading file {} to room {} by user {}", uploadDto.getFilename(), roomId, uploaderId);
+    // @Transactional
+    // public FileResponseDto uploadFile(Long roomId, Long uploaderId, FileUploadDto uploadDto) {
+    //     log.info("Uploading file {} to room {} by user {}", uploadDto.getFilename(), roomId, uploaderId);
         
-        // Verify room exists
-        Room room = roomRepository.findById(roomId)
-            .orElseThrow(() -> new ResourceNotFoundException("Room", "id", roomId));
+    //     // Verify room exists
+    //     Room room = roomRepository.findById(roomId)
+    //         .orElseThrow(() -> new ResourceNotFoundException("Room", "id", roomId));
         
-        // Map DTO to entity
-        File file = fileMapper.toEntity(uploadDto);
-        file.setRoom(room);
-        file.setUploaderId(uploaderId);
+    //     // Map DTO to entity
+    //     File file = fileMapper.toEntity(uploadDto);
+    //     file.setRoom(room);
+    //     file.setUploaderId(uploaderId);
         
-        // Save file
-        File savedFile = fileRepository.save(file);
-        log.info("File uploaded successfully with ID: {}", savedFile.getId());
+    //     // Save file
+    //     File savedFile = fileRepository.save(file);
+    //     log.info("File uploaded successfully with ID: {}", savedFile.getId());
         
-        return fileMapper.toResponseDto(savedFile);
-    }
+    //     return fileMapper.toResponseDto(savedFile);
+    // }
     
     @Transactional
     public FileResponseDto uploadFileToCloudinary(Long roomId, Long uploaderId, FileMultipartUploadDto uploadDto) throws IOException {

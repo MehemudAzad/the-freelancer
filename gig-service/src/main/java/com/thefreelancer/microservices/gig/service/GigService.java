@@ -164,4 +164,21 @@ public class GigService {
         log.info("Successfully deleted gig with ID: {}", gigId);
         return true;
     }
+    
+    @Transactional
+    public void updateGigRatings(Long gigId, Double averageRating, Long reviewCount) {
+        log.info("Updating ratings for gig: {} - avgRating: {}, reviewCount: {}", gigId, averageRating, reviewCount);
+        
+        Optional<Gig> gigOptional = gigRepository.findById(gigId);
+        if (gigOptional.isPresent()) {
+            Gig gig = gigOptional.get();
+            gig.setReviewAvg(averageRating != null ? java.math.BigDecimal.valueOf(averageRating) : java.math.BigDecimal.ZERO);
+            gig.setReviewsCount(reviewCount != null ? reviewCount.intValue() : 0);
+            
+            gigRepository.save(gig);
+            log.info("Successfully updated ratings for gig: {}", gigId);
+        } else {
+            log.warn("Gig not found for rating update: {}", gigId);
+        }
+    }
 }

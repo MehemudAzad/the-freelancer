@@ -15,6 +15,7 @@ public class Routes {
 	private static final String AUTH_SERVICE_URL = "http://localhost:8081";
 	private static final String GIG_SERVICE_URL = "http://localhost:8082";
 	private static final String JOB_PROPOSAL_SERVICE_URL = "http://localhost:8083";
+	private static final String WORKSPACE_SERVICE_URL = "http://localhost:8084";
 	private static final String PAYMENT_SERVICE_URL = "http://localhost:8087";
 
 	@Bean
@@ -48,6 +49,13 @@ public class Routes {
 			}
 
 	@Bean
+	public RouterFunction<ServerResponse> workspaceServiceRoute() {
+		return GatewayRouterFunctions.route("workspace-service")
+				.route(RequestPredicates.path("/api/workspaces/**"), this::forwardToWorkspaceService)
+				.build();
+	}
+
+	@Bean
 	public RouterFunction<ServerResponse> paymentServiceRoute() {
 		return GatewayRouterFunctions.route("payment-service")
 				.route(RequestPredicates.path("/api/payments/**"), this::forwardToPaymentService)
@@ -65,6 +73,10 @@ public class Routes {
 
 	private ServerResponse forwardToJobProposalService(ServerRequest request) {
 		return forwardWithUserContext(request, JOB_PROPOSAL_SERVICE_URL);
+	}
+
+	private ServerResponse forwardToWorkspaceService(ServerRequest request) {
+		return forwardWithUserContext(request, WORKSPACE_SERVICE_URL);
 	}
 
 	private ServerResponse forwardToPaymentService(ServerRequest request) {

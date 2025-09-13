@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
@@ -44,7 +45,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
     public void afterHandshake(@NonNull ServerHttpRequest request, 
                              @NonNull ServerHttpResponse response,
                              @NonNull WebSocketHandler wsHandler, 
-                             Exception exception) {
+                             @Nullable Exception exception) {
         // No action needed after handshake
     }
     

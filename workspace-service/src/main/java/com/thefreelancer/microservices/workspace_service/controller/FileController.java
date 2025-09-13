@@ -3,7 +3,6 @@ package com.thefreelancer.microservices.workspace_service.controller;
 import com.thefreelancer.microservices.workspace_service.dto.file.FileMultipartUploadDto;
 import com.thefreelancer.microservices.workspace_service.dto.file.FileResponseDto;
 import com.thefreelancer.microservices.workspace_service.dto.file.FileUpdateDto;
-import com.thefreelancer.microservices.workspace_service.dto.file.FileUploadDto;
 import com.thefreelancer.microservices.workspace_service.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,21 +30,7 @@ public class FileController {
     
     private final FileService fileService;
     
-    @PostMapping
-    @Operation(summary = "Upload file to room", description = "Upload a new file to a workspace room")
-    @ApiResponse(responseCode = "201", description = "File uploaded successfully")
-    @ApiResponse(responseCode = "404", description = "Room not found")
-    public ResponseEntity<FileResponseDto> uploadFile(
-            @Parameter(description = "Room ID") @PathVariable Long roomId,
-            @Valid @RequestBody FileUploadDto uploadDto,
-            HttpServletRequest request) {
-        
-        Long uploaderId = extractUserIdFromRequest(request);
-        log.info("File upload request for room {} by user {}", roomId, uploaderId);
-        
-        FileResponseDto response = fileService.uploadFile(roomId, uploaderId, uploadDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
+    // JSON-based upload endpoint removed. Use multipart endpoint (/multipart) instead.
     
     @PostMapping(value = "/multipart", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload file to room (Multipart)", description = "Upload a new file to a workspace room using multipart form data")
