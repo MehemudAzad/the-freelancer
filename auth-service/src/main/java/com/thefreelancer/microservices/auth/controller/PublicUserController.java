@@ -4,6 +4,9 @@ import com.thefreelancer.microservices.auth.dto.UserResponseDto;
 import com.thefreelancer.microservices.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +23,9 @@ public class PublicUserController {
     @GetMapping("/username/{handle}")
     public ResponseEntity<UserResponseDto> getUserByUsername(@PathVariable String handle) {
         log.debug("Getting user by username: {}", handle);
-        
+
         Optional<UserResponseDto> user = userService.getUserByHandle(handle);
-        
+
         if (user.isPresent()) {
             log.info("Successfully found user by username: {}", handle);
             return ResponseEntity.ok(user.get());
@@ -30,5 +33,23 @@ public class PublicUserController {
             log.warn("User not found with username: {}", handle);
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Search users by handle prefix (case-insensitive) with paging.
+     * Example: GET /api/auth/public/users/search?handle=absk&page=0&size=20
+     */
+    @GetMapping("/search")
+    public ResponseEntity<Page<UserResponseDto>> searchUsersByHandle(
+            @RequestParam(name = "handle") String handle,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size
+    ) {
+        log.debug("Searching users by handle prefix='{}' page={} size={}", handle, page, size);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserResponseDto> results = userService.searchUsersByHandle(handle, pageable);
+
+        return ResponseEntity.ok(results);
     }
 }

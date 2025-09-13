@@ -2,6 +2,8 @@ package com.thefreelancer.microservices.auth.repository;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +14,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findByHandle(String handle);
     Optional<User> findTopByHandleIgnoreCaseStartingWith(String handlePrefix);
+
+    // Pageable prefix search for handles (case-insensitive)
+    Page<User> findByHandleStartingWithIgnoreCase(String handlePrefix, Pageable pageable);
 }

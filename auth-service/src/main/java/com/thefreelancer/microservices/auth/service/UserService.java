@@ -1,6 +1,11 @@
 package com.thefreelancer.microservices.auth.service;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import java.util.stream.Collectors;
 
 // import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -102,6 +107,18 @@ public class UserService {
         // Fallback: case-insensitive prefix match (returns first match)
         Optional<User> prefix = userRepository.findTopByHandleIgnoreCaseStartingWith(handle);
         return prefix.map(UserResponseDto::fromUser);
+    }
+
+    /**
+     * Search users by handle prefix (case-insensitive) with paging.
+     */
+    public Page<UserResponseDto> searchUsersByHandle(String prefix, Pageable pageable) {
+        Page<User> users = userRepository.findByHandleStartingWithIgnoreCase(prefix, pageable);
+        return new PageImpl<>(
+                users.stream().map(UserResponseDto::fromUser).collect(Collectors.toList()),
+                pageable,
+                users.getTotalElements()
+        );
     }
 
     public Optional<User> findByEmail(String email) {
