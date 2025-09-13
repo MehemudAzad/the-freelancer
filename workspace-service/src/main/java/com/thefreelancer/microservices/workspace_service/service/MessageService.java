@@ -53,7 +53,7 @@ public class MessageService {
             }
             
             message.setReplyToMessage(replyToMessage);
-            message.setReplyToId(createDto.getReplyToId());
+            // replyToId is set by the mapper when parsing from String to Long
         }
         
         Message savedMessage = messageRepository.save(message);

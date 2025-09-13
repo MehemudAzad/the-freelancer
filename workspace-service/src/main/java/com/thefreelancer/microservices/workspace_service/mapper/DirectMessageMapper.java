@@ -45,7 +45,7 @@ public class DirectMessageMapper {
             .receiverId(message.getReceiverId())
             .content(message.getContent())
             .messageType(message.getMessageType().name())
-            .replyToId(message.getReplyToId())
+            .replyToId(message.getReplyToId() != null ? message.getReplyToId().toString() : null)
             .replyToMessage(toResponseDto(message.getReplyToMessage()))
             .attachments(attachmentDtos)
             .isRead(message.getIsRead())

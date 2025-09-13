@@ -43,7 +43,7 @@ public class MessageMapper {
             .senderName(getSenderName(message.getSenderId())) // TODO: Implement user lookup
             .content(message.getContent())
             .messageType(message.getMessageType().name())
-            .replyToId(message.getReplyToId())
+            .replyToId(message.getReplyToId() != null ? message.getReplyToId().toString() : null)
             .replyToMessage(message.getReplyToMessage() != null ? 
                 toResponseDto(message.getReplyToMessage()) : null)
             .attachments(attachmentDtos)
