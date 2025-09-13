@@ -70,8 +70,11 @@ public class JobService {
         }
         
         jobMapper.updateEntityFromDto(updateDto, job);
-        
-        Job updatedJob = jobRepository.save(job);
+
+    // mark the job as edited now
+    job.setEditedAt(java.time.LocalDateTime.now());
+
+    Job updatedJob = jobRepository.save(job);
         log.info("Successfully updated job with ID: {}", jobId);
         
         return Optional.of(jobMapper.toResponseDto(updatedJob));
@@ -112,22 +115,11 @@ public class JobService {
                 .toList();
     }
     
-    public List<JobResponseDto> searchJobs(List<String> stack, BigInteger minBudget, BigInteger maxBudget, String status) {
-        log.info("Searching jobs with stack: {}, minBudget: {}, maxBudget: {}, status: {}", stack, minBudget, maxBudget, status);
-        
-        List<Job> jobs;
-        
-        if (stack != null && !stack.isEmpty()) {
-            jobs = jobRepository.findJobsByStackContaining(stack);
-        } else if (minBudget != null && maxBudget != null) {
-            jobs = jobRepository.findJobsByBudgetRange(minBudget, maxBudget);
-        } else if (status != null) {
-            Job.JobStatus jobStatus = Job.JobStatus.valueOf(status.toUpperCase());
-            jobs = jobRepository.findByStatus(jobStatus);
-        } else {
-            jobs = jobRepository.findOpenJobs();
-        }
-        
+    public List<JobResponseDto> searchJobs(String category, BigInteger minBudget, BigInteger maxBudget, Boolean isUrgent, Job.BudgetType budgetType) {
+        log.info("Searching jobs with category: {}, minBudget: {}, maxBudget: {}, isUrgent: {}, budgetType: {}", category, minBudget, maxBudget, isUrgent, budgetType);
+
+        List<Job> jobs = jobRepository.findOpenJobsByFilters(category, isUrgent, budgetType, minBudget, maxBudget);
+
         return jobs.stream()
                 .map(jobMapper::toResponseDto)
                 .toList();

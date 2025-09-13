@@ -16,30 +16,32 @@ import java.util.List;
 @AllArgsConstructor
 public class JobUpdateDto {
     
-    @NotBlank(message = "Title is required")
-    @Size(min = 5, max = 200, message = "Title must be between 5 and 200 characters")
-    private String title;
+    @NotBlank(message = "Project name is required")
+    @Size(min = 5, max = 200, message = "Project name must be between 5 and 200 characters")
+    private String projectName;
     
     @Size(max = 5000, message = "Description cannot exceed 5000 characters")
     private String description;
-    
-    private List<String> stack;
-    
+
     private Job.BudgetType budgetType;
-    
+
     @Positive(message = "Minimum budget must be positive")
     private BigInteger minBudgetCents;
-    
+
     @Positive(message = "Maximum budget must be positive")
     private BigInteger maxBudgetCents;
-    
-    private String currency;
-    
+
+    private String category;
+
+    private List<String> skills;
+
+    private String payType;
+
+    private Boolean isUrgent;
+
     private Boolean ndaRequired;
-    
+
     private Boolean ipAssignment;
-    
-    private String repoLink;
-    
+
     private Job.JobStatus status;
 }

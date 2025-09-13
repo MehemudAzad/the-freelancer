@@ -27,8 +27,8 @@ public class Job {
     @Column(name = "client_id", nullable = false)
     private Long clientId;
     
-    @Column(nullable = false)
-    private String title;
+    @Column(name = "project_name", nullable = false)
+    private String projectName;
     
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -48,9 +48,6 @@ public class Job {
     @Column(name = "max_budget_cents")
     private BigInteger maxBudgetCents;
     
-    @Column(length = 3)
-    private String currency;
-    
     @Column(name = "nda_required")
     @Builder.Default
     private Boolean ndaRequired = false;
@@ -59,8 +56,19 @@ public class Job {
     @Builder.Default
     private Boolean ipAssignment = true;
     
-    @Column(name = "repo_link")
-    private String repoLink;
+    @Column
+    private String category;
+
+    @ElementCollection
+    @CollectionTable(name = "job_skills", joinColumns = @JoinColumn(name = "job_id"))
+    @Column(name = "skill")
+    private java.util.List<String> skills;
+
+
+
+    @Column(name = "is_urgent")
+    @Builder.Default
+    private Boolean isUrgent = false;
     
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -73,6 +81,9 @@ public class Job {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "edited_at")
+    private LocalDateTime editedAt;
     
     // Relationships
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

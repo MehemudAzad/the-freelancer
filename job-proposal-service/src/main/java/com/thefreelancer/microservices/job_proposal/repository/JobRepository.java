@@ -26,6 +26,17 @@ public interface JobRepository extends JpaRepository<Job, Long> {
            "j.minBudgetCents <= :maxBudget AND j.maxBudgetCents >= :minBudget")
     List<Job> findOpenJobsByBudgetRange(@Param("minBudget") BigInteger minBudget, 
                                         @Param("maxBudget") BigInteger maxBudget);
+
+    @Query("SELECT j FROM Job j WHERE j.status = 'OPEN' AND " +
+           "(:category IS NULL OR j.category = :category) AND " +
+           "(:isUrgent IS NULL OR j.isUrgent = :isUrgent) AND " +
+           "(:budgetType IS NULL OR j.budgetType = :budgetType) AND " +
+           "(:minBudget IS NULL OR :maxBudget IS NULL OR (j.minBudgetCents <= :maxBudget AND j.maxBudgetCents >= :minBudget))")
+    List<Job> findOpenJobsByFilters(@Param("category") String category,
+                                    @Param("isUrgent") Boolean isUrgent,
+                                    @Param("budgetType") Job.BudgetType budgetType,
+                                    @Param("minBudget") BigInteger minBudget,
+                                    @Param("maxBudget") BigInteger maxBudget);
     
     @Query("SELECT j FROM Job j WHERE EXISTS (SELECT s FROM j.stack s WHERE s IN :stack)")
     List<Job> findJobsByStackContaining(@Param("stack") List<String> stack);

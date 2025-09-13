@@ -14,17 +14,19 @@ import java.util.List;
 public class JobResponseDto {
     private Long id;
     private Long clientId;
-    private String title;
+    private String projectName;
     private String description;
     private List<String> stack;
     private String budgetType;
     private BigInteger minBudgetCents;
     private BigInteger maxBudgetCents;
-    private String currency;
+    private String category;
+    private List<String> skills;
+    private Boolean isUrgent;
     private Boolean ndaRequired;
     private Boolean ipAssignment;
-    private String repoLink;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime editedAt;
 }

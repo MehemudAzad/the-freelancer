@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 @Component
 public interface ProposalMapper {
     
@@ -26,7 +26,7 @@ public interface ProposalMapper {
     Proposal toEntity(ProposalCreateDto dto);
     
     @Mapping(target = "jobId", source = "job.id")
-    @Mapping(target = "jobTitle", source = "job.title")
+    @Mapping(target = "jobTitle", source = "job.projectName")
     @Mapping(target = "proposedRate", source = "totalCents", qualifiedByName = "centsToRate")
     @Mapping(target = "coverLetter", source = "cover")
     @Mapping(target = "freelancerName", constant = "Unknown") // TODO: Get from user service

@@ -57,17 +57,26 @@ public class JobController {
     @Operation(summary = "Search jobs", description = "Search and filter jobs by various criteria (public endpoint)")
     @GetMapping("/search")
     public ResponseEntity<List<JobResponseDto>> searchJobs(
-            @Parameter(description = "Technology stack filter") @RequestParam(required = false) List<String> stack,
+            @Parameter(description = "Category filter") @RequestParam(required = false) String category,
             @Parameter(description = "Minimum budget filter") @RequestParam(required = false) BigInteger minBudget,
             @Parameter(description = "Maximum budget filter") @RequestParam(required = false) BigInteger maxBudget,
-            @Parameter(description = "Job status filter") @RequestParam(required = false) String status) {
-        
-        log.info("GET /api/jobs/search - Searching jobs with stack: {}, minBudget: {}, maxBudget: {}, status: {}", 
-                stack, minBudget, maxBudget, status);
-        
+            @Parameter(description = "Is urgent filter") @RequestParam(required = false) Boolean isUrgent,
+            @Parameter(description = "Budget type filter (FIXED|HOURLY)") @RequestParam(required = false) String budgetType) {
+
+        log.info("GET /api/jobs/search - Searching jobs with category: {}, minBudget: {}, maxBudget: {}, isUrgent: {}, budgetType: {}", 
+                category, minBudget, maxBudget, isUrgent, budgetType);
+
         try {
-            List<JobResponseDto> jobs = jobService.searchJobs(stack, minBudget, maxBudget, status);
+            Job.BudgetType bt = null;
+            if (budgetType != null) {
+                bt = Job.BudgetType.valueOf(budgetType.toUpperCase());
+            }
+
+            List<JobResponseDto> jobs = jobService.searchJobs(category, minBudget, maxBudget, isUrgent, bt);
             return ResponseEntity.ok(jobs);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid budget type provided: {}", budgetType);
+            return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             log.warn("Failed to search jobs: {}", e.getMessage());
             return ResponseEntity.badRequest().build();

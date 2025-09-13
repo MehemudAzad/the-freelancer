@@ -19,14 +19,20 @@ public class JobCreateDto {
     
     // clientId should come from authentication headers, not from request body
     
-    @NotBlank(message = "Title is required")
-    @Size(min = 5, max = 200, message = "Title must be between 5 and 200 characters")
-    private String title;
+    @NotBlank(message = "Project name is required")
+    @Size(min = 5, max = 200, message = "Project name must be between 5 and 200 characters")
+    private String projectName;
     
     @Size(max = 5000, message = "Description cannot exceed 5000 characters")
     private String description;
     
     private List<String> stack;
+    
+    private String category;
+    
+    private List<String> skills;
+    
+    private Boolean isUrgent = false;
     
     @NotNull(message = "Budget type is required")
     private Job.BudgetType budgetType;
@@ -37,13 +43,7 @@ public class JobCreateDto {
     @Positive(message = "Maximum budget must be positive")
     private BigInteger maxBudgetCents;
     
-    @NotBlank(message = "Currency is required")
-    @Size(min = 3, max = 3, message = "Currency must be 3 characters")
-    private String currency;
-    
     private Boolean ndaRequired = false;
     
     private Boolean ipAssignment = true;
-    
-    private String repoLink;
 }

@@ -126,7 +126,7 @@ public class ContractService {
         try {
             RoomCreateDto roomCreateDto = RoomCreateDto.builder()
                 .contractId(savedContract.getId())
-                .jobTitle(job.getTitle())
+                .jobTitle(job.getProjectName())
                 .clientId(savedContract.getClientId().toString())
                 .freelancerId(savedContract.getFreelancerId().toString())
                 .build();
@@ -208,7 +208,7 @@ public class ContractService {
         ContractResponseDto dto = new ContractResponseDto();
         dto.setId(contract.getId());
         dto.setJobId(contract.getJob().getId());
-        dto.setJobTitle(contract.getJob().getTitle());
+    dto.setJobTitle(contract.getJob().getProjectName());
         dto.setProposalId(contract.getProposal().getId());
         dto.setClientId(contract.getClientId());
         dto.setFreelancerId(contract.getFreelancerId());
