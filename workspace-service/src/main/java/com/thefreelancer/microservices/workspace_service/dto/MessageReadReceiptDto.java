@@ -17,6 +17,6 @@ import java.time.LocalDateTime;
 public class MessageReadReceiptDto {
     
     private String messageId;
-    private String userId;
+    private Long userId;
     private LocalDateTime readAt;
 }

@@ -15,9 +15,9 @@ import java.util.List;
 public class DirectMessageResponseDto {
     
     private String id;
-    private String senderId;
+    private Long senderId;
     private String senderName; // We'll populate this from user service or cache
-    private String receiverId;
+    private Long receiverId;
     private String receiverName; // We'll populate this from user service or cache
     private String content;
     private String messageType;

@@ -1,6 +1,7 @@
 package com.thefreelancer.microservices.workspace_service.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,10 +16,10 @@ import java.util.List;
 @AllArgsConstructor
 public class DirectMessageCreateDto {
     
-    private String senderId; // Set by controller or extracted from auth headers
-    
-    @NotBlank(message = "Receiver ID is required")
-    private String receiverId;
+    private Long senderId; // Set by controller or extracted from auth headers
+
+    @NotNull(message = "Receiver ID is required")
+    private Long receiverId;
     
     @NotBlank(message = "Message content is required")
     @Size(max = 5000, message = "Message content cannot exceed 5000 characters")
@@ -27,7 +28,7 @@ public class DirectMessageCreateDto {
     @Builder.Default
     private String messageType = "TEXT"; // TEXT, FILE, IMAGE, VIDEO, DOCUMENT, SYSTEM
     
-    private String replyToId; // For threaded conversations
+    private String replyToId; // For threaded conversations (message UUID)
     
     private List<MessageAttachmentDto> attachments; // File attachments
     

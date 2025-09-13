@@ -20,7 +20,7 @@ public class MessageMapper {
             return null;
         }
         
-        List<MessageResponseDto.MessageAttachmentDto> attachmentDtos = null;
+    List<MessageResponseDto.MessageAttachmentDto> attachmentDtos = null;
         if (message.getAttachments() != null && !message.getAttachments().isNull()) {
             try {
                 List<MessageCreateDto.MessageAttachmentDto> attachments = 
@@ -43,17 +43,17 @@ public class MessageMapper {
             .senderName(getSenderName(message.getSenderId())) // TODO: Implement user lookup
             .content(message.getContent())
             .messageType(message.getMessageType().name())
-            .replyToId(message.getReplyToId() != null ? message.getReplyToId().toString() : null)
+            .replyToId(message.getReplyToId())
             .replyToMessage(message.getReplyToMessage() != null ? 
                 toResponseDto(message.getReplyToMessage()) : null)
             .attachments(attachmentDtos)
             .editedAt(message.getEditedAt())
             .createdAt(message.getCreatedAt())
-            .isSystemMessage("SYSTEM".equals(message.getSenderId()))
+            .isSystemMessage(message.getMessageType() == Message.MessageType.SYSTEM)
             .build();
     }
     
-    public Message toEntity(MessageCreateDto createDto, String roomId, String senderId) {
+    public Message toEntity(MessageCreateDto createDto, String roomId, Long senderId) {
         com.fasterxml.jackson.databind.JsonNode attachmentsNode = null;
         if (createDto.getAttachments() != null && !createDto.getAttachments().isEmpty()) {
             try {
@@ -69,7 +69,7 @@ public class MessageMapper {
             .senderId(senderId)
             .content(createDto.getContent())
             .messageType(Message.MessageType.valueOf(createDto.getMessageType().toUpperCase()))
-            .replyToId(parseReplyToId(createDto.getReplyToId()))
+            .replyToId(createDto.getReplyToId())
             .attachments(attachmentsNode)
             .build();
     }
@@ -90,21 +90,12 @@ public class MessageMapper {
             .build();
     }
     
-    private String getSenderName(String senderId) {
+    private String getSenderName(Long senderId) {
         // TODO: Implement user service lookup or cache
-        if ("SYSTEM".equals(senderId)) {
-            return "System";
-        }
-        return "User " + senderId; // Temporary placeholder
+        if (senderId == null) return "Unknown";
+        // Reserve special system id (e.g., 0) if used; otherwise rely on message type
+        return "User " + senderId;
     }
 
-    private Long parseReplyToId(String replyToId) {
-        if (replyToId == null) return null;
-        try {
-            return Long.valueOf(replyToId);
-        } catch (NumberFormatException e) {
-            // If the incoming id is not a number, ignore and return null
-            return null;
-        }
-    }
+    // replyToId is already Long in DTOs now
 }

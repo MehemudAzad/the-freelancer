@@ -37,10 +37,17 @@ public class MessageService {
         Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
-        validateRoomAccess(room, senderId);
+        // parse sender id to numeric
+        Long senderIdLong = null;
+        try {
+            senderIdLong = Long.parseLong(senderId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid senderId: " + senderId);
+        }
+        validateRoomAccess(room, senderIdLong);
         
         // Create message entity
-        Message message = messageMapper.toEntity(createDto, roomId, senderId);
+    Message message = messageMapper.toEntity(createDto, roomId, senderIdLong);
         message.setRoom(room);
         
         // Handle reply-to message
@@ -82,7 +89,13 @@ public class MessageService {
         Long roomIdLong = Long.parseLong(roomId);
         Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
-        validateRoomAccess(room, userId);
+        Long userIdLong = null;
+        try {
+            userIdLong = Long.parseLong(userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+        validateRoomAccess(room, userIdLong);
         
         Pageable pageable = PageRequest.of(page, size);
         Page<Message> messagePage;
@@ -120,7 +133,13 @@ public class MessageService {
         Long roomIdLong = Long.parseLong(roomId);
         Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
-        validateRoomAccess(room, userId);
+        Long userIdLong = null;
+        try {
+            userIdLong = Long.parseLong(userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+        validateRoomAccess(room, userIdLong);
         
         // Find and validate message
         Message message = messageRepository.findById(messageId)
@@ -130,7 +149,7 @@ public class MessageService {
             throw new IllegalArgumentException("Message does not belong to this room");
         }
         
-        if (!message.getSenderId().equals(userId)) {
+        if (!message.getSenderId().equals(userIdLong)) {
             throw new IllegalArgumentException("Cannot edit message sent by another user");
         }
         
@@ -158,7 +177,13 @@ public class MessageService {
         Long roomIdLong = Long.parseLong(roomId);
         Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
-        validateRoomAccess(room, userId);
+        Long userIdLong = null;
+        try {
+            userIdLong = Long.parseLong(userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+        validateRoomAccess(room, userIdLong);
         
         // Find and validate message
         Message message = messageRepository.findById(messageId)
@@ -168,7 +193,7 @@ public class MessageService {
             throw new IllegalArgumentException("Message does not belong to this room");
         }
         
-        if (!message.getSenderId().equals(userId)) {
+        if (!message.getSenderId().equals(userIdLong)) {
             throw new IllegalArgumentException("Cannot delete message sent by another user");
         }
         
@@ -192,7 +217,14 @@ public class MessageService {
         Long roomIdLong = Long.parseLong(roomId);
         Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
-        validateRoomAccess(room, userId);
+        
+        Long userIdLong = null;
+        try {
+            userIdLong = Long.parseLong(userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+        validateRoomAccess(room, userIdLong);
         
         Pageable pageable = PageRequest.of(page, size);
         Page<Message> messagePage;
@@ -230,7 +262,7 @@ public class MessageService {
         Message systemMessage = Message.builder()
             .room(room)
             .roomId(roomId)
-            .senderId("SYSTEM")
+            .senderId(0L) // System sender ID as 0
             .content(content)
             .messageType(Message.MessageType.SYSTEM)
             .build();
@@ -252,9 +284,7 @@ public class MessageService {
         Long roomIdLong = Long.parseLong(roomId);
         Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
-        validateRoomAccess(room, typingStatus.getUserId());
-        
-        // Set timestamp
+        validateRoomAccess(room, typingStatus.getUserId());        // Set timestamp
         typingStatus.setTimestamp(System.currentTimeMillis());
         
         // Broadcast via WebSocket
@@ -274,7 +304,13 @@ public class MessageService {
         Long roomIdLong = Long.parseLong(roomId);
         Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
-        validateRoomAccess(room, userId);
+        Long userIdLong = null;
+        try {
+            userIdLong = Long.parseLong(userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+        validateRoomAccess(room, userIdLong);
         
         // For each message, broadcast read receipt
         for (String messageId : messageIds) {
@@ -288,14 +324,14 @@ public class MessageService {
                 }
                 
                 // Don't mark own messages as read
-                if (message.getSenderId().equals(userId)) {
+                if (message.getSenderId().equals(userIdLong)) {
                     continue;
                 }
                 
                 // Broadcast read receipt via WebSocket
                 MessageReadReceiptDto readReceipt = MessageReadReceiptDto.builder()
                     .messageId(messageId)
-                    .userId(userId)
+                    .userId(userIdLong)
                     .readAt(LocalDateTime.now())
                     .build();
                 
@@ -316,7 +352,13 @@ public class MessageService {
         Long roomIdLong = Long.parseLong(roomId);
         Room room = roomRepository.findById(roomIdLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
-        validateRoomAccess(room, userId);
+        Long userIdLong = null;
+        try {
+            userIdLong = Long.parseLong(userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+        validateRoomAccess(room, userIdLong);
         
         // For now, return 0 as we don't have read tracking in database yet
         // In a full implementation, you would track read receipts in a separate table
@@ -328,7 +370,8 @@ public class MessageService {
         return 0L; // Placeholder
     }
     
-    private void validateRoomAccess(Room room, String userId) {
+    private void validateRoomAccess(Room room, Long userId) {
+        if (userId == null) throw new IllegalArgumentException("User id is null");
         if (!room.getClientId().equals(userId) && !room.getFreelancerId().equals(userId)) {
             throw new IllegalArgumentException("User does not have access to this room");
         }

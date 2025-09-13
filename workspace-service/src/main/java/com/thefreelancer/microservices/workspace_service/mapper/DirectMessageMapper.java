@@ -45,7 +45,7 @@ public class DirectMessageMapper {
             .receiverId(message.getReceiverId())
             .content(message.getContent())
             .messageType(message.getMessageType().name())
-            .replyToId(message.getReplyToId() != null ? message.getReplyToId().toString() : null)
+            .replyToId(message.getReplyToId())
             .replyToMessage(toResponseDto(message.getReplyToMessage()))
             .attachments(attachmentDtos)
             .isRead(message.getIsRead())
@@ -56,7 +56,7 @@ public class DirectMessageMapper {
             .build();
     }
     
-    public DirectMessage toEntity(DirectMessageCreateDto createDto, String senderId) {
+    public DirectMessage toEntity(DirectMessageCreateDto createDto, Long senderId) {
         if (createDto == null) {
             return null;
         }
@@ -76,7 +76,7 @@ public class DirectMessageMapper {
             .receiverId(createDto.getReceiverId())
             .content(createDto.getContent())
             .messageType(Message.MessageType.valueOf(createDto.getMessageType()))
-            .replyToId(parseReplyToId(createDto.getReplyToId()))
+            .replyToId(createDto.getReplyToId())
             .attachments(attachmentsNode);
         
         return builder.build();

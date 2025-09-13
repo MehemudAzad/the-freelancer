@@ -19,9 +19,9 @@ public class RoomCreateDto {
     @NotBlank(message = "Job title is required")
     private String jobTitle;
     
-    @NotBlank(message = "Client ID is required")
-    private String clientId;
+    @NotNull(message = "Client ID is required")
+    private Long clientId;
     
-    @NotBlank(message = "Freelancer ID is required")
-    private String freelancerId;
+    @NotNull(message = "Freelancer ID is required")
+    private Long freelancerId;
 }

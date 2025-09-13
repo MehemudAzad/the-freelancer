@@ -16,7 +16,7 @@ public class MessageResponseDto {
     
     private String id;
     private String roomId;
-    private String senderId;
+    private Long senderId;
     private String senderName; // We'll populate this from user service or cache
     private String content;
     private String messageType;

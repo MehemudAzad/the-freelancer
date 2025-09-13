@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TypingStatusDto {
     
-    private String userId;
+    private Long userId;
     private String roomId;
     private boolean typing;
     private long timestamp;
     
-    public TypingStatusDto(String userId, String roomId, boolean typing) {
+    public TypingStatusDto(Long userId, String roomId, boolean typing) {
         this.userId = userId;
         this.roomId = roomId;
         this.typing = typing;

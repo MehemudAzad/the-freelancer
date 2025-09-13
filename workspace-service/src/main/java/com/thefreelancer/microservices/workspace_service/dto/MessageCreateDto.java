@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class MessageCreateDto {
     
-    private String senderId; // Set by WebSocket controller or extracted from auth headers
+    private Long senderId; // Set by WebSocket controller or extracted from auth headers
     
     @NotBlank(message = "Message content is required")
     @Size(max = 5000, message = "Message content cannot exceed 5000 characters")
@@ -24,7 +24,7 @@ public class MessageCreateDto {
     @Builder.Default
     private String messageType = "TEXT"; // TEXT, FILE, IMAGE, VIDEO, DOCUMENT, SYSTEM
     
-    private String replyToId; // For threaded conversations
+    private String replyToId; // For threaded conversations (message UUID)
     
     private List<MessageAttachmentDto> attachments; // File attachments
     

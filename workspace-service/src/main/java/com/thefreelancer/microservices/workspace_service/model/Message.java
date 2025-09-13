@@ -34,7 +34,7 @@ public class Message {
     private String roomId; // For easier queries
 
     @Column(name = "sender_id", nullable = false)
-    private String senderId; // User ID from Auth Service
+    private Long senderId; // User ID from Auth Service (numeric)
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -48,7 +48,7 @@ public class Message {
     private Message replyToMessage; // For threaded conversations
 
     @Column(name = "reply_to_id", insertable = false, updatable = false)
-    private Long replyToId; // For easier queries (maps to bigint)
+    private String replyToId; // For easier queries (stores the message UUID)
 
     @Column(name = "attachments", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)

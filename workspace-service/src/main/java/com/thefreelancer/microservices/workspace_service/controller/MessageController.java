@@ -263,7 +263,15 @@ public class MessageController {
         
         try {
             String authenticatedUserId = userIdHeader;
-            typingStatus.setUserId(authenticatedUserId);
+            
+            // Parse and set user ID as Long
+            try {
+                Long userIdLong = Long.parseLong(authenticatedUserId);
+                typingStatus.setUserId(userIdLong);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid user ID: " + authenticatedUserId);
+            }
+            
             typingStatus.setRoomId(roomId);
             
             // Broadcast typing indicator via WebSocket

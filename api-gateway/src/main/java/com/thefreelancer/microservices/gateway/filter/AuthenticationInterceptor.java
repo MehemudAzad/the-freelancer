@@ -102,6 +102,11 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         if ("GET".equals(method) && requestURI.matches("/api/gigs/\\d+")) {
             return true;
         }
+
+        // Special case: GET /api/gigs/{id}/media is public (gig media list)
+        if ("GET".equals(method) && requestURI.matches("/api/gigs/\\d+/media")) {
+            return true;
+        }
         
         // Special case: GET /api/jobs/{id} is public (individual job details)
         if ("GET".equals(method) && requestURI.matches("/api/jobs/\\d+")) {

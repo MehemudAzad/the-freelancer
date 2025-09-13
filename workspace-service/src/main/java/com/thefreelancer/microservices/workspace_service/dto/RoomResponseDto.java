@@ -17,8 +17,8 @@ public class RoomResponseDto {
     private Long id;
     private Long contractId;
     private String jobTitle;
-    private String clientId;
-    private String freelancerId;
+    private Long clientId;
+    private Long freelancerId;
     private Room.RoomStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

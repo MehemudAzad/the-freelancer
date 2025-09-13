@@ -39,8 +39,12 @@ public class ChatWebSocketController {
         
         try {
             // Extract user information from session
+            if (headerAccessor.getSessionAttributes() == null) {
+                log.warn("Session attributes not found");
+                throw new IllegalArgumentException("Authentication required");
+            }
+            
             String userId = (String) headerAccessor.getSessionAttributes().get("userId");
-            String userRole = (String) headerAccessor.getSessionAttributes().get("userRole");
             
             if (userId == null) {
                 log.warn("User ID not found in session attributes");
@@ -49,8 +53,13 @@ public class ChatWebSocketController {
             
             log.info("Received WebSocket message for room: {} from user: {}", roomId, userId);
             
-            // Set sender ID from authenticated user
-            messageDto.setSenderId(userId);
+            // Parse and set sender ID from authenticated user
+            try {
+                Long userIdLong = Long.parseLong(userId);
+                messageDto.setSenderId(userIdLong);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid user ID: " + userId);
+            }
             
             // Send message through service (this also saves to database)
             MessageResponseDto response = messageService.sendMessage(roomId, userId, messageDto);
@@ -75,14 +84,21 @@ public class ChatWebSocketController {
             SimpMessageHeaderAccessor headerAccessor) {
         
         try {
-            String userId = (String) headerAccessor.getSessionAttributes().get("userId");
-            
-            if (userId != null) {
-                typingStatus.setUserId(userId);
-                typingStatus.setRoomId(roomId);
+            if (headerAccessor.getSessionAttributes() != null) {
+                String userId = (String) headerAccessor.getSessionAttributes().get("userId");
                 
-                log.debug("User {} typing status: {} in room: {}", userId, typingStatus.isTyping(), roomId);
-                return typingStatus;
+                if (userId != null) {
+                    try {
+                        Long userIdLong = Long.parseLong(userId);
+                        typingStatus.setUserId(userIdLong);
+                        typingStatus.setRoomId(roomId);
+                        
+                        log.debug("User {} typing status: {} in room: {}", userId, typingStatus.isTyping(), roomId);
+                        return typingStatus;
+                    } catch (Exception e) {
+                        log.warn("Invalid user ID: {}", userId);
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("Error handling typing indicator: {}", e.getMessage(), e);
@@ -152,8 +168,15 @@ public class ChatWebSocketController {
             
             log.info("Received WebSocket direct message from user: {} to user: {}", userId, receiverId);
             
-            // Set receiver ID and send through service
-            messageDto.setReceiverId(receiverId);
+            // Parse and set receiver ID 
+            try {
+                Long receiverIdLong = Long.parseLong(receiverId);
+                messageDto.setReceiverId(receiverIdLong);
+            } catch (Exception e) {
+                log.warn("Invalid receiver ID: {}", receiverId);
+                return;
+            }
+            
             DirectMessageResponseDto response = directMessageService.sendMessage(messageDto, userId);
             
             log.info("Direct message sent successfully via WebSocket: {}", response.getId());

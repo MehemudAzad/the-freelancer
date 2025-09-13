@@ -18,6 +18,6 @@ public class DirectMessageReadReceiptDto {
     
     private String messageId;
     private String conversationId;
-    private String readerId; // User who read the message
+    private Long readerId; // User who read the message
     private LocalDateTime readAt;
 }

@@ -28,10 +28,10 @@ public class Room {
     private String jobTitle;
 
     @Column(name = "client_id", nullable = false)
-    private String clientId;
+    private Long clientId;
 
     @Column(name = "freelancer_id", nullable = false)
-    private String freelancerId;
+    private Long freelancerId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

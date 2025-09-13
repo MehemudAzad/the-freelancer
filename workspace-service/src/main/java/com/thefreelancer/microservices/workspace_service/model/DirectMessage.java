@@ -31,10 +31,10 @@ public class DirectMessage {
     private String id;
 
     @Column(name = "sender_id", nullable = false)
-    private String senderId; // User ID from Auth Service
+    private Long senderId; // User ID from Auth Service (numeric)
 
     @Column(name = "receiver_id", nullable = false)
-    private String receiverId; // User ID from Auth Service
+    private Long receiverId; // User ID from Auth Service (numeric)
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -48,7 +48,7 @@ public class DirectMessage {
     private DirectMessage replyToMessage; // For threaded conversations
 
     @Column(name = "reply_to_id", insertable = false, updatable = false)
-    private Long replyToId; // For easier queries (maps to bigint)
+    private String replyToId; // For easier queries (stores the message UUID)
 
     @Column(name = "attachments", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
@@ -70,8 +70,9 @@ public class DirectMessage {
 
     // Helper method to generate conversation ID for consistent ordering
     public String getConversationId() {
-        // Always use lexicographically smaller ID first for consistent conversation ID
-        if (senderId.compareTo(receiverId) < 0) {
+        // Use numeric ordering for conversation id
+        if (senderId == null || receiverId == null) return null;
+        if (senderId < receiverId) {
             return senderId + "_" + receiverId;
         } else {
             return receiverId + "_" + senderId;
@@ -79,12 +80,14 @@ public class DirectMessage {
     }
 
     // Helper method to check if current user is the sender
-    public boolean isSentBy(String userId) {
+    public boolean isSentBy(Long userId) {
+        if (userId == null || senderId == null) return false;
         return senderId.equals(userId);
     }
 
     // Helper method to get the other participant in the conversation
-    public String getOtherParticipant(String currentUserId) {
+    public Long getOtherParticipant(Long currentUserId) {
+        if (currentUserId == null) return null;
         return senderId.equals(currentUserId) ? receiverId : senderId;
     }
 
