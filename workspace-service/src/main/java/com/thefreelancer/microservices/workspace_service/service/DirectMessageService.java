@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.thefreelancer.microservices.workspace_service.client.AuthServiceClient;
+import com.thefreelancer.microservices.workspace_service.dto.AuthUserSummaryDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +28,7 @@ public class DirectMessageService {
     private final DirectMessageRepository directMessageRepository;
     private final DirectMessageMapper directMessageMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final AuthServiceClient authServiceClient;
     
     @Transactional
     public DirectMessageResponseDto sendMessage(DirectMessageCreateDto createDto, String senderId) {
@@ -92,6 +95,61 @@ public class DirectMessageService {
         return messageResponse;
     }
     
+
+        @Transactional(readOnly = true)
+    public List<RecentChatPartnerDto> getRecentChatPartners(String userId) {
+        log.info("Getting recent chat partners for user: {}", userId);
+
+        Long userIdLong;
+        try {
+            userIdLong = Long.parseLong(userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+
+        // Get latest messages for each conversation
+        List<DirectMessage> latestMessages = directMessageRepository.findLatestMessagesForUserConversations(userId);
+
+        // Map to other participant IDs
+        List<Long> otherUserIds = latestMessages.stream()
+            .map(m -> m.getOtherParticipant(userIdLong))
+            .filter(id -> id != null)
+            .distinct()
+            .limit(10)
+            .collect(Collectors.toList());
+
+        // Fetch user details from AuthService
+        List<UserResponseDto> users = authServiceClient.getUsersByIds(otherUserIds);
+
+        // Map userId to UserResponseDto for quick lookup
+        Map<Long, UserResponseDto> userMap = users.stream()
+            .collect(Collectors.toMap(UserResponseDto::getId, u -> u));
+
+        // Build result list
+        List<RecentChatPartnerDto> result = latestMessages.stream()
+            .map(m -> {
+                Long otherId = m.getOtherParticipant(userIdLong);
+                if (otherId == null) return null;
+                UserResponseDto user = userMap.get(otherId);
+                long unread = directMessageRepository.countUnreadMessagesFromSender(userId, otherId.toString());
+                return RecentChatPartnerDto.builder()
+                    .userId(otherId.toString())
+                    .name(user != null ? user.getDisplayName() : null)
+                    .handle(user != null ? user.getFormattedHandle() : null)
+                    .email(user != null ? user.getEmail() : null)
+                    .unreadCount(unread)
+                    .lastMessage(directMessageMapper.toResponseDto(m))
+                    .lastActivity(m.getCreatedAt())
+                    .build();
+            })
+            .filter(r -> r != null)
+            .limit(10)
+            .collect(Collectors.toList());
+
+        return result;
+    }
+
+
     @Transactional(readOnly = true)
     public DirectMessagePageResponseDto getConversationMessages(String userId, String otherUserId, 
                                                          int page, int size, String beforeMessageId) {
@@ -160,6 +218,8 @@ public class DirectMessageService {
             })
             .collect(Collectors.toList());
     }
+
+    
     
     @Transactional
     public void markConversationAsRead(String receiverId, String senderId) {

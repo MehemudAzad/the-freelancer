@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/direct-messages")
 @RequiredArgsConstructor
@@ -24,6 +25,29 @@ import java.util.List;
 public class DirectMessageController {
     
     private final DirectMessageService directMessageService;
+
+    @Operation(summary = "Get recent chat partners", description = "Get top 10 users you've chatted with recently")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Recent chat partners retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
+    @GetMapping("/recent")
+    public ResponseEntity<List<RecentChatPartnerDto>> getRecentChatPartners(
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        log.info("GET /api/direct-messages/recent - Getting recent chat partners for user {}", userIdHeader);
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for getting recent chat partners");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            List<RecentChatPartnerDto> response = directMessageService.getRecentChatPartners(userIdHeader);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error getting recent chat partners: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
     
     @Operation(summary = "Send direct message", description = "Send a direct message to another user")
     @ApiResponses(value = {
