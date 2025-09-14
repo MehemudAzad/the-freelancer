@@ -1,6 +1,7 @@
 package com.thefreelancer.microservices.job_proposal.controller;
 
 import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateDto;
+import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateWithMilestonesDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalUpdateDto;
 import com.thefreelancer.microservices.job_proposal.service.ProposalService;
@@ -70,6 +71,47 @@ public class ProposalController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
+
+    @Operation(summary = "Submit new proposal with milestones", description = "Submit a new proposal for a job with milestones (FREELANCER only)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Proposal with milestones submitted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid proposal data"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Access denied - FREELANCER role required")
+    })
+    @PostMapping("/my-proposals-with-milestones")
+    public ResponseEntity<ProposalResponseDto> submitProposalWithMilestones(
+            @Valid @RequestBody ProposalCreateWithMilestonesDto proposalCreateDto,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        log.info("POST /api/proposals/my-proposals-with-milestones - Submitting new proposal with milestones for job: {}", proposalCreateDto.getJobId());
+
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for submitting proposals");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // Check authorization - only freelancers can submit proposals
+        if (!"FREELANCER".equalsIgnoreCase(userRole)) {
+            log.warn("Access denied: Only freelancers can submit proposals. User role: {}", userRole);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            Long freelancerId = Long.parseLong(userIdHeader);
+            ProposalResponseDto response = proposalService.createProposalWithMilestones(proposalCreateDto, freelancerId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            log.warn("Failed to submit proposal with milestones: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 
     @Operation(summary = "Submit new proposal", description = "Submit a new proposal for a job (FREELANCER only)")
     @ApiResponses(value = {

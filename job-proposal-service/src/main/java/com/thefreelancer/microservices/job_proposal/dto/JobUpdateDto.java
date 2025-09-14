@@ -35,7 +35,6 @@ public class JobUpdateDto {
 
     private List<String> skills;
 
-    private String payType;
 
     private Boolean isUrgent;
 

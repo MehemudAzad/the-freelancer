@@ -17,7 +17,6 @@ public interface ProposalMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "job", source = "jobId", qualifiedByName = "jobIdToJob")
     @Mapping(target = "totalCents", source = "proposedRate", qualifiedByName = "rateToCents")
-    @Mapping(target = "currency", constant = "USD")
     @Mapping(target = "cover", source = "coverLetter")
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

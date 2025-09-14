@@ -27,9 +27,9 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>21</java.version>
-		<mapstruct.version>1.5.5.Final</mapstruct.version>
-		<lombok.version>1.18.26</lombok.version>
+	<java.version>21</java.version>
+	<lombok.version>1.18.26</lombok.version>
+	<mapstruct.version>1.5.5.Final</mapstruct.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -100,10 +100,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
@@ -113,9 +110,13 @@
 						<path>
 							<groupId>org.mapstruct</groupId>
 							<artifactId>mapstruct-processor</artifactId>
-							<version>${mapstruct.version}</version>
+							<version>1.5.5.Final</version>
 						</path>
-						<!-- removed lombok-mapstruct-binding due to incompatibility with newer javac internals -->
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok-mapstruct-binding</artifactId>
+							<version>0.2.0</version>
+						</path>
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>

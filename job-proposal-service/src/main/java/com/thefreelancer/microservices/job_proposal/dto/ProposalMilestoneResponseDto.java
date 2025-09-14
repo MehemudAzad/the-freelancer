@@ -18,7 +18,6 @@ public class ProposalMilestoneResponseDto {
     private String title;
     private String description;
     private BigDecimal amountCents;
-    private String currency;
     private LocalDate dueDate;
     private Integer orderIndex;
     private LocalDateTime createdAt;

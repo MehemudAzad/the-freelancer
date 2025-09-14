@@ -19,7 +19,6 @@ public class ProposalMilestoneUpdateDto {
     @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than 0")
     private BigDecimal amountCents;
     
-    private String currency;
     private LocalDate dueDate;
     private Integer orderIndex;
 }

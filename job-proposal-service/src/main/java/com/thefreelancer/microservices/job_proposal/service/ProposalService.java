@@ -1,11 +1,14 @@
 package com.thefreelancer.microservices.job_proposal.service;
 
 import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateDto;
+import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateWithMilestonesDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalUpdateDto;
 import com.thefreelancer.microservices.job_proposal.model.Job;
 import com.thefreelancer.microservices.job_proposal.model.Proposal;
+import com.thefreelancer.microservices.job_proposal.model.ProposalMilestone;
 import com.thefreelancer.microservices.job_proposal.repository.JobRepository;
+import com.thefreelancer.microservices.job_proposal.repository.ProposalMilestoneRepository;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalRepository;
 import com.thefreelancer.microservices.job_proposal.mapper.ProposalMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ public class ProposalService {
     
     private final ProposalRepository proposalRepository;
     private final JobRepository jobRepository;
+    private final ProposalMilestoneRepository proposalMilestoneRepository;
     private final ProposalMapper proposalMapper;
     
     @Transactional(readOnly = true)
@@ -52,19 +56,67 @@ public class ProposalService {
     public ProposalResponseDto createProposal(ProposalCreateDto proposalCreateDto) {
         log.info("Creating new proposal for job: {} by freelancer: {}", 
                 proposalCreateDto.getJobId(), proposalCreateDto.getFreelancerId());
-        
-        // TODO: Check if freelancer already has a proposal for this job
-        // TODO: Check if job exists and is still open for proposals
-        
+
+        // Check if freelancer already has a proposal for this job
+        boolean exists = proposalRepository.existsByJobIdAndFreelancerId(
+            proposalCreateDto.getJobId(), proposalCreateDto.getFreelancerId());
+        if (exists) {
+            throw new RuntimeException("You have already submitted a proposal for this job.");
+        }
+
+        // Check if job exists and is still open for proposals
+        Job job = jobRepository.findById(proposalCreateDto.getJobId())
+            .orElseThrow(() -> new RuntimeException("Job not found: " + proposalCreateDto.getJobId()));
+        if (job.getStatus() != Job.JobStatus.OPEN) {
+            throw new RuntimeException("Proposals can only be submitted to jobs with status OPEN.");
+        }
+
         Proposal proposal = proposalMapper.toEntity(proposalCreateDto);
         proposal.setStatus(Proposal.ProposalStatus.SUBMITTED);
-        
+
         Proposal savedProposal = proposalRepository.save(proposal);
         log.info("Proposal created successfully with ID: {}", savedProposal.getId());
-        
+
         return proposalMapper.toResponseDto(savedProposal);
     }
     
+    @Transactional
+    public ProposalResponseDto createProposalWithMilestones(ProposalCreateWithMilestonesDto proposalCreateDto, Long freelancerId) {
+        log.info("Creating new proposal with milestones for job: {} by freelancer: {}", proposalCreateDto.getJobId(), freelancerId);
+
+        // Fetch job entity
+        Job job = jobRepository.findById(proposalCreateDto.getJobId())
+            .orElseThrow(() -> new RuntimeException("Job not found: " + proposalCreateDto.getJobId()));
+
+        Proposal proposal = Proposal.builder()
+            .job(job)
+            .freelancerId(freelancerId)
+            .cover(proposalCreateDto.getCover())
+            .totalCents(proposalCreateDto.getTotalCents())
+            .deliveryDays(proposalCreateDto.getDeliveryDays())
+            .status(Proposal.ProposalStatus.SUBMITTED)
+            .build();
+        Proposal savedProposal = proposalRepository.save(proposal);
+
+        // Save milestones if provided
+        if (proposalCreateDto.getMilestones() != null && !proposalCreateDto.getMilestones().isEmpty()) {
+            List<ProposalMilestone> milestones = proposalCreateDto.getMilestones().stream()
+                .map(dto -> ProposalMilestone.builder()
+                    .proposal(savedProposal)
+                    .title(dto.getTitle())
+                    .description(dto.getDescription())
+                    .amountCents(dto.getAmountCents())
+                    .dueDate(dto.getDueDate())
+                    .orderIndex(dto.getOrderIndex())
+                    .build())
+                .collect(java.util.stream.Collectors.toList());
+            proposalMilestoneRepository.saveAll(milestones);
+        }
+
+        log.info("Proposal with milestones created successfully with ID: {}", savedProposal.getId());
+        return proposalMapper.toResponseDto(savedProposal);
+    }
+
     @Transactional
     public ProposalResponseDto updateProposal(Long proposalId, ProposalUpdateDto proposalUpdateDto) {
         log.info("Updating proposal: {}", proposalId);

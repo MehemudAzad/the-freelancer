@@ -90,7 +90,7 @@ public class JobController {
             @Parameter(description = "ID of the user whose jobs to retrieve") @PathVariable Long userId) {
         log.info("GET /api/jobs/user/{} - Fetching jobs for user", userId);
         
-        List<JobResponseDto> jobs = jobService.getJobsByClientId(userId);
+        List<JobResponseDto> jobs = jobService.getJobsByClientId(userId, null);
         return ResponseEntity.ok(jobs);
     }
     
@@ -160,8 +160,19 @@ public class JobController {
         
         try {
             Long authenticatedUserId = Long.parseLong(userIdHeader);
-            List<JobResponseDto> myJobs = jobService.getJobsByClientId(authenticatedUserId);
-            log.info("Found {} jobs for authenticated client: {}", myJobs.size(), authenticatedUserId);
+            
+            Job.JobStatus jobStatus = null;
+            if (status != null && !status.trim().isEmpty()) {
+                try {
+                    jobStatus = Job.JobStatus.valueOf(status.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid status provided: {}", status);
+                    return ResponseEntity.badRequest().build();
+                }
+            }
+            
+            List<JobResponseDto> myJobs = jobService.getJobsByClientId(authenticatedUserId, jobStatus);
+            log.info("Found {} jobs for authenticated client: {} with status: {}", myJobs.size(), authenticatedUserId, jobStatus);
             return ResponseEntity.ok(myJobs);
         } catch (NumberFormatException e) {
             log.error("Invalid user ID format: {}", userIdHeader);
@@ -193,7 +204,7 @@ public class JobController {
             
             // TODO: Add ownership validation in service layer
             // For now, using existing updateJob method with TODO comment
-            Optional<JobResponseDto> updatedJob = jobService.updateJob(jobId, jobUpdateDto);
+            Optional<JobResponseDto> updatedJob = jobService.updateJob(jobId, jobUpdateDto, authenticatedUserId);
             
             if (updatedJob.isPresent()) {
                 log.info("Job successfully updated with ID: {} by user: {}", jobId, authenticatedUserId);
@@ -231,7 +242,7 @@ public class JobController {
             
             // TODO: Add ownership validation in service layer
             // For now, using existing deleteJob method with TODO comment
-            boolean deleted = jobService.deleteJob(jobId);
+            boolean deleted = jobService.deleteJob(jobId, authenticatedUserId);
             
             if (deleted) {
                 log.info("Job successfully deleted/cancelled with ID: {} by user: {}", jobId, authenticatedUserId);
