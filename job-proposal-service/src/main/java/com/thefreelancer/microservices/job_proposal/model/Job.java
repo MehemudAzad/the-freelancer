@@ -33,10 +33,7 @@ public class Job {
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    @ElementCollection
-    @CollectionTable(name = "job_stack", joinColumns = @JoinColumn(name = "job_id"))
-    @Column(name = "stack_item")
-    private List<String> stack;
+    // stack replaced by skills - use `skills` field
     
     @Enumerated(EnumType.STRING)
     @Column(name = "budget_type")

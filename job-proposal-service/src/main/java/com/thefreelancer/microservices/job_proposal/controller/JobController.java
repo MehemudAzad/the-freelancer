@@ -4,6 +4,7 @@ import com.thefreelancer.microservices.job_proposal.dto.JobCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.JobResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.JobUpdateDto;
 import com.thefreelancer.microservices.job_proposal.service.JobService;
+import com.thefreelancer.microservices.job_proposal.model.Job;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

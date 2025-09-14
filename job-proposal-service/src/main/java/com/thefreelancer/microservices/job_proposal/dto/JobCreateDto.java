@@ -26,8 +26,6 @@ public class JobCreateDto {
     @Size(max = 5000, message = "Description cannot exceed 5000 characters")
     private String description;
     
-    private List<String> stack;
-    
     private String category;
     
     private List<String> skills;

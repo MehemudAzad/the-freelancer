@@ -16,7 +16,6 @@ public class JobResponseDto {
     private Long clientId;
     private String projectName;
     private String description;
-    private List<String> stack;
     private String budgetType;
     private BigInteger minBudgetCents;
     private BigInteger maxBudgetCents;
