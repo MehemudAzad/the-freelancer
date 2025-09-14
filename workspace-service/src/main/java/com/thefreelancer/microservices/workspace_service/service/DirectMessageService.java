@@ -13,7 +13,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.thefreelancer.microservices.workspace_service.client.AuthServiceClient;
-import com.thefreelancer.microservices.workspace_service.dto.AuthUserSummaryDto;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -120,7 +120,10 @@ public class DirectMessageService {
 
         // Fetch user details from AuthService
         List<UserResponseDto> users = authServiceClient.getUsersByIds(otherUserIds);
-
+        log.info("Fetched user details from AuthService: {}", users);
+        for (UserResponseDto u : users) {
+            log.info("User detail: id={}, name={}, handle={}, email={}", u.getId(), u.getName(), u.getHandle(), u.getEmail());
+        }
         // Map userId to UserResponseDto for quick lookup
         Map<Long, UserResponseDto> userMap = users.stream()
             .collect(Collectors.toMap(UserResponseDto::getId, u -> u));
@@ -198,19 +201,42 @@ public class DirectMessageService {
         // Get latest messages for each conversation
         List<DirectMessage> latestMessages = directMessageRepository.findLatestMessagesForUserConversations(userId);
         
+        // Get other participant IDs
+        List<Long> otherUserIds = latestMessages.stream()
+            .map(m -> m.getOtherParticipant(userIdLong))
+            .filter(id -> id != null)
+            .distinct()
+            .collect(Collectors.toList());
+
+        // Fetch user details from AuthService
+        List<UserResponseDto> users = authServiceClient.getUsersByIds(otherUserIds);
+        Map<Long, UserResponseDto> userMap = users.stream()
+            .collect(Collectors.toMap(UserResponseDto::getId, u -> u));
+
         return latestMessages.stream()
             .map(message -> {
                 Long otherUserIdLong = message.getOtherParticipant(userIdLong);
                 String otherUserId = otherUserIdLong != null ? otherUserIdLong.toString() : null;
                 long unreadCount = directMessageRepository.countUnreadMessagesFromSender(userId, otherUserId);
-                
+
+                UserResponseDto otherUser = otherUserIdLong != null ? userMap.get(otherUserIdLong) : null;
+                DirectMessageResponseDto lastMessageDto = directMessageMapper.toResponseDto(message);
+                // Fill senderName and receiverName if possible
+                if (lastMessageDto != null) {
+                    if (lastMessageDto.getSenderId() != null && lastMessageDto.getSenderId().toString().equals(otherUserId)) {
+                        lastMessageDto.setSenderName(otherUser != null ? otherUser.getDisplayName() : null);
+                    }
+                    if (lastMessageDto.getReceiverId() != null && lastMessageDto.getReceiverId().toString().equals(otherUserId)) {
+                        lastMessageDto.setReceiverName(otherUser != null ? otherUser.getDisplayName() : null);
+                    }
+                }
+
                 return ConversationResponseDto.builder()
                     .conversationId(message.getConversationId())
                     .otherParticipantId(otherUserId)
-                    // TODO: Populate name and handle from user service
-                    .otherParticipantName("User " + otherUserId) // Temporary
-                    .otherParticipantHandle("@user" + otherUserId) // Temporary
-                    .lastMessage(directMessageMapper.toResponseDto(message))
+                    .otherParticipantName(otherUser != null ? otherUser.getDisplayName() : "User " + otherUserId)
+                    .otherParticipantHandle(otherUser != null ? otherUser.getFormattedHandle() : "@user" + otherUserId)
+                    .lastMessage(lastMessageDto)
                     .unreadCount(unreadCount)
                     .lastActivity(message.getCreatedAt())
                     .participantIds(List.of(userId, otherUserId))

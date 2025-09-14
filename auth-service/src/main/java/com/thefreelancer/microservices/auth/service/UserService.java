@@ -87,6 +87,12 @@ public class UserService {
         return savedUser;
     }
 
+    public java.util.List<UserResponseDto> getUsersByIds(java.util.List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return java.util.Collections.emptyList();
+        java.util.List<User> users = userRepository.findAllById(ids);
+        return users.stream().map(UserResponseDto::fromUser).collect(java.util.stream.Collectors.toList());
+    }
+
     public Optional<UserResponseDto> getUserById(Long id) {
         return userRepository.findById(id)
                 .map(UserResponseDto::fromUser);

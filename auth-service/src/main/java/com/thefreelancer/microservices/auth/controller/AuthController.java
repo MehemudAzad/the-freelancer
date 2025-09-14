@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -108,5 +109,29 @@ public class AuthController {
         Optional<UserResponseDto> user = userService.getUserByEmail(email);
         return user.map(u -> ResponseEntity.ok(u))
                    .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Batch get users by IDs: GET /api/auth/users?ids=1,2,3
+     */
+    @GetMapping(path = "/users")
+    public ResponseEntity<?> getUsersByIds(@RequestParam(name = "ids") String ids) {
+        if (ids == null || ids.isBlank()) {
+            return ResponseEntity.badRequest().body("Missing ids param");
+        }
+        String[] idArr = ids.split(",");
+        List<Long> idList = new java.util.ArrayList<>();
+        for (String idStr : idArr) {
+            try {
+                idList.add(Long.parseLong(idStr.trim()));
+            } catch (NumberFormatException e) {
+                // log.warn("Invalid user id: {}", idStr);
+            }
+        }
+        if (idList.isEmpty()) {
+            return ResponseEntity.badRequest().body("No valid ids");
+        }
+        List<UserResponseDto> users = userService.getUsersByIds(idList);
+        return ResponseEntity.ok(users);
     }
 }

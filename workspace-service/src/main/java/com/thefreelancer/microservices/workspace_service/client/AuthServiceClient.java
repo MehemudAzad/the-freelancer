@@ -21,25 +21,29 @@ public class AuthServiceClient {
     
     private final WebClient.Builder webClientBuilder;
     
-    @Value("${app.auth-service.url:http://localhost:8081}")
+    @Value("${app.auth-service.url:http://localhost:8081/api/auth}")
     private String authServiceUrl;
     
     public Optional<UserResponseDto> getUserById(Long userId) {
         try {
             log.debug("Calling Auth Service to get user: {}", userId);
             
-            UserResponseDto user = webClientBuilder.build()
+            UserResponseDto user = webClientBuilder
+                .baseUrl(authServiceUrl)
+                .build()
                 .get()
-                .uri(authServiceUrl + "/api/users/{userId}", userId)
+                .uri(uriBuilder -> uriBuilder
+                    .path("/users/{userId}")
+                    .build(userId))
                 .retrieve()
                 .bodyToMono(UserResponseDto.class)
                 .timeout(Duration.ofSeconds(5))
-                .onErrorResume(WebClientResponseException.NotFound.class, 
+                .onErrorResume(WebClientResponseException.NotFound.class,
                     ex -> {
                         log.debug("User not found: {}", userId);
                         return Mono.empty();
                     })
-                .onErrorResume(Exception.class, 
+                .onErrorResume(Exception.class,
                     ex -> {
                         log.error("Error calling Auth Service for user: {}", userId, ex);
                         return Mono.empty();
@@ -73,17 +77,19 @@ public class AuthServiceClient {
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
             
-            List<UserResponseDto> users = webClientBuilder.build()
+            List<UserResponseDto> users = webClientBuilder
+                .baseUrl(authServiceUrl)
+                .build()
                 .get()
                 .uri(uriBuilder -> uriBuilder
-                    .path(authServiceUrl + "/api/users")
+                    .path("/users")
                     .queryParam("ids", userIdsParam)
                     .build())
                 .retrieve()
                 .bodyToFlux(UserResponseDto.class)
                 .collectList()
-                .timeout(Duration.ofSeconds(10))
-                .onErrorResume(Exception.class, 
+                .timeout(Duration.ofSeconds(20))
+                .onErrorResume(Exception.class,
                     ex -> {
                         log.error("Error calling Auth Service for users: {}", userIds, ex);
                         return Mono.just(List.of());
