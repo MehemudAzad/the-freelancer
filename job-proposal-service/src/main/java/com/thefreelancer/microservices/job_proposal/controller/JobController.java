@@ -3,6 +3,7 @@ package com.thefreelancer.microservices.job_proposal.controller;
 import com.thefreelancer.microservices.job_proposal.dto.JobCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.JobResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.JobUpdateDto;
+import com.thefreelancer.microservices.job_proposal.dto.JobWithClientResponseDto;
 import com.thefreelancer.microservices.job_proposal.service.JobService;
 import com.thefreelancer.microservices.job_proposal.model.Job;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,6 +81,35 @@ public class JobController {
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             log.warn("Failed to search jobs: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @Operation(summary = "Search jobs with client information", description = "Search and filter jobs with enriched client data (public endpoint)")
+    @GetMapping("/search/with-client-info")
+    public ResponseEntity<List<JobWithClientResponseDto>> searchJobsWithClientInfo(
+            @Parameter(description = "Category filter") @RequestParam(required = false) String category,
+            @Parameter(description = "Minimum budget filter") @RequestParam(required = false) BigInteger minBudget,
+            @Parameter(description = "Maximum budget filter") @RequestParam(required = false) BigInteger maxBudget,
+            @Parameter(description = "Is urgent filter") @RequestParam(required = false) Boolean isUrgent,
+            @Parameter(description = "Budget type filter (FIXED|HOURLY)") @RequestParam(required = false) String budgetType) {
+
+        log.info("GET /api/jobs/search/with-client-info - Searching jobs with client info - category: {}, minBudget: {}, maxBudget: {}, isUrgent: {}, budgetType: {}", 
+                category, minBudget, maxBudget, isUrgent, budgetType);
+
+        try {
+            Job.BudgetType bt = null;
+            if (budgetType != null) {
+                bt = Job.BudgetType.valueOf(budgetType.toUpperCase());
+            }
+
+            List<JobWithClientResponseDto> jobs = jobService.searchJobsWithClientInfo(category, minBudget, maxBudget, isUrgent, bt);
+            return ResponseEntity.ok(jobs);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid budget type provided: {}", budgetType);
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            log.warn("Failed to search jobs with client info: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
