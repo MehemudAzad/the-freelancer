@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Notification Service
+  notification-postgres:
+    image: postgres:15
+    container_name: notification-postgres
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: notification_password
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - freelancer-network
+
+  # Kafka (if not running already)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - freelancer-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    networks:
+      - freelancer-network
+
+  # Notification Service
+  notification-service:
+    build: .
+    container_name: notification-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: notification-postgres
+      DB_PORT: 5432
+      DB_NAME: notification_db
+      DB_USERNAME: notification_user
+      DB_PASSWORD: notification_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_SERVICE_URL: http://auth-service:8081
+      JOB_PROPOSAL_SERVICE_URL: http://job-proposal-service:8083
+      GIG_SERVICE_URL: http://gig-service:8082
+    ports:
+      - "8084:8084"
+    depends_on:
+      - notification-postgres
+      - kafka
+    networks:
+      - freelancer-network
+    restart: unless-stopped
+
+volumes:
+  notification_postgres_data:
+
+networks:
+  freelancer-network:
+    external: true
