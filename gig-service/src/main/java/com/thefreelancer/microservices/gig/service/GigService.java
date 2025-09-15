@@ -1,8 +1,11 @@
 package com.thefreelancer.microservices.gig.service;
 
+import com.thefreelancer.microservices.gig.client.AuthServiceClient;
 import com.thefreelancer.microservices.gig.dto.GigCreateDto;
 import com.thefreelancer.microservices.gig.dto.GigResponseDto;
 import com.thefreelancer.microservices.gig.dto.GigUpdateDto;
+import com.thefreelancer.microservices.gig.dto.GigWithFreelancerResponseDto;
+import com.thefreelancer.microservices.gig.dto.UserResponseDto;
 import com.thefreelancer.microservices.gig.mapper.GigMapper;
 import com.thefreelancer.microservices.gig.model.Gig;
 import com.thefreelancer.microservices.gig.repository.GigRepository;
@@ -13,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -23,6 +27,7 @@ public class GigService {
     private final GigRepository gigRepository;
     private final ProfileRepository profileRepository;
     private final GigMapper gigMapper;
+    private final AuthServiceClient authServiceClient;
     
     @Transactional
     public GigResponseDto createGig(Long userId, GigCreateDto createDto) {
@@ -180,5 +185,103 @@ public class GigService {
         } else {
             log.warn("Gig not found for rating update: {}", gigId);
         }
+    }
+
+    /**
+     * Search gigs with freelancer information from auth-service
+     */
+    public List<GigWithFreelancerResponseDto> searchGigsWithFreelancerInfo(String category, List<String> tags, Long freelancerId) {
+        log.info("Searching gigs with freelancer info - category: {}, tags: {}, freelancerId: {}", category, tags, freelancerId);
+        
+        // Get gigs using existing search logic
+        List<Gig> gigs = searchGigsInternal(category, tags, freelancerId);
+        
+        if (gigs.isEmpty()) {
+            log.info("No gigs found for the given criteria");
+            return List.of();
+        }
+        
+        // Extract unique profile IDs (which correspond to user IDs in auth-service)
+        List<Long> freelancerIds = gigs.stream()
+                .map(Gig::getProfileId)
+                .distinct()
+                .toList();
+        
+        log.info("Fetching freelancer info for {} unique profiles: {}", freelancerIds.size(), freelancerIds);
+        
+        // Batch fetch freelancer information from auth-service
+        Map<Long, UserResponseDto> freelancerMap = authServiceClient.getUsersByIds(freelancerIds);
+        
+        // Build enriched response DTOs
+        return gigs.stream()
+                .map(gig -> buildGigWithFreelancerResponse(gig, freelancerMap.get(gig.getProfileId())))
+                .toList();
+    }
+
+    public Optional<GigWithFreelancerResponseDto> getGigWithFreelancerInfo(Long gigId) {
+        log.info("Fetching gig with ID: {} along with freelancer info", gigId);
+        
+        Optional<Gig> gigOpt = gigRepository.findById(gigId);
+        if (gigOpt.isEmpty()) {
+            log.warn("Gig not found with ID: {}", gigId);
+            return Optional.empty();
+        }
+        
+        Gig gig = gigOpt.get();
+        
+        // Fetch freelancer info from auth-service
+        UserResponseDto freelancer = authServiceClient.getUserById(gig.getProfileId());
+        
+        GigWithFreelancerResponseDto responseDto = buildGigWithFreelancerResponse(gig, freelancer);
+        
+        return Optional.of(responseDto);
+    }
+
+    /**
+     * Internal method to get gigs without DTO mapping (for reuse)
+     */
+    private List<Gig> searchGigsInternal(String category, List<String> tags, Long freelancerId) {
+        if (freelancerId != null) {
+            // If freelancer_id is specified, get gigs for that freelancer only
+            // But only return ACTIVE gigs to respect privacy
+            return gigRepository.findByProfileIdAndStatus(freelancerId, Gig.Status.ACTIVE);
+        } else if (category != null && !category.trim().isEmpty()) {
+            return gigRepository.findActiveGigsByCategory(category);
+        } else if (tags != null && !tags.isEmpty()) {
+            return gigRepository.findActiveGigsByTags(tags);
+        } else {
+            return gigRepository.findByStatus(Gig.Status.ACTIVE);
+        }
+    }
+
+    /**
+     * Build GigWithFreelancerResponseDto from gig and freelancer info
+     */
+    private GigWithFreelancerResponseDto buildGigWithFreelancerResponse(Gig gig, UserResponseDto freelancer) {
+        return GigWithFreelancerResponseDto.builder()
+                .id(gig.getId())
+                .profileId(gig.getProfileId())
+                .title(gig.getTitle())
+                .description(gig.getDescription())
+                .status(gig.getStatus().toString())
+                .category(gig.getCategory())
+                .tags(gig.getTags() != null ? List.of(gig.getTags()) : List.of())
+                .reviewAvg(gig.getReviewAvg() != null ? gig.getReviewAvg().doubleValue() : 0.0)
+                .reviewsCount(gig.getReviewsCount())
+                .createdAt(gig.getCreatedAt())
+                .updatedAt(gig.getUpdatedAt())
+                .freelancerInfo(freelancer != null ? 
+                    GigWithFreelancerResponseDto.FreelancerInfo.builder()
+                        .id(freelancer.getId())
+                        .email(freelancer.getEmail())
+                        .name(freelancer.getName())
+                        .handle(freelancer.getHandle())
+                        .role(freelancer.getRole())
+                        .country(freelancer.getCountry())
+                        .timezone(freelancer.getTimezone())
+                        .isActive(freelancer.getIsActive())
+                        .build()
+                    : null)
+                .build();
     }
 }
