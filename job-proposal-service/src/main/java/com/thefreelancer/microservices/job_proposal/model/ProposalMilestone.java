@@ -37,8 +37,6 @@ public class ProposalMilestone {
     @Column(name = "amount_cents", nullable = false)
     private BigInteger amountCents;
     
-    @Column(length = 3, nullable = false)
-    private String currency;
     
     @Column(name = "due_date")
     private LocalDate dueDate;

@@ -24,8 +24,6 @@ public class ProposalMilestoneCreateDto {
     @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than 0")
     private BigDecimal amountCents;
     
-    @NotNull(message = "Currency is required")
-    private String currency;
     
     private LocalDate dueDate;
     

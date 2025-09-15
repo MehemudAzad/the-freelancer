@@ -20,6 +20,7 @@ public interface ProfileMapper {
     @Mapping(target = "skills", source = "skills", qualifiedByName = "arrayToList")
     @Mapping(target = "deliveryScore", source = "deliveryScore", qualifiedByName = "bigDecimalToDouble")
     @Mapping(target = "reviewAvg", source = "reviewAvg", qualifiedByName = "bigDecimalToDouble")
+    @Mapping(target = "profilePictureUrl", source = "profilePictureUrl")
     ProfileResponseDto toResponseDto(Profile profile);
     
     @Mapping(target = "availability", source = "availability", qualifiedByName = "stringToAvailability")

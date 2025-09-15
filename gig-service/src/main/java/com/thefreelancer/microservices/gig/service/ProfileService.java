@@ -19,6 +19,17 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class ProfileService {
+    @Transactional
+    public Optional<ProfileResponseDto> updateProfilePictureUrl(Long userId, String profilePictureUrl) {
+        Optional<Profile> profileOpt = profileRepository.findByUserId(userId);
+        if (profileOpt.isPresent()) {
+            Profile profile = profileOpt.get();
+            profile.setProfilePictureUrl(profilePictureUrl);
+            profileRepository.save(profile);
+            return Optional.of(profileMapper.toResponseDto(profile));
+        }
+        return Optional.empty();
+    }
     
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;

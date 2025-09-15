@@ -42,7 +42,7 @@ public class JobService {
 
         Job job = jobMapper.toEntity(createDto);
         job.setClientId(clientId); // Set clientId from authentication
-        job.setStatus(Job.JobStatus.DRAFT); // New jobs start as draft
+        job.setStatus(Job.JobStatus.OPEN); // New jobs start as open
         
         Job savedJob = jobRepository.save(job);
         log.info("Successfully created job with ID: {} for clientId: {}", savedJob.getId(), clientId);
@@ -56,38 +56,38 @@ public class JobService {
     }
     
     @Transactional
-    public Optional<JobResponseDto> updateJob(Long jobId, JobUpdateDto updateDto) {
+    public Optional<JobResponseDto> updateJob(Long jobId, JobUpdateDto updateDto, Long clientId) {
         log.info("Updating job with ID: {}", jobId);
         
         Optional<Job> jobOpt = jobRepository.findById(jobId);
-        
         if (jobOpt.isEmpty()) {
             log.warn("Job not found with ID: {}", jobId);
             return Optional.empty();
         }
-        
         Job job = jobOpt.get();
-        
+
+        // Ownership check: only creator can update
+        if (clientId == null || !job.getClientId().equals(clientId)) {
+            log.warn("User {} is not the owner of job {}", clientId, jobId);
+            throw new RuntimeException("Only the creator of the job can update it.");
+        }
+
         // Validate budget range if both are provided
         if (updateDto.getMinBudgetCents() != null && updateDto.getMaxBudgetCents() != null) {
             if (updateDto.getMinBudgetCents().compareTo(updateDto.getMaxBudgetCents()) > 0) {
                 throw new RuntimeException("Minimum budget cannot be greater than maximum budget");
             }
         }
-        
+
         jobMapper.updateEntityFromDto(updateDto, job);
-
-    // mark the job as edited now
-    job.setEditedAt(java.time.LocalDateTime.now());
-
-    Job updatedJob = jobRepository.save(job);
+        job.setEditedAt(java.time.LocalDateTime.now());
+        Job updatedJob = jobRepository.save(job);
         log.info("Successfully updated job with ID: {}", jobId);
-        
         return Optional.of(jobMapper.toResponseDto(updatedJob));
     }
     
     @Transactional
-    public boolean deleteJob(Long jobId) {
+    public boolean deleteJob(Long jobId, Long clientId) {
         log.info("Deleting job with ID: {}", jobId);
         
         Optional<Job> jobOpt = jobRepository.findById(jobId);
@@ -98,6 +98,12 @@ public class JobService {
         }
         
         Job job = jobOpt.get();
+        
+        // Ownership check: only creator can delete
+        if (clientId == null || !job.getClientId().equals(clientId)) {
+            log.warn("User {} is not the owner of job {}", clientId, jobId);
+            throw new RuntimeException("Only the creator of the job can delete it.");
+        }
         
         // Check if job can be deleted (should not be in progress or completed)
         if (job.getStatus() == Job.JobStatus.IN_PROGRESS || job.getStatus() == Job.JobStatus.COMPLETED) {
@@ -112,11 +118,18 @@ public class JobService {
         return true;
     }
     
-    public List<JobResponseDto> getJobsByClientId(Long clientId) {
-        log.info("Fetching jobs for clientId: {}", clientId);
+    public List<JobResponseDto> getJobsByClientId(Long clientId, Job.JobStatus status) {
+        log.info("Fetching jobs for clientId: {} with status: {}", clientId, status);
         
-        return jobRepository.findByClientId(clientId)
-                .stream()
+        List<Job> jobs = jobRepository.findByClientId(clientId);
+        
+        if (status != null) {
+            jobs = jobs.stream()
+                    .filter(job -> job.getStatus().equals(status))
+                    .toList();
+        }
+        
+        return jobs.stream()
                 .map(jobMapper::toResponseDto)
                 .toList();
     }

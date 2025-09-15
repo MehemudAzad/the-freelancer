@@ -37,9 +37,6 @@ public class Proposal {
     @Column(name = "total_cents")
     private BigInteger totalCents;
     
-    @Column(length = 3)
-    private String currency;
-    
     @Column(name = "delivery_days")
     private Integer deliveryDays;
     

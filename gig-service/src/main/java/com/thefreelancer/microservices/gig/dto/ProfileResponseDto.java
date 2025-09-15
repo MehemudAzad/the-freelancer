@@ -19,6 +19,7 @@ public class ProfileResponseDto {
     private String headline;
     private String bio;
     private Long hourlyRateCents;
+    private String profilePictureUrl;
     private String currency;
     private String availability;
     private List<String> languages;
