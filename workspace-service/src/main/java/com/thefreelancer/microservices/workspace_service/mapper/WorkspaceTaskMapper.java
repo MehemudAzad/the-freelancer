@@ -3,8 +3,15 @@ package com.thefreelancer.microservices.workspace_service.mapper;
 import com.thefreelancer.microservices.workspace_service.dto.TaskCreateDto;
 import com.thefreelancer.microservices.workspace_service.dto.TaskResponseDto;
 import com.thefreelancer.microservices.workspace_service.dto.TaskUpdateDto;
-import com.thefreelancer.microservices.workspace_service.model.Task;
-import org.mapstruct.*;
+import com.thefreelancer.microservices.workspace_service.model.WorkspaceTask;
+
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,77 +21,75 @@ import java.util.List;
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
     unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
-public interface TaskMapper {
+public interface WorkspaceTaskMapper {
     
     @Mapping(target = "status", source = "status", qualifiedByName = "statusToString")
     @Mapping(target = "priority", source = "priority", qualifiedByName = "priorityToString")
-    TaskResponseDto toResponseDto(Task task);
+    @Mapping(target = "createdBy", source = "createdById")
+    TaskResponseDto toResponseDto(WorkspaceTask task);
     
-    List<TaskResponseDto> toResponseDtoList(List<Task> tasks);
+    List<TaskResponseDto> toResponseDtoList(List<WorkspaceTask> tasks);
     
     @Mapping(target = "priority", source = "createDto.priority", qualifiedByName = "stringToPriority")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "room", ignore = true)
-    @Mapping(target = "roomId", source = "roomId")
-    @Mapping(target = "createdBy", source = "createdBy")
     @Mapping(target = "completedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "status", constant = "TODO")
-    Task toEntity(TaskCreateDto createDto, Long roomId, String createdBy);
+    WorkspaceTask toEntity(TaskCreateDto createDto, Long roomId, String createdBy);
     
     @Mapping(target = "status", source = "updateDto.status", qualifiedByName = "stringToStatus")
     @Mapping(target = "priority", source = "updateDto.priority", qualifiedByName = "stringToPriority")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "room", ignore = true)
-    @Mapping(target = "roomId", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdById", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateTaskFromDto(TaskUpdateDto updateDto, @MappingTarget Task task);
+    void updateTaskFromDto(TaskUpdateDto updateDto, @MappingTarget WorkspaceTask task);
     
     @Named("statusToString")
-    default String statusToString(Task.TaskStatus status) {
+    default String statusToString(WorkspaceTask.TaskStatus status) {
         return status != null ? status.toString() : null;
     }
     
     @Named("stringToStatus")
-    default Task.TaskStatus stringToStatus(String status) {
+    default WorkspaceTask.TaskStatus stringToStatus(String status) {
         if (status == null || status.trim().isEmpty()) {
             return null;
         }
         try {
-            return Task.TaskStatus.valueOf(status.toUpperCase());
+            return WorkspaceTask.TaskStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
             return null; // Invalid value, ignore
         }
     }
     
     @Named("priorityToString")
-    default String priorityToString(Task.TaskPriority priority) {
+    default String priorityToString(WorkspaceTask.TaskPriority priority) {
         return priority != null ? priority.toString() : null;
     }
     
     @Named("stringToPriority")
-    default Task.TaskPriority stringToPriority(String priority) {
+    default WorkspaceTask.TaskPriority stringToPriority(String priority) {
         if (priority == null || priority.trim().isEmpty()) {
-            return Task.TaskPriority.MEDIUM; // Default
+            return WorkspaceTask.TaskPriority.MEDIUM; // Default
         }
         try {
-            return Task.TaskPriority.valueOf(priority.toUpperCase());
+            return WorkspaceTask.TaskPriority.valueOf(priority.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return Task.TaskPriority.MEDIUM; // Invalid value, use default
+            return WorkspaceTask.TaskPriority.MEDIUM; // Invalid value, use default
         }
     }
     
     @AfterMapping
-    default void setCompletedAt(@MappingTarget Task task, TaskUpdateDto updateDto) {
+    default void setCompletedAt(@MappingTarget WorkspaceTask task, TaskUpdateDto updateDto) {
         if (updateDto.getStatus() != null && 
-            "DONE".equalsIgnoreCase(updateDto.getStatus()) && 
+            "COMPLETED".equalsIgnoreCase(updateDto.getStatus()) && 
             task.getCompletedAt() == null) {
             task.setCompletedAt(LocalDateTime.now());
         } else if (updateDto.getStatus() != null && 
-                   !"DONE".equalsIgnoreCase(updateDto.getStatus())) {
+                   !"COMPLETED".equalsIgnoreCase(updateDto.getStatus())) {
             task.setCompletedAt(null);
         }
     }

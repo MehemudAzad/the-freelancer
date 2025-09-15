@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@lombok.Builder
 public class WorkspaceEvent {
 
     @Id
@@ -40,7 +41,7 @@ public class WorkspaceEvent {
     private LocalDateTime endTime;
 
     @Column(name = "attendees", columnDefinition = "jsonb")
-    private String attendees; // JSON array of user IDs
+    private String attendees; // JSON array of user emails
 
     @Column(name = "milestone_id")
     private Long milestoneId; // Optional link to contract milestone

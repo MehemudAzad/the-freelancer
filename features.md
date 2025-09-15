@@ -143,8 +143,8 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [ ] `PUT /api/workspaces/rooms/{roomId}/tasks/reorder` - Reorder tasks (drag & drop)
 
 ### Calendar & Events
-- [ ] `GET /api/workspaces/rooms/{roomId}/events` - Get calendar events
-- [ ] `POST /api/workspaces/rooms/{roomId}/events` - Create/schedule event
+- [x] `GET /api/workspaces/rooms/{roomId}/events` - Get calendar events ✅ **COMPLETED**
+- [x] `POST /api/workspaces/rooms/{roomId}/events` - Create/schedule event ✅ **COMPLETED**
 
 ### WebSocket (Real-time) 
 - [ ] `WS /api/workspaces/rooms/{roomId}/live` - Real-time room connection
@@ -246,7 +246,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 | Auth Service | ✅ | ✅ | 🟡 (3/8) | ❌ |
 | Gig Service | ✅ | ✅ | ✅ (11/11) | ❌ |
 | Job Proposal Service | ✅ | ❌ | 🟡 (23/28) | ❌ |
-| Workspace Service | ✅ | ❌ | 🟡 (9/18) | ❌ |
+| Workspace Service | ✅ | ❌ | 🟡 (11/18) | ❌ |
 | Payment Service | ✅ | ❌ | ✅ (6/6) | ❌ |
 
 **Legend:**

@@ -3,6 +3,7 @@ package com.thefreelancer.microservices.workspace_service.dto;
 import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 
 @Data
@@ -18,7 +19,7 @@ public class TaskResponseDto {
     private String assigneeId;
     private String createdBy;
     private Integer orderIndex;
-    private LocalDateTime dueDate;
+    private LocalDate dueDate;
     private LocalDateTime completedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

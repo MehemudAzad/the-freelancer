@@ -1,7 +1,8 @@
 package com.thefreelancer.microservices.workspace_service.controller;
 
 import com.thefreelancer.microservices.workspace_service.dto.*;
-import com.thefreelancer.microservices.workspace_service.service.TaskService;
+import com.thefreelancer.microservices.workspace_service.service.WorkspaceTaskService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/workspaces/rooms/{roomId}/tasks")
 @RequiredArgsConstructor
 @Slf4j
-public class TaskController {
+public class WorkspaceTaskController {
     
-    private final TaskService taskService;
+    private final WorkspaceTaskService taskService;
     
     /**
      * Create task in room

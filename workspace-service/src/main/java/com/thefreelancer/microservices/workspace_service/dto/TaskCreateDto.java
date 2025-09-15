@@ -3,7 +3,7 @@ package com.thefreelancer.microservices.workspace_service.dto;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 public class TaskCreateDto {
@@ -19,7 +19,7 @@ public class TaskCreateDto {
     
     private String assigneeId;
     
-    private LocalDateTime dueDate;
+    private LocalDate dueDate;
     
     private Integer orderIndex;
 }

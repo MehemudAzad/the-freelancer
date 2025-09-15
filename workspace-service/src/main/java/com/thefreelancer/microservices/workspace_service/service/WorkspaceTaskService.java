@@ -2,11 +2,12 @@ package com.thefreelancer.microservices.workspace_service.service;
 
 import com.thefreelancer.microservices.workspace_service.dto.*;
 import com.thefreelancer.microservices.workspace_service.exception.ResourceNotFoundException;
-import com.thefreelancer.microservices.workspace_service.mapper.TaskMapper;
+import com.thefreelancer.microservices.workspace_service.mapper.WorkspaceTaskMapper;
 import com.thefreelancer.microservices.workspace_service.model.Room;
-import com.thefreelancer.microservices.workspace_service.model.Task;
+import com.thefreelancer.microservices.workspace_service.model.WorkspaceTask;
 import com.thefreelancer.microservices.workspace_service.repository.RoomRepository;
-import com.thefreelancer.microservices.workspace_service.repository.TaskRepository;
+import com.thefreelancer.microservices.workspace_service.repository.WorkspaceTaskRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,15 +19,15 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TaskService {
+public class WorkspaceTaskService {
     
-    private final TaskRepository taskRepository;
+    private final WorkspaceTaskRepository taskRepository;
     private final RoomRepository roomRepository;
-    private final TaskMapper taskMapper;
+    private final WorkspaceTaskMapper taskMapper;
     
     @Transactional
     public TaskResponseDto createTask(String roomId, String userId, TaskCreateDto createDto) {
-        log.info("Creating task in room: {} by user: {}", roomId, userId);
+        log.info("Creating WorkspaceTask in room: {} by user: {}", roomId, userId);
         
         // Validate room exists and user has access
         Long roomIdLong = Long.parseLong(roomId);
@@ -41,16 +42,18 @@ public class TaskService {
             createDto.setOrderIndex(maxOrder != null ? maxOrder + 1 : 1);
         }
         
-        // Create task entity
-        Task task = taskMapper.toEntity(createDto, roomIdLong, userId);
-        task.setRoom(room);
+        // Create WorkspaceTask entity
+    WorkspaceTask workspaceTask = taskMapper.toEntity(createDto, roomIdLong, userId);
+    // Mapper ignores room and createdById; set them here
+    workspaceTask.setRoom(room);
+    workspaceTask.setCreatedById(userId);
         
-        Task savedTask = taskRepository.save(task);
+        WorkspaceTask savedTask = taskRepository.save(workspaceTask);
         
         // TODO: Publish WebSocket event for real-time updates
         // TODO: Send notification to assignee if different from creator
         
-        log.info("Task created successfully with ID: {}", savedTask.getId());
+        log.info("WorkspaceTask created successfully with ID: {}", savedTask.getId());
         return taskMapper.toResponseDto(savedTask);
     }
     
@@ -66,13 +69,13 @@ public class TaskService {
         validateRoomAccess(room, userId);
         
         // Fetch tasks with filters
-        List<Task> tasks;
+        List<WorkspaceTask> tasks;
         if (status != null && assigneeId != null) {
-            Task.TaskStatus taskStatus = Task.TaskStatus.valueOf(status.toUpperCase());
+            WorkspaceTask.TaskStatus taskStatus = WorkspaceTask.TaskStatus.valueOf(status.toUpperCase());
             tasks = taskRepository.findByRoomIdAndStatusAndAssigneeIdOrderByOrderIndexAscCreatedAtDesc(
                 roomIdLong, taskStatus, assigneeId);
         } else if (status != null) {
-            Task.TaskStatus taskStatus = Task.TaskStatus.valueOf(status.toUpperCase());
+            WorkspaceTask.TaskStatus taskStatus = WorkspaceTask.TaskStatus.valueOf(status.toUpperCase());
             tasks = taskRepository.findByRoomIdAndStatusOrderByOrderIndexAscCreatedAtDesc(roomIdLong, taskStatus);
         } else if (assigneeId != null) {
             tasks = taskRepository.findByRoomIdAndAssigneeIdOrderByOrderIndexAscCreatedAtDesc(roomIdLong, assigneeId);
@@ -82,7 +85,7 @@ public class TaskService {
         
         List<TaskResponseDto> taskDtos = taskMapper.toResponseDtoList(tasks);
         
-        // Calculate task statistics
+        // Calculate WorkspaceTask statistics
         TaskListResponseDto.TaskStats stats = calculateTaskStats(roomIdLong);
         
         log.info("Found {} tasks for room: {}", tasks.size(), roomId);
@@ -96,7 +99,7 @@ public class TaskService {
     
     @Transactional
     public TaskResponseDto updateTask(String roomId, String taskId, String userId, TaskUpdateDto updateDto) {
-        log.info("Updating task: {} in room: {} by user: {}", taskId, roomId, userId);
+        log.info("Updating WorkspaceTask: {} in room: {} by user: {}", taskId, roomId, userId);
         
         // Validate room access
         Long roomIdLong = Long.parseLong(roomId);
@@ -104,24 +107,24 @@ public class TaskService {
             .orElseThrow(() -> new ResourceNotFoundException("Room not found: " + roomId));
         validateRoomAccess(room, userId);
         
-        // Find and validate task
+        // Find and validate WorkspaceTask
         Long taskIdLong = Long.parseLong(taskId);
-        Task task = taskRepository.findById(taskIdLong)
-            .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
-        
-        if (!task.getRoomId().equals(roomIdLong)) {
-            throw new IllegalArgumentException("Task does not belong to this room");
+        WorkspaceTask workspaceTask = taskRepository.findById(taskIdLong)
+            .orElseThrow(() -> new ResourceNotFoundException("WorkspaceTask not found: " + taskId));
+
+        if (workspaceTask.getRoom() == null || !workspaceTask.getRoom().getId().equals(roomIdLong)) {
+            throw new IllegalArgumentException("WorkspaceTask does not belong to this room");
         }
-        
-        // Update task
-        taskMapper.updateTaskFromDto(updateDto, task);
-        
-        Task savedTask = taskRepository.save(task);
+
+        // Update WorkspaceTask
+        taskMapper.updateTaskFromDto(updateDto, workspaceTask);
+
+        WorkspaceTask savedTask = taskRepository.save(workspaceTask);
         
         // TODO: Publish WebSocket event for real-time updates
         // TODO: Send notification on status change or assignment change
         
-        log.info("Task updated successfully: {}", taskId);
+        log.info("WorkspaceTask updated successfully: {}", taskId);
         return taskMapper.toResponseDto(savedTask);
     }
     
@@ -129,10 +132,10 @@ public class TaskService {
         LocalDateTime now = LocalDateTime.now();
         
         return TaskListResponseDto.TaskStats.builder()
-            .todoCount(taskRepository.countByRoomIdAndStatus(roomId, Task.TaskStatus.TODO))
-            .inProgressCount(taskRepository.countByRoomIdAndStatus(roomId, Task.TaskStatus.IN_PROGRESS))
-            .reviewCount(taskRepository.countByRoomIdAndStatus(roomId, Task.TaskStatus.REVIEW))
-            .doneCount(taskRepository.countByRoomIdAndStatus(roomId, Task.TaskStatus.DONE))
+            .todoCount(taskRepository.countByRoomIdAndStatus(roomId, WorkspaceTask.TaskStatus.TODO))
+            .inProgressCount(taskRepository.countByRoomIdAndStatus(roomId, WorkspaceTask.TaskStatus.IN_PROGRESS))
+            .reviewCount(taskRepository.countByRoomIdAndStatus(roomId, WorkspaceTask.TaskStatus.REVIEW))
+            .doneCount(taskRepository.countByRoomIdAndStatus(roomId, WorkspaceTask.TaskStatus.COMPLETED))
             .overdueTasks(taskRepository.countOverdueTasks(roomId, now))
             .build();
     }

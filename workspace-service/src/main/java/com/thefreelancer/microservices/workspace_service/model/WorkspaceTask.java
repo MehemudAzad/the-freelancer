@@ -2,10 +2,12 @@ package com.thefreelancer.microservices.workspace_service.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class WorkspaceTask {
 
     @Id
@@ -25,9 +28,6 @@ public class WorkspaceTask {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    @Column(name = "milestone_id")
-    private Long milestoneId; // Links to contract milestone from job-proposal-service
-
     @Column(name = "title", nullable = false)
     private String title;
 
@@ -36,6 +36,7 @@ public class WorkspaceTask {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @Builder.Default
     private TaskStatus status = TaskStatus.TODO;
 
     @Column(name = "assignee_id")
@@ -43,11 +44,18 @@ public class WorkspaceTask {
 
     @Column(name = "due_date")
     private LocalDate dueDate;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private TaskPriority priority = TaskPriority.MEDIUM;
+    
 
     @Column(name = "created_by_id", nullable = false)
     private String createdById; // User who created the task
 
     @Column(name = "order_index")
+    @Builder.Default
     private Integer orderIndex = 0;
 
     @CreationTimestamp
@@ -58,11 +66,18 @@ public class WorkspaceTask {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     public enum TaskStatus {
         TODO,
         IN_PROGRESS,
         REVIEW,
         COMPLETED,
         BLOCKED
+    }
+
+    public enum TaskPriority {
+        LOW, MEDIUM, HIGH, URGENT
     }
 }
