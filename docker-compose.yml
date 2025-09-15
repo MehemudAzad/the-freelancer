@@ -121,3 +121,17 @@ services:
       - "5437:5432"
     volumes:
       - ./payment-service/postgres-data:/var/lib/postgresql/data
+
+  # Notification Service Database
+  notification-postgres:
+    image: postgres:16-alpine
+    container_name: notification-postgres-db
+    environment:
+      - POSTGRES_USER=notification_user
+      - POSTGRES_PASSWORD=notification_password
+      - POSTGRES_DB=notification_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./notification-service/postgres-data:/var/lib/postgresql/data
+      - ./notification-service/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
