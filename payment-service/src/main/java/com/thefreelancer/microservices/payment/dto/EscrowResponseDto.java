@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class EscrowResponseDto {
     
     private String id;
-    private Long milestoneId;
+    private Long jobId;
     private String paymentIntentId;
     private Long amountCents;
     private String currency;

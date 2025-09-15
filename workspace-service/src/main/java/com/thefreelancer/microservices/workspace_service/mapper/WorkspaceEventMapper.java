@@ -21,22 +21,22 @@ public class WorkspaceEventMapper {
     }
 
     public WorkspaceEvent toEntity(WorkspaceEventRequestDto dto, Room room) {
-        return WorkspaceEvent.builder()
-                .room(room)
-                .title(dto.getTitle())
-                .description(dto.getDescription())
-                .eventType(dto.getEventType())
-                .startTime(dto.getStartTime())
-                .endTime(dto.getEndTime())
-                .build();
+    return WorkspaceEvent.builder()
+        .room(room)
+        .title(dto.getTitle())
+        .description(dto.getDescription())
+        .eventType(dto.getEventType())
+        .startTime(dto.getStartTime())
+        .endTime(dto.getEndTime())
+        .build();
     }
 
     public void updateEntity(WorkspaceEvent event, WorkspaceEventRequestDto dto, Room room) {
-        event.setRoom(room);
-        event.setTitle(dto.getTitle());
-        event.setDescription(dto.getDescription());
-        event.setEventType(dto.getEventType());
-        event.setStartTime(dto.getStartTime());
-        event.setEndTime(dto.getEndTime());
+    event.setRoom(room);
+    event.setTitle(dto.getTitle());
+    event.setDescription(dto.getDescription());
+    event.setEventType(dto.getEventType());
+    event.setStartTime(dto.getStartTime());
+    event.setEndTime(dto.getEndTime());
     }
 }

@@ -7,8 +7,8 @@ import lombok.Data;
 @Data
 public class EscrowCreateDto {
     
-    @NotNull(message = "Milestone ID is required")
-    private Long milestoneId;
+    @NotNull(message = "Job ID is required")
+    private Long jobId;
     
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")

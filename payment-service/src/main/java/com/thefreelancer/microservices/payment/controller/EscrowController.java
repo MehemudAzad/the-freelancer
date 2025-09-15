@@ -42,7 +42,7 @@ public class EscrowController {
     })
     @PostMapping("/fund")
     public ResponseEntity<EscrowResponseDto> createEscrow(@Valid @RequestBody EscrowCreateDto createDto) {
-        log.info("Creating escrow for milestone: {}", createDto.getMilestoneId());
+        log.info("Creating escrow for milestone: {}", createDto.getJobId());
         
         try {
             EscrowResponseDto response = escrowService.createEscrow(createDto);
@@ -79,7 +79,7 @@ public class EscrowController {
             EscrowResponseDto escrow = escrowService.getEscrowByMilestone(Long.parseLong(escrowId))
                 .orElseThrow(() -> new IllegalArgumentException("Escrow not found"));
             
-            escrowService.releaseEscrow(escrow.getMilestoneId(), destinationAccountId);
+            escrowService.releaseEscrow(escrow.getJobId(), destinationAccountId);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             log.warn("Invalid escrow release request: {}", e.getMessage());

@@ -37,18 +37,18 @@ public class WebhookService {
             String milestoneIdStr = paymentIntent.getMetadata().get("milestone_id");
             
             if (milestoneIdStr != null) {
-                Long milestoneId = Long.parseLong(milestoneIdStr);
+                Long jobId = Long.parseLong(milestoneIdStr);
                 
                 // Update escrow status to HELD
-                escrowRepository.findByMilestoneId(milestoneId)
+                escrowRepository.findByMilestoneId(jobId)
                     .ifPresentOrElse(
                         escrow -> {
                             escrow.setStatus(Escrow.EscrowStatus.HELD);
                             escrow.setUpdatedAt(LocalDateTime.now());
                             escrowRepository.save(escrow);
-                            log.info("Updated escrow status to HELD for milestone: {}", milestoneId);
+                            log.info("Updated escrow status to HELD for milestone: {}", jobId);
                         },
-                        () -> log.warn("Escrow not found for milestone: {}", milestoneId)
+                        () -> log.warn("Escrow not found for milestone: {}", jobId)
                     );
                 
                 // Create ledger entry
@@ -79,18 +79,18 @@ public class WebhookService {
             String milestoneIdStr = paymentIntent.getMetadata().get("milestone_id");
             
             if (milestoneIdStr != null) {
-                Long milestoneId = Long.parseLong(milestoneIdStr);
+                Long jobId = Long.parseLong(milestoneIdStr);
                 
                 // Update escrow status to FAILED
-                escrowRepository.findByMilestoneId(milestoneId)
+                escrowRepository.findByMilestoneId(jobId)
                     .ifPresentOrElse(
                         escrow -> {
                             escrow.setStatus(Escrow.EscrowStatus.FAILED);
                             escrow.setUpdatedAt(LocalDateTime.now());
                             escrowRepository.save(escrow);
-                            log.warn("Updated escrow status to FAILED for milestone: {}", milestoneId);
+                            log.warn("Updated escrow status to FAILED for milestone: {}", jobId);
                         },
-                        () -> log.warn("Escrow not found for milestone: {}", milestoneId)
+                        () -> log.warn("Escrow not found for milestone: {}", jobId)
                     );
                 
                 // Create ledger entry
@@ -121,18 +121,18 @@ public class WebhookService {
             String milestoneIdStr = paymentIntent.getMetadata().get("milestone_id");
             
             if (milestoneIdStr != null) {
-                Long milestoneId = Long.parseLong(milestoneIdStr);
+                Long jobId = Long.parseLong(milestoneIdStr);
                 
                 // Update escrow status to CANCELED
-                escrowRepository.findByMilestoneId(milestoneId)
+                escrowRepository.findByMilestoneId(jobId)
                     .ifPresentOrElse(
                         escrow -> {
                             escrow.setStatus(Escrow.EscrowStatus.CANCELED);
                             escrow.setUpdatedAt(LocalDateTime.now());
                             escrowRepository.save(escrow);
-                            log.info("Updated escrow status to CANCELED for milestone: {}", milestoneId);
+                            log.info("Updated escrow status to CANCELED for milestone: {}", jobId);
                         },
-                        () -> log.warn("Escrow not found for milestone: {}", milestoneId)
+                        () -> log.warn("Escrow not found for milestone: {}", jobId)
                     );
             }
             
@@ -153,12 +153,12 @@ public class WebhookService {
             String milestoneIdStr = transfer.getMetadata().get("milestone_id");
             
             if (milestoneIdStr != null) {
-                Long milestoneId = Long.parseLong(milestoneIdStr);
+                Long jobId = Long.parseLong(milestoneIdStr);
                 
                 // Create or update payout record
                 Payout payout = new Payout();
                 payout.setId(UUID.randomUUID().toString());
-                payout.setMilestoneId(milestoneId);
+                payout.setJobId(jobId);
                 payout.setTransferId(transfer.getId());
                 payout.setDestinationAccountId(transfer.getDestination());
                 payout.setAmountCents(transfer.getAmount());
@@ -170,12 +170,12 @@ public class WebhookService {
                 log.info("Created payout record for transfer: {} with status PAID", transfer.getId());
                 
                 // Update escrow status to RELEASED since transfer is being processed
-                escrowRepository.findByMilestoneId(milestoneId)
+                escrowRepository.findByMilestoneId(jobId)
                     .ifPresent(escrow -> {
                         escrow.setStatus(Escrow.EscrowStatus.RELEASED);
                         escrow.setUpdatedAt(LocalDateTime.now());
                         escrowRepository.save(escrow);
-                        log.info("Updated escrow status to RELEASED for milestone: {}", milestoneId);
+                        log.info("Updated escrow status to RELEASED for milestone: {}", jobId);
                     });
                 
                 // Create ledger entry
@@ -213,12 +213,12 @@ public class WebhookService {
                         log.warn("Updated payout status to FAILED due to reversal for transfer: {}", transfer.getId());
                         
                         // Update escrow status back to HELD
-                        escrowRepository.findByMilestoneId(payout.getMilestoneId())
+                        escrowRepository.findByMilestoneId(payout.getJobId())
                             .ifPresent(escrow -> {
                                 escrow.setStatus(Escrow.EscrowStatus.HELD);
                                 escrow.setUpdatedAt(LocalDateTime.now());
                                 escrowRepository.save(escrow);
-                                log.warn("Updated escrow status back to HELD due to transfer reversal for milestone: {}", payout.getMilestoneId());
+                                log.warn("Updated escrow status back to HELD due to transfer reversal for milestone: {}", payout.getJobId());
                             });
                     },
                     () -> log.warn("Payout not found for transfer: {}", transfer.getId())

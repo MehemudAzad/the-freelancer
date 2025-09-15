@@ -36,11 +36,11 @@ public class EscrowService {
     
     @Transactional
     public EscrowResponseDto createEscrow(EscrowCreateDto createDto) {
-        log.info("Creating escrow for milestone: {}", createDto.getMilestoneId());
+        log.info("Creating escrow for milestone: {}", createDto.getJobId());
         
         // Check if escrow already exists for this milestone
-        if (escrowRepository.existsByMilestoneId(createDto.getMilestoneId())) {
-            throw new IllegalArgumentException("Escrow already exists for milestone: " + createDto.getMilestoneId());
+        if (escrowRepository.existsByMilestoneId(createDto.getJobId())) {
+            throw new IllegalArgumentException("Escrow already exists for milestone: " + createDto.getJobId());
         }
         
         try {
@@ -64,7 +64,7 @@ public class EscrowService {
             
             // Create and charge the payment intent (money is now held)
             PaymentIntent paymentIntent = stripeService.createEscrowPaymentIntent(
-                createDto.getMilestoneId(),
+                createDto.getJobId(),
                 createDto.getAmountCents(),
                 createDto.getCurrency(),
                 customerId,
@@ -79,7 +79,7 @@ public class EscrowService {
             // Create escrow record
             Escrow escrow = Escrow.builder()
                 .id(UUID.randomUUID().toString())
-                .milestoneId(createDto.getMilestoneId())
+                .jobId(createDto.getJobId())
                 .paymentIntentId(paymentIntent.getId())
                 .amountCents(createDto.getAmountCents())
                 .currency(createDto.getCurrency().toUpperCase())
@@ -95,14 +95,14 @@ public class EscrowService {
                 paymentIntent.getId(),
                 createDto.getAmountCents(),
                 createDto.getCurrency(),
-                "Escrow created for milestone: " + createDto.getMilestoneId()
+                "Escrow created for milestone: " + createDto.getJobId()
             );
             
             log.info("Escrow created successfully with payment charged: {}", savedEscrow.getId());
             
             return EscrowResponseDto.builder()
                 .id(savedEscrow.getId())
-                .milestoneId(savedEscrow.getMilestoneId())
+                .jobId(savedEscrow.getJobId())
                 .paymentIntentId(savedEscrow.getPaymentIntentId())
                 .amountCents(savedEscrow.getAmountCents())
                 .currency(savedEscrow.getCurrency())
@@ -119,11 +119,11 @@ public class EscrowService {
     }
     
     @Transactional
-    public void releaseEscrow(Long milestoneId, String destinationAccountId) {
-        log.info("Releasing escrow for milestone: {} to account: {}", milestoneId, destinationAccountId);
+    public void releaseEscrow(Long jobId, String destinationAccountId) {
+        log.info("Releasing escrow for milestone: {} to account: {}", jobId, destinationAccountId);
         
-        Escrow escrow = escrowRepository.findByMilestoneId(milestoneId)
-            .orElseThrow(() -> new IllegalArgumentException("Escrow not found for milestone: " + milestoneId));
+        Escrow escrow = escrowRepository.findByMilestoneId(jobId)
+            .orElseThrow(() -> new IllegalArgumentException("Escrow not found for milestone: " + jobId));
         
         if (escrow.getStatus() != Escrow.EscrowStatus.HELD) {
             throw new IllegalArgumentException("Escrow is not in HELD status: " + escrow.getStatus());
@@ -136,7 +136,7 @@ public class EscrowService {
                 destinationAccountId,
                 escrow.getAmountCents(),
                 escrow.getCurrency(),
-                milestoneId
+                jobId
             );
             
             // Update escrow status
@@ -147,7 +147,7 @@ public class EscrowService {
             Long platformFee = stripeService.calculatePlatformFee(escrow.getAmountCents());
             Payout payout = Payout.builder()
                 .id(UUID.randomUUID().toString())
-                .milestoneId(milestoneId)
+                .jobId(jobId)
                 .transferId(transfer.getId())
                 .destinationAccountId(destinationAccountId)
                 .amountCents(escrow.getAmountCents() - platformFee)
@@ -165,7 +165,7 @@ public class EscrowService {
                 transfer.getId(),
                 escrow.getAmountCents() - platformFee,
                 escrow.getCurrency(),
-                "Escrow released for milestone: " + milestoneId
+                "Escrow released for milestone: " + jobId
             );
             
             // Record platform fee
@@ -175,10 +175,10 @@ public class EscrowService {
                 "platform",
                 platformFee,
                 escrow.getCurrency(),
-                "Platform fee for milestone: " + milestoneId
+                "Platform fee for milestone: " + jobId
             );
             
-            log.info("Escrow released successfully for milestone: {}", milestoneId);
+            log.info("Escrow released successfully for milestone: {}", jobId);
             
         } catch (StripeException e) {
             log.error("Stripe error releasing escrow: {}", e.getMessage(), e);
@@ -240,8 +240,8 @@ public class EscrowService {
         }
     }
     
-    public Optional<EscrowResponseDto> getEscrowByMilestone(Long milestoneId) {
-        return escrowRepository.findByMilestoneId(milestoneId)
+    public Optional<EscrowResponseDto> getEscrowByMilestone(Long jobId) {
+        return escrowRepository.findByMilestoneId(jobId)
             .map(this::convertToDto);
     }
     
@@ -255,7 +255,7 @@ public class EscrowService {
     private EscrowResponseDto convertToDto(Escrow escrow) {
         return EscrowResponseDto.builder()
             .id(escrow.getId())
-            .milestoneId(escrow.getMilestoneId())
+            .jobId(escrow.getJobId())
             .paymentIntentId(escrow.getPaymentIntentId())
             .amountCents(escrow.getAmountCents())
             .currency(escrow.getCurrency())

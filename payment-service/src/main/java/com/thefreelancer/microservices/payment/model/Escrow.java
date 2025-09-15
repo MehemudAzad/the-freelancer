@@ -19,8 +19,8 @@ public class Escrow {
     @Id
     private String id; // ULID/UUID
     
-    @Column(name = "milestone_id", nullable = false)
-    private Long milestoneId;
+    @Column(name = "job_id", nullable = false)
+    private Long jobId;
     
     @Column(name = "payment_intent_id", unique = true, nullable = false)
     private String paymentIntentId;

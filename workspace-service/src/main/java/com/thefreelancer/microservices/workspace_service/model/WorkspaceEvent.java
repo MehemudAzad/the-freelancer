@@ -43,9 +43,6 @@ public class WorkspaceEvent {
     @Column(name = "attendees", columnDefinition = "jsonb")
     private String attendees; // JSON array of user emails
 
-    @Column(name = "milestone_id")
-    private Long milestoneId; // Optional link to contract milestone
-
     @Column(name = "created_by_id", nullable = false)
     private String createdById;
 

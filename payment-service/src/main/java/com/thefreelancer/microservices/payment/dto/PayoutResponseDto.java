@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class PayoutResponseDto {
     
     private String id;
-    private Long milestoneId;
+    private Long jobId;
     private String transferId;
     private String destinationAccountId;
     private Long amountCents;
