@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +29,7 @@ public class ProposalService {
     private final JobRepository jobRepository;
     private final ProposalMilestoneRepository proposalMilestoneRepository;
     private final ProposalMapper proposalMapper;
+    private final EventPublisherService eventPublisherService;
     
     @Transactional(readOnly = true)
     public List<ProposalResponseDto> getMyProposals(Long freelancerId, String status) {
@@ -77,6 +77,9 @@ public class ProposalService {
 
         Proposal savedProposal = proposalRepository.save(proposal);
         log.info("Proposal created successfully with ID: {}", savedProposal.getId());
+
+        // Publish Kafka event
+        publishProposalSubmittedEvent(savedProposal, job);
 
         return proposalMapper.toResponseDto(savedProposal);
     }
@@ -186,5 +189,24 @@ public class ProposalService {
         return proposals.stream()
                 .map(proposalMapper::toResponseDto)
                 .collect(Collectors.toList());
+    }
+    
+    private void publishProposalSubmittedEvent(Proposal proposal, Job job) {
+        try {
+            // Get freelancer name - you might want to fetch this from user service
+            String freelancerName = "Freelancer-" + proposal.getFreelancerId(); // Placeholder
+            
+            eventPublisherService.publishProposalSubmittedEvent(
+                proposal.getId(),
+                job.getId(),
+                proposal.getFreelancerId(),
+                job.getClientId(),
+                job.getProjectName(),
+                freelancerName
+            );
+        } catch (Exception e) {
+            log.error("Failed to publish proposal submitted event for proposal: {}", proposal.getId(), e);
+            // Don't throw exception here to avoid failing the main transaction
+        }
     }
 }

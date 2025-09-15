@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,14 +14,6 @@ public class ProposalSubmittedEvent {
     private Long jobId;
     private Long freelancerId;
     private Long clientId;
-    private String jobTitle;
+    private String projectName;
     private String freelancerName;
-    private String freelancerHandle;
-    private LocalDateTime submittedAt;
-    private String proposalCoverLetter;
-    
-    // Additional context
-    private Long totalBudget;
-    private String currency;
-    private Integer deliveryDays;
 }

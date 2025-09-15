@@ -1,0 +1,59 @@
+{
+  "description": "Test Kafka Events for Proposal Flow",
+  "tests": [
+    {
+      "name": "1. Submit Proposal (triggers proposal-submitted event)",
+      "method": "POST",
+      "url": "http://localhost:8083/api/proposals/my-proposals",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-User-Id": "2",
+        "X-User-Email": "freelancer@example.com",
+        "X-User-Role": "FREELANCER"
+      },
+      "body": {
+        "jobId": 1,
+        "freelancerId": 2,
+        "cover": "I'm interested in this project and have the necessary skills...",
+        "totalCents": 500000,
+        "deliveryDays": 14
+      },
+      "expected": "201 Created - Proposal submitted successfully and Kafka event published"
+    },
+    {
+      "name": "2. Create Contract from Proposal (triggers proposal-accepted event)",
+      "method": "POST",
+      "url": "http://localhost:8083/api/contracts",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-User-ID": "1"
+      },
+      "body": {
+        "jobId": 1,
+        "proposalId": "[use proposal ID from step 1]",
+        "totalAmountCents": 500000,
+        "startDate": "2024-01-15",
+        "endDate": "2024-02-15",
+        "terms": {
+          "payment_schedule": "milestone-based",
+          "revision_rounds": 2,
+          "communication": "daily updates"
+        }
+      },
+      "expected": "201 Created - Contract created and Kafka proposal-accepted event published"
+    }
+  ],
+  "kafka_topics_to_monitor": [
+    "proposal-submitted",
+    "proposal-accepted"
+  ],
+  "notes": [
+    "Start Kafka consumer to monitor events:",
+    "kafka-console-consumer --bootstrap-server localhost:9092 --topic proposal-submitted --from-beginning",
+    "kafka-console-consumer --bootstrap-server localhost:9092 --topic proposal-accepted --from-beginning",
+    "",
+    "Expected event structure:",
+    "proposal-submitted: {proposalId, jobId, freelancerId, clientId, jobTitle, freelancerName}",
+    "proposal-accepted: {proposalId, jobId, freelancerId, clientId, jobTitle, freelancerName}"
+  ]
+}

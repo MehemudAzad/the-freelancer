@@ -27,6 +27,7 @@ public class ContractService {
     private final ProposalMilestoneRepository proposalMilestoneRepository;
     private final ObjectMapper objectMapper;
     private final WorkspaceClient workspaceClient;
+    private final EventPublisherService eventPublisherService;
 
     /**
      * Create a new contract from an accepted proposal
@@ -121,7 +122,10 @@ public class ContractService {
         // Update job status to IN_PROGRESS
         job.setStatus(Job.JobStatus.IN_PROGRESS);
         jobRepository.save(job);
-        
+
+        // Publish Kafka event for proposal acceptance
+        publishProposalAcceptedEvent(proposal, job);
+
         // Create workspace room for the contract
         try {
             RoomCreateDto roomCreateDto = RoomCreateDto.builder()
@@ -288,6 +292,25 @@ public class ContractService {
                     throw new IllegalArgumentException("Invalid status transition from DISPUTED to " + newStatus);
                 }
                 break;
+        }
+    }
+    
+    private void publishProposalAcceptedEvent(Proposal proposal, Job job) {
+        try {
+            // Get freelancer name - you might want to fetch this from user service
+            String freelancerName = "Freelancer-" + proposal.getFreelancerId(); // Placeholder
+            
+            eventPublisherService.publishProposalAcceptedEvent(
+                proposal.getId(),
+                job.getId(),
+                proposal.getFreelancerId(),
+                job.getClientId(),
+                job.getProjectName(),
+                freelancerName
+            );
+        } catch (Exception e) {
+            log.error("Failed to publish proposal accepted event for proposal: {}", proposal.getId(), e);
+            // Don't throw exception here to avoid failing the main transaction
         }
     }
 }

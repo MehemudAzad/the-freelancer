@@ -38,9 +38,9 @@ public class NotificationEventListener {
                 event.getJobId(),
                 event.getClientId(),
                 event.getFreelancerId(),
-                event.getJobTitle(),
+                event.getProjectName(),
                 event.getFreelancerName(),
-                event.getProposalCoverLetter()
+                null // proposalCoverLetter - not available in simplified event
             );
             
             acknowledgment.acknowledge();
@@ -67,9 +67,9 @@ public class NotificationEventListener {
                 event.getJobId(),
                 event.getFreelancerId(),
                 event.getClientId(),
-                event.getJobTitle(),
+                event.getProjectName(),
                 "Client", // TODO: Get actual client name
-                event.getAcceptanceMessage()
+                "Your proposal has been accepted!" // Default message since acceptanceMessage might not exist
             );
             
             acknowledgment.acknowledge();
@@ -94,10 +94,10 @@ public class NotificationEventListener {
             notificationService.createProposalRejectedNotification(
                 event.getJobId(),
                 event.getFreelancerId(),
-                event.getClientId(),
-                event.getJobTitle(),
+                null, // clientId - not available in simplified event
+                event.getProjectName(),
                 "Client", // TODO: Get actual client name
-                event.getRejectionMessage()
+                event.getFeedback() // Use feedback field
             );
             
             acknowledgment.acknowledge();
