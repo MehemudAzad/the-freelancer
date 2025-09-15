@@ -38,10 +38,12 @@ public class Notification {
     private String message;
 
     @Column(name = "is_read", nullable = false)
+    @Builder.Default
     private Boolean isRead = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @Builder.Default
     private NotificationStatus status = NotificationStatus.PENDING;
 
     @Column(name = "job_id")
@@ -52,9 +54,6 @@ public class Notification {
 
     @Column(name = "contract_id")
     private Long contractId;
-
-    @Column(name = "milestone_id")
-    private Long milestoneId;
 
     @Column(name = "reference_url")
     private String referenceUrl;
@@ -72,22 +71,27 @@ public class Notification {
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name = "retry_count", nullable = false)
+    @Builder.Default
+    private Integer retryCount = 0;
+
     public enum NotificationType {
         // Job & Proposal Related
         PROPOSAL_SUBMITTED,
         PROPOSAL_ACCEPTED, 
         PROPOSAL_REJECTED,
         JOB_POSTED,
+        JOB_SUBMITTED,
+        JOB_ACCEPTED,
+        JOB_REJECTED,
         JOB_UPDATED,
         JOB_CLOSED,
         
-        // Contract & Milestone Related
+        // Contract Related
         CONTRACT_CREATED,
-        MILESTONE_CREATED,
-        MILESTONE_SUBMITTED,
-        MILESTONE_ACCEPTED,
-        MILESTONE_REJECTED,
-        MILESTONE_DISPUTED,
         
         // Payment Related
         PAYMENT_RECEIVED,

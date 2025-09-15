@@ -1,8 +1,11 @@
 package com.thefreelancer.microservices.notification.repository;
 
 import com.thefreelancer.microservices.notification.model.Notification;
-import com.thefreelancer.microservices.notification.model.NotificationStatus;
-import com.thefreelancer.microservices.notification.model.NotificationType;
+import com.thefreelancer.microservices.notification.model.Notification.NotificationStatus;
+import com.thefreelancer.microservices.notification.model.Notification.NotificationType;
+
+// import com.thefreelancer.microservices.notification.model.NotificationStatus;
+// import com.thefreelancer.microservices.notification.model.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -59,9 +62,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // Find notifications created within time range
     List<Notification> findByRecipientIdAndCreatedAtBetweenOrderByCreatedAtDesc(
         Long recipientId, LocalDateTime startDate, LocalDateTime endDate);
-    
-    // Find notifications by reference (jobId, proposalId, etc.)
-    List<Notification> findByReferenceIdAndReferenceTypeOrderByCreatedAtDesc(Long referenceId, String referenceType);
     
     // Delete old notifications (cleanup)
     @Modifying

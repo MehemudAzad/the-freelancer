@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 83 / 96 APIs Completed (86.5%)**
+## 📊 **Overall Progress: 126 / 139 APIs Completed (90.6%)**
 
-**Current Status: Payment Service Integration Complete! Real Stripe payments with escrow and API Gateway routing**
+**Current Status: Notification Service Complete! Real-time WebSocket notifications, email delivery, and comprehensive event-driven integration**
 
 ---
 
@@ -178,6 +178,58 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 
 ---
 
+## 🔔 **Notification Service APIs** (Port: 8085)
+
+### Notification Management
+- [x] `GET /api/notifications/user/{userId}` - Get user notifications with pagination ✅ **COMPLETED**
+- [x] `GET /api/notifications/user/{userId}/unread` - Get unread notifications ✅ **COMPLETED**
+- [x] `GET /api/notifications/user/{userId}/unread/count` - Get unread notification count ✅ **COMPLETED**
+- [x] `GET /api/notifications/{notificationId}` - Get specific notification ✅ **COMPLETED**
+- [x] `PUT /api/notifications/{notificationId}/read` - Mark notification as read ✅ **COMPLETED**
+- [x] `PUT /api/notifications/user/{userId}/read-all` - Mark all notifications as read ✅ **COMPLETED**
+- [x] `PUT /api/notifications/{notificationId}/delivered` - Mark notification as delivered ✅ **COMPLETED**
+- [x] `GET /api/notifications/user/{userId}/stats` - Get notification delivery statistics ✅ **COMPLETED**
+
+### Internal APIs (Inter-service Communication)
+- [x] `POST /api/notifications/internal/proposal-submitted` - Create proposal submitted notification ✅ **COMPLETED**
+- [x] `POST /api/notifications/internal/proposal-accepted` - Create proposal accepted notification ✅ **COMPLETED**
+- [x] `POST /api/notifications/internal/proposal-rejected` - Create proposal rejected notification ✅ **COMPLETED**
+- [x] `POST /api/notifications/internal/contract-created` - Create contract created notification ✅ **COMPLETED**
+- [x] `POST /api/notifications/internal/milestone-completed` - Create milestone completed notification ✅ **COMPLETED**
+- [x] `POST /api/notifications/internal/payment-released` - Create payment released notification ✅ **COMPLETED**
+
+### Real-time Notifications (WebSocket)
+- [x] `WS /ws/notifications` - WebSocket endpoint for real-time notifications ✅ **COMPLETED**
+- [x] `SUBSCRIBE /user/queue/notifications` - Subscribe to user-specific notifications ✅ **COMPLETED**
+- [x] `SUBSCRIBE /user/queue/unread-count` - Subscribe to unread count updates ✅ **COMPLETED**
+- [x] `SEND /app/notifications/mark-read/{id}` - Mark notification as read via WebSocket ✅ **COMPLETED**
+- [x] `SEND /app/notifications/mark-all-read` - Mark all notifications as read via WebSocket ✅ **COMPLETED**
+
+### Email Notifications
+- [x] HTML email templates for all notification types ✅ **COMPLETED**
+- [x] Integration with Auth Service to fetch user email addresses ✅ **COMPLETED**
+- [x] Email delivery tracking and retry logic ✅ **COMPLETED**
+- [x] Responsive email design with action buttons ✅ **COMPLETED**
+
+### Event-Driven Integration (Kafka Listeners)
+- [x] `proposal-submitted` event listener ✅ **COMPLETED**
+- [x] `proposal-accepted` event listener ✅ **COMPLETED**
+- [x] `proposal-rejected` event listener ✅ **COMPLETED**
+- [x] `contract-created` event listener ✅ **COMPLETED**
+- [x] `milestone-completed` event listener ✅ **COMPLETED**
+- [x] `milestone-accepted` event listener ✅ **COMPLETED**
+- [x] `milestone-rejected` event listener ✅ **COMPLETED**
+- [x] `payment-released` event listener ✅ **COMPLETED**
+- [x] `message-sent` event listener ✅ **COMPLETED**
+
+### Delivery & Retry Management
+- [x] Automatic retry logic for failed notifications ✅ **COMPLETED**
+- [x] Scheduled cleanup of old notifications ✅ **COMPLETED**
+- [x] Delivery status tracking (PENDING, SENT, DELIVERED, FAILED) ✅ **COMPLETED**
+- [x] Notification delivery statistics and analytics ✅ **COMPLETED**
+
+---
+
 ## 🔗 **API Gateway Configuration**
 
 ### Authentication & Routing
@@ -226,15 +278,15 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `UserCreatedEvent` - Auth Service → Gig Service ✅ **COMPLETED**
 
 ### Planned Events
-- [ ] `JobPostedEvent` - Job Service → Notification Service  
-- [ ] `ProposalSubmittedEvent` - Job Service → Notification Service
-- [ ] `ProposalAcceptedEvent` - Job Service → Workspace Service (create room)
-- [ ] `ContractCreatedEvent` - Job Service → Workspace Service (setup collaboration)
-- [ ] `MilestoneSubmittedEvent` - Job Service → Notification Service
-- [ ] `MilestoneAcceptedEvent` - Job Service → Payment Service
-- [ ] `PaymentCompletedEvent` - Payment Service → Notification Service
-- [ ] `MessageSentEvent` - Workspace Service → Notification Service
-- [ ] `FileUploadedEvent` - Workspace Service → Notification Service
+- [x] `JobPostedEvent` - Job Service → Notification Service ✅ **COMPLETED**
+- [x] `ProposalSubmittedEvent` - Job Service → Notification Service ✅ **COMPLETED**
+- [x] `ProposalAcceptedEvent` - Job Service → Workspace Service (create room) ✅ **COMPLETED**
+- [x] `ContractCreatedEvent` - Job Service → Workspace Service (setup collaboration) ✅ **COMPLETED**
+- [x] `MilestoneSubmittedEvent` - Job Service → Notification Service ✅ **COMPLETED**
+- [x] `MilestoneAcceptedEvent` - Job Service → Payment Service ✅ **COMPLETED**
+- [x] `PaymentCompletedEvent` - Payment Service → Notification Service ✅ **COMPLETED**
+- [x] `MessageSentEvent` - Workspace Service → Notification Service ✅ **COMPLETED**
+- [x] `FileUploadedEvent` - Workspace Service → Notification Service ✅ **COMPLETED**
 
 ---
 
@@ -248,6 +300,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 | Job Proposal Service | ✅ | ❌ | 🟡 (23/28) | ❌ |
 | Workspace Service | ✅ | ❌ | 🟡 (11/18) | ❌ |
 | Payment Service | ✅ | ❌ | ✅ (6/6) | ❌ |
+| **Notification Service** | ✅ | ✅ | ✅ (8/8) | ✅ (WebSocket, Email, Retry) |
 
 **Legend:**
 - ✅ Completed
