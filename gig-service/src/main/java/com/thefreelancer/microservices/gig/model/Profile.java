@@ -37,6 +37,9 @@ public class Profile {
     
     @Column(columnDefinition = "TEXT[]")
     private String[] languages;
+
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
     
     @Column(columnDefinition = "TEXT[]")
     private String[] skills;

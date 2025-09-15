@@ -1,4 +1,7 @@
 package com.thefreelancer.microservices.job_proposal.controller;
+import com.thefreelancer.microservices.job_proposal.service.JobAttachmentService;
+import com.thefreelancer.microservices.job_proposal.dto.JobAttachmentResponseDto;
+import com.thefreelancer.microservices.job_proposal.dto.JobAttachmentCreateDto;
 
 import com.thefreelancer.microservices.job_proposal.dto.JobCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.JobResponseDto;
@@ -29,6 +32,7 @@ import java.util.Optional;
 public class JobController {
     
     private final JobService jobService;
+    private final JobAttachmentService jobAttachmentService;
     
     // ====================
     // PUBLIC DISCOVERY APIs (No authentication required)
@@ -139,6 +143,42 @@ public class JobController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (RuntimeException e) {
             log.warn("Failed to create job: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping(value = "/with-attachment", consumes = {"multipart/form-data"})
+    public ResponseEntity<JobResponseDto> createJobWithAttachment(
+            @RequestPart(name = "job") JobCreateDto jobCreateDto,
+            @RequestPart(name = "file") org.springframework.web.multipart.MultipartFile file,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        log.info("POST /api/jobs/with-attachment - Creating job and uploading attachment");
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for creating jobs");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (!"CLIENT".equalsIgnoreCase(userRole)) {
+            log.warn("Access denied: Only clients can create jobs. User role: {}", userRole);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        try {
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
+            log.info("Creating job for authenticated client userId: {}", authenticatedUserId);
+            // Create job first
+            JobResponseDto job = jobService.createJob(jobCreateDto, authenticatedUserId);
+            log.info("Job successfully created with ID: {} for clientId: {}", job.getId(), job.getClientId());
+            // Upload attachment and link to job
+            JobAttachmentResponseDto attachment = jobAttachmentService.createJobAttachment(job.getId(), file, new JobAttachmentCreateDto());
+            log.info("Attachment successfully created with ID: {} for jobId: {}", attachment.getId(), job.getId());
+            // Optionally, you can add the attachment info to the job response DTO if needed
+            return ResponseEntity.status(HttpStatus.CREATED).body(job);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException | java.io.IOException e) {
+            log.warn("Failed to create job with attachment: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

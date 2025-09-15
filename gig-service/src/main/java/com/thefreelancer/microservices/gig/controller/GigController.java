@@ -1,4 +1,6 @@
 package com.thefreelancer.microservices.gig.controller;
+import org.springframework.web.multipart.MultipartFile;
+import com.thefreelancer.microservices.gig.service.GigMediaService;
 
 import com.thefreelancer.microservices.gig.dto.GigCreateDto;
 import com.thefreelancer.microservices.gig.dto.GigResponseDto;
@@ -26,7 +28,9 @@ import java.util.Optional;
 @Tag(name = "Gigs", description = "Gig management operations")
 public class GigController {
     
+    
     private final GigService gigService;
+    private final GigMediaService gigMediaService;
     
     //! public
     @Operation(summary = "Get gig by ID", description = "Fetch a specific gig by its ID")
@@ -174,6 +178,43 @@ public class GigController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @PostMapping(value = "/create-with-media", consumes = "multipart/form-data")
+    @Operation(summary = "Create gig with media", description = "Create a gig and upload a media file in one request")
+    public ResponseEntity<GigResponseDto> createGigWithMedia(
+            @RequestPart(name = "gig") GigCreateDto gigCreateDto,
+            @RequestPart(name = "file") MultipartFile file,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        log.info("POST /api/gigs/create-with-media - Creating gig and uploading media");
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for creating gigs");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (!"FREELANCER".equalsIgnoreCase(userRole)) {
+            log.warn("Access denied: Only freelancers can create gigs. User role: {}", userRole);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        try {
+            Long userId = Long.parseLong(userIdHeader);
+            log.info("Creating gig for authenticated freelancer userId: {}", userId);
+            GigResponseDto gig = gigService.createGig(userId, gigCreateDto);
+            log.info("Gig successfully created with ID: {} for userId: {}", gig.getId(), userId);
+            // Upload media and link to gig
+            gigMediaService.uploadMedia(gig.getId(), file);
+            log.info("Media successfully uploaded for gigId: {}", gig.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(gig);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException | java.io.IOException e) {
+            log.warn("Failed to create gig with media: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    
     //! Auth needed
     @PutMapping("/my-gigs/{gigId}")
     public ResponseEntity<GigResponseDto> updateMyGig(
