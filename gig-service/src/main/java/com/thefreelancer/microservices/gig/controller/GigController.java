@@ -5,6 +5,7 @@ import com.thefreelancer.microservices.gig.service.GigMediaService;
 import com.thefreelancer.microservices.gig.dto.GigCreateDto;
 import com.thefreelancer.microservices.gig.dto.GigResponseDto;
 import com.thefreelancer.microservices.gig.dto.GigUpdateDto;
+import com.thefreelancer.microservices.gig.dto.GigWithFreelancerResponseDto;
 import com.thefreelancer.microservices.gig.service.GigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -53,6 +54,21 @@ public class GigController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/with-freelancer/{gigId}")
+    public ResponseEntity<GigWithFreelancerResponseDto> getGigWithFreelancer(
+            @Parameter(description = "ID of the gig to retrieve with freelancer info") @PathVariable Long gigId) {
+        log.info("GET /api/gigs/with-freelancer/{} - Fetching gig with freelancer info", gigId);
+        Optional<GigWithFreelancerResponseDto> gig = gigService.getGigWithFreelancerInfo(gigId);
+        if (gig.isPresent()) {
+            log.info("Gig with freelancer info found with ID: {}", gigId);
+            return ResponseEntity.ok(gig.get());
+        } else {
+            log.warn("Gig with freelancer info not found with ID: {}", gigId);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     //! public
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<GigResponseDto>> getUserGigs(@PathVariable Long userId) {
@@ -71,6 +87,24 @@ public class GigController {
         log.info("GET /api/gigs/search - Searching gigs with category: {}, tags: {}, freelancerId: {}", category, tags, freelancerId);
         
         List<GigResponseDto> gigs = gigService.searchGigs(category, tags, freelancerId);
+        return ResponseEntity.ok(gigs);
+    }
+
+    //! public - Enhanced search with freelancer information
+    @GetMapping("/search/with-freelancer")
+    @Operation(summary = "Search gigs with freelancer information", description = "Search for gigs and include freelancer details from auth-service")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Gigs found with freelancer information"),
+        @ApiResponse(responseCode = "404", description = "No gigs found")
+    })
+    public ResponseEntity<List<GigWithFreelancerResponseDto>> searchGigsWithFreelancer(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) List<String> tags,
+            @RequestParam(required = false) Long freelancerId) {
+        
+        log.info("GET /api/gigs/search/with-freelancer - Searching gigs with freelancer info - category: {}, tags: {}, freelancerId: {}", category, tags, freelancerId);
+        
+        List<GigWithFreelancerResponseDto> gigs = gigService.searchGigsWithFreelancerInfo(category, tags, freelancerId);
         return ResponseEntity.ok(gigs);
     }
     
