@@ -119,9 +119,30 @@ public class NotificationEventListener {
             
             JobPostedEvent event = objectMapper.readValue(eventData, JobPostedEvent.class);
             
-            // TODO: Implement job matching algorithm to find relevant freelancers
-            // For now, just log the event
-            log.info("Job posted: {} by {}", event.getJobTitle(), event.getClientName());
+                // Create budget range string
+                String budgetRange = null;
+                if (event.getMinBudget() != null && event.getMaxBudget() != null) {
+                    budgetRange = String.format("%d-%d %s", 
+                        event.getMinBudget(), event.getMaxBudget(), 
+                        event.getCurrency() != null ? event.getCurrency() : "USD");
+                } else if (event.getMinBudget() != null) {
+                    budgetRange = String.format("From %d %s", 
+                        event.getMinBudget(), 
+                        event.getCurrency() != null ? event.getCurrency() : "USD");
+                }
+            
+                // Create the job posted notification
+                notificationService.createJobPostedNotification(
+                    event.getJobId(),
+                    event.getJobTitle(),
+                    event.getClientName(),
+                    event.getJobDescription(),
+                    event.getRequiredSkills(),
+                    budgetRange,
+                    event.getJobCategory()
+                );
+            
+                log.info("Created job posted notification for job: {} by {}", event.getJobTitle(), event.getClientName());
             
             acknowledgment.acknowledge();
             log.debug("Successfully processed job posted event: {}", event.getJobId());

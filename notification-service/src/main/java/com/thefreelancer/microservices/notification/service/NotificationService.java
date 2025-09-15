@@ -212,21 +212,33 @@ public class NotificationService {
         return createAndSendNotification(notification);
     }
     
-    public Notification createJobPostedNotification(Long jobId, String jobTitle, String clientName) {
-        // This could be used for notifying interested freelancers
-        // For now, we'll create a system announcement type
-        Notification notification = Notification.builder()
-                .recipientId(null) // Will be sent to relevant freelancers
-                .senderId(null)
-                .type(Notification.NotificationType.JOB_POSTED)
-                .title("New Job Posted")
-                .message(String.format("New job '%s' posted by %s", jobTitle, clientName))
-                .jobId(jobId)
-                .status(Notification.NotificationStatus.PENDING)
-                .build();
+        public Notification createJobPostedNotification(Long jobId, String jobTitle, String clientName, 
+                                                       String jobDescription, String[] requiredSkills, 
+                                                       String budgetRange, String category) {
+            // Create a system notification about the new job
+            Notification notification = Notification.builder()
+                    .recipientId(null) // System notification - will be used for matching
+                    .senderId(null)
+                    .type(Notification.NotificationType.JOB_POSTED)
+                    .title("New Job Posted")
+                    .message(String.format("New job '%s' posted by %s. Budget: %s", 
+                            jobTitle, clientName, budgetRange != null ? budgetRange : "Not specified"))
+                    .jobId(jobId)
+                    .status(Notification.NotificationStatus.PENDING)
+                    .metadata(String.format("{\"jobTitle\":\"%s\",\"clientName\":\"%s\",\"category\":\"%s\",\"skills\":[%s]}", 
+                            jobTitle.replace("\"", "\\\""), 
+                            clientName.replace("\"", "\\\""),
+                            category != null ? category.replace("\"", "\\\"") : "",
+                            requiredSkills != null ? "\"" + String.join("\",\"", requiredSkills) + "\"" : ""))
+                    .build();
         
-        return notificationRepository.save(notification);
-    }
+            return createAndSendNotification(notification);
+        }
+    
+        // Overloaded method for backward compatibility
+        public Notification createJobPostedNotification(Long jobId, String jobTitle, String clientName) {
+            return createJobPostedNotification(jobId, jobTitle, clientName, null, null, null, null);
+        }
     
     public Notification createMessageReceivedNotification(Long recipientId, Long senderId, String senderName,
                                                          Long roomId, String messagePreview) {

@@ -6,8 +6,6 @@ import com.thefreelancer.microservices.notification.service.NotificationService;
 import com.thefreelancer.microservices.notification.service.NotificationDeliveryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -107,6 +105,19 @@ public class NotificationController {
         
         return ResponseEntity.ok(notification);
     }
+
+    // API to create a message received notification (no email)
+    @PostMapping("/internal/message-received")
+    public ResponseEntity<Notification> createMessageReceivedNotification(
+            @RequestParam Long recipientId,
+            @RequestParam Long senderId,
+            @RequestParam String senderName,
+            @RequestParam Long roomId,
+            @RequestParam String messagePreview) {
+        Notification notification = notificationService.createMessageReceivedNotification(
+                recipientId, senderId, senderName, roomId, messagePreview);
+        return ResponseEntity.ok(notification);
+    }
     
     @PostMapping("/internal/proposal-accepted")
     public ResponseEntity<Notification> createProposalAcceptedNotification(
@@ -137,6 +148,39 @@ public class NotificationController {
         
         return ResponseEntity.ok(notification);
     }
+    
+        @Operation(
+            summary = "Create Job Posted Notification",
+            description = "Creates a notification when a client posts a new job. This is used internally by the job service.",
+            tags = {"Internal APIs"}
+        )
+        @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Job posted notification created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+        })
+        @PostMapping("/internal/job-posted")
+        public ResponseEntity<Notification> createJobPostedNotification(
+                @Parameter(description = "Job ID", required = true)
+                @RequestParam Long jobId,
+                @Parameter(description = "Job title", required = true)
+                @RequestParam String jobTitle,
+                @Parameter(description = "Client name", required = true)
+                @RequestParam String clientName,
+                @Parameter(description = "Job description")
+                @RequestParam(required = false) String jobDescription,
+                @Parameter(description = "Required skills for the job")
+                @RequestParam(required = false) String[] requiredSkills,
+                @Parameter(description = "Budget range (e.g., '$1000-$5000')")
+                @RequestParam(required = false) String budgetRange,
+                @Parameter(description = "Job category")
+                @RequestParam(required = false) String category) {
+        
+            Notification notification = notificationService.createJobPostedNotification(
+                jobId, jobTitle, clientName, jobDescription, requiredSkills, budgetRange, category);
+        
+            return ResponseEntity.ok(notification);
+        }
     
     @PostMapping("/internal/contract-created")
     public ResponseEntity<Notification> createContractCreatedNotification(

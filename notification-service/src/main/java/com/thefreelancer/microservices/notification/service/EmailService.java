@@ -78,6 +78,9 @@ public class EmailService {
             case PROPOSAL_REJECTED -> "Proposal Update - FreelancerHub";
             case CONTRACT_CREATED -> "Contract Created - FreelancerHub";
             case JOB_SUBMITTED -> "Job Submitted for Review - FreelancerHub";
+                case JOB_POSTED -> "New Job Opportunity - FreelancerHub";
+                case JOB_ACCEPTED -> "Job Accepted - FreelancerHub";
+                case JOB_REJECTED -> "Job Review Update - FreelancerHub";
             case PAYMENT_RECEIVED -> "Payment Received - FreelancerHub";
             case MESSAGE_RECEIVED -> "New Message - FreelancerHub";
             default -> notification.getTitle() + " - FreelancerHub";
@@ -141,6 +144,27 @@ public class EmailService {
                     html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>Review Job</a>");
                 }
                 break;
+                
+                case JOB_POSTED:
+                    html.append("<p>A new job opportunity that matches your skills has been posted! Check it out and submit a proposal if you're interested.</p>");
+                    if (notification.getJobId() != null) {
+                        html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>View Job Details</a>");
+                    }
+                    break;
+                
+                case JOB_ACCEPTED:
+                    html.append("<p>Excellent work! Your job submission has been accepted. Payment will be processed shortly.</p>");
+                    if (notification.getJobId() != null) {
+                        html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>View Job</a>");
+                    }
+                    break;
+                
+                case JOB_REJECTED:
+                    html.append("<p>Your job submission needs some revisions. Please review the feedback and resubmit when ready.</p>");
+                    if (notification.getJobId() != null) {
+                        html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>View Feedback</a>");
+                    }
+                    break;
                 
             case PAYMENT_RECEIVED:
                 html.append("<p>Great news! Your payment has been processed and should appear in your account soon.</p>");
