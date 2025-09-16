@@ -1,24 +1,33 @@
 package com.thefreelancer.microservices.workspace_service.service;
 
-import com.thefreelancer.microservices.workspace_service.dto.*;
-import com.thefreelancer.microservices.workspace_service.mapper.DirectMessageMapper;
-import com.thefreelancer.microservices.workspace_service.model.DirectMessage;
-import com.thefreelancer.microservices.workspace_service.repository.DirectMessageRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.thefreelancer.microservices.workspace_service.client.AuthServiceClient;
+import com.thefreelancer.microservices.workspace_service.dto.ConversationResponseDto;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessageCreateDto;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessagePageResponseDto;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessageReadReceiptDto;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessageResponseDto;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessageTypingStatusDto;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessageUpdateDto;
+import com.thefreelancer.microservices.workspace_service.dto.RecentChatPartnerDto;
+import com.thefreelancer.microservices.workspace_service.dto.UserResponseDto;
+import com.thefreelancer.microservices.workspace_service.mapper.DirectMessageMapper;
+import com.thefreelancer.microservices.workspace_service.model.DirectMessage;
+import com.thefreelancer.microservices.workspace_service.repository.DirectMessageRepository;
 
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -74,17 +83,17 @@ public class DirectMessageService {
         
         // Broadcast message via WebSocket to both users
         try {
+            log.info("Broadcasting direct message {} via WebSocket", savedMessage.getId());
+            
             // Send to receiver
-            messagingTemplate.convertAndSend(
-                "/topic/user/" + createDto.getReceiverId() + "/messages", 
-                messageResponse
-            );
+            String receiverTopic = "/topic/user/" + createDto.getReceiverId() + "/messages";
+            messagingTemplate.convertAndSend(receiverTopic, messageResponse);
+            log.debug("Sent message to receiver topic: {}", receiverTopic);
             
             // Send to sender for confirmation and multi-device sync
-            messagingTemplate.convertAndSend(
-                "/topic/user/" + senderId + "/messages", 
-                messageResponse
-            );
+            String senderTopic = "/topic/user/" + senderId + "/messages";
+            messagingTemplate.convertAndSend(senderTopic, messageResponse);
+            log.debug("Sent message to sender topic: {}", senderTopic);
             
             log.info("Direct message broadcasted via WebSocket to users: {} and {}", 
                 senderId, createDto.getReceiverId());
@@ -140,6 +149,7 @@ public class DirectMessageService {
                     .name(user != null ? user.getDisplayName() : null)
                     .handle(user != null ? user.getFormattedHandle() : null)
                     .email(user != null ? user.getEmail() : null)
+                    .role(user != null ? user.getRole() : null)
                     .unreadCount(unread)
                     .lastMessage(directMessageMapper.toResponseDto(m))
                     .lastActivity(m.getCreatedAt())

@@ -34,7 +34,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // so that alternative transports can be used if WebSocket is not available
         registry.addEndpoint("/ws")
                 .addInterceptors(new WebSocketAuthInterceptor())
-                .setAllowedOrigins("http://localhost:3000", "http://localhost:8080", "https://thefreelancer.com")
+                .setAllowedOriginPatterns("*") // Allow all origins for development
                 .withSockJS();
+                
+        // Also add a plain WebSocket endpoint without SockJS for better compatibility
+        registry.addEndpoint("/ws")
+                .addInterceptors(new WebSocketAuthInterceptor())
+                .setAllowedOriginPatterns("*");
     }
 }

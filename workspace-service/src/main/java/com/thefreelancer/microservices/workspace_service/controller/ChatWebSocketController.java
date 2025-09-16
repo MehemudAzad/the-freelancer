@@ -1,10 +1,5 @@
 package com.thefreelancer.microservices.workspace_service.controller;
 
-import com.thefreelancer.microservices.workspace_service.dto.*;
-import com.thefreelancer.microservices.workspace_service.service.DirectMessageService;
-import com.thefreelancer.microservices.workspace_service.service.MessageService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -13,7 +8,17 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.security.Principal;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessageCreateDto;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessageResponseDto;
+import com.thefreelancer.microservices.workspace_service.dto.DirectMessageTypingStatusDto;
+import com.thefreelancer.microservices.workspace_service.dto.MessageCreateDto;
+import com.thefreelancer.microservices.workspace_service.dto.MessageResponseDto;
+import com.thefreelancer.microservices.workspace_service.dto.TypingStatusDto;
+import com.thefreelancer.microservices.workspace_service.service.DirectMessageService;
+import com.thefreelancer.microservices.workspace_service.service.MessageService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * WebSocket controller for real-time chat functionality
@@ -153,9 +158,11 @@ public class ChatWebSocketController {
             SimpMessageHeaderAccessor headerAccessor) {
         
         try {
+            log.info("Received WebSocket direct message request to receiverId: {}", receiverId);
+            
             // Extract user information from session
             if (headerAccessor.getSessionAttributes() == null) {
-                log.warn("Session attributes not found");
+                log.warn("Session attributes not found for direct message");
                 return;
             }
             
@@ -166,12 +173,13 @@ public class ChatWebSocketController {
                 return;
             }
             
-            log.info("Received WebSocket direct message from user: {} to user: {}", userId, receiverId);
+            log.info("Processing WebSocket direct message from user: {} to user: {}", userId, receiverId);
             
             // Parse and set receiver ID 
             try {
                 Long receiverIdLong = Long.parseLong(receiverId);
                 messageDto.setReceiverId(receiverIdLong);
+                log.debug("Set receiverId: {} for direct message", receiverIdLong);
             } catch (Exception e) {
                 log.warn("Invalid receiver ID: {}", receiverId);
                 return;
@@ -179,7 +187,7 @@ public class ChatWebSocketController {
             
             DirectMessageResponseDto response = directMessageService.sendMessage(messageDto, userId);
             
-            log.info("Direct message sent successfully via WebSocket: {}", response.getId());
+            log.info("Direct message sent successfully via WebSocket with ID: {}", response.getId());
             
         } catch (Exception e) {
             log.error("Error processing WebSocket direct message: {}", e.getMessage(), e);

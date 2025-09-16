@@ -25,4 +25,26 @@ public class ProposalResponseDto {
     private String status; // SUBMITTED, ACCEPTED, REJECTED, WITHDRAWN
     private LocalDateTime submittedAt;
     private LocalDateTime updatedAt;
+    
+    // Enhanced freelancer information from auth-service
+    private FreelancerInfo freelancerInfo;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FreelancerInfo {
+        private Long id;
+        private String name;
+        private String email;
+        private String handle;
+        private String profilePicture;
+        private String bio;
+        private String skills;
+        private Double hourlyRate;
+        private String location;
+        private LocalDateTime joinedAt;
+        private Integer completedProjects;
+        private Double rating;
+        private String portfolioUrl;
+    }
 }

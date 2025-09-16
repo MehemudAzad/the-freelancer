@@ -1,9 +1,11 @@
 package com.thefreelancer.microservices.job_proposal.service;
 
+import com.thefreelancer.microservices.job_proposal.client.AuthServiceClient;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateWithMilestonesDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalUpdateDto;
+import com.thefreelancer.microservices.job_proposal.dto.UserResponseDto;
 import com.thefreelancer.microservices.job_proposal.model.Job;
 import com.thefreelancer.microservices.job_proposal.model.Proposal;
 import com.thefreelancer.microservices.job_proposal.model.ProposalMilestone;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,6 +33,7 @@ public class ProposalService {
     private final ProposalMilestoneRepository proposalMilestoneRepository;
     private final ProposalMapper proposalMapper;
     private final EventPublisherService eventPublisherService;
+    private final AuthServiceClient authServiceClient;
     
     @Transactional(readOnly = true)
     public List<ProposalResponseDto> getMyProposals(Long freelancerId, String status) {
@@ -78,10 +82,68 @@ public class ProposalService {
         Proposal savedProposal = proposalRepository.save(proposal);
         log.info("Proposal created successfully with ID: {}", savedProposal.getId());
 
+<<<<<<< Updated upstream
         // Publish Kafka event
         publishProposalSubmittedEvent(savedProposal, job);
 
         return proposalMapper.toResponseDto(savedProposal);
+=======
+        // Create response DTO
+        ProposalResponseDto responseDto = proposalMapper.toResponseDto(savedProposal);
+        
+        // Fetch and add freelancer information from auth-service
+        try {
+            Optional<UserResponseDto> userOpt = authServiceClient.getUserById(savedProposal.getFreelancerId());
+            if (userOpt.isPresent()) {
+                ProposalResponseDto.FreelancerInfo freelancerInfo = convertToFreelancerInfo(userOpt.get());
+                responseDto.setFreelancerInfo(freelancerInfo);
+                log.info("Enhanced proposal response with freelancer info for: {}", savedProposal.getFreelancerId());
+            } else {
+                log.warn("No user found in auth service for freelancer ID: {}", savedProposal.getFreelancerId());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch freelancer info for proposal {}: {}", savedProposal.getId(), e.getMessage());
+            // Continue without freelancer info rather than failing the entire operation
+        }
+        
+        // Send notification asynchronously (fire and forget)
+        try {
+            sendProposalNotifications(savedProposal, job, responseDto);
+            log.info("Notifications sent for proposal: {}", savedProposal.getId());
+        } catch (Exception e) {
+            log.error("Failed to send notifications for proposal {}: {}", savedProposal.getId(), e.getMessage());
+            // Continue without failing the proposal creation
+        }
+
+        return responseDto;
+    }
+    
+    private void sendProposalNotifications(Proposal proposal, Job job, ProposalResponseDto responseDto) {
+        // TODO: Implement notification system - temporarily disabled
+        log.info("Notification system temporarily disabled for proposal: {}", proposal.getId());
+    }
+    
+    /**
+     * Convert UserResponseDto from auth service to FreelancerInfo for proposal response
+     */
+    private ProposalResponseDto.FreelancerInfo convertToFreelancerInfo(UserResponseDto user) {
+        ProposalResponseDto.FreelancerInfo freelancerInfo = new ProposalResponseDto.FreelancerInfo();
+        freelancerInfo.setId(user.getId());
+        freelancerInfo.setName(user.getName());
+        freelancerInfo.setEmail(user.getEmail());
+        freelancerInfo.setHandle(user.getHandle());
+        freelancerInfo.setJoinedAt(user.getCreatedAt());
+        // Set default values for fields not available in UserResponseDto
+        freelancerInfo.setProfilePicture(null);
+        freelancerInfo.setBio(null);
+        freelancerInfo.setSkills(null);
+        freelancerInfo.setHourlyRate(null);
+        freelancerInfo.setLocation(user.getCountry());
+        freelancerInfo.setCompletedProjects(0);
+        freelancerInfo.setRating(0.0);
+        freelancerInfo.setPortfolioUrl(null);
+        return freelancerInfo;
+    }
     }
     
     @Transactional
@@ -168,7 +230,12 @@ public class ProposalService {
         List<Proposal> proposals = proposalRepository.findByJobIdOrderByCreatedAtDesc(jobId);
         
         return proposals.stream()
-                .map(proposalMapper::toResponseDto)
+                .map(proposal -> {
+                    ProposalResponseDto dto = proposalMapper.toResponseDto(proposal);
+                    // Enrich with freelancer info from auth service
+                    enrichWithFreelancerInfo(dto, proposal.getFreelancerId());
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
     
@@ -187,7 +254,12 @@ public class ProposalService {
         List<Proposal> proposals = proposalRepository.findByJobIdOrderByCreatedAtDesc(jobId);
         
         return proposals.stream()
-                .map(proposalMapper::toResponseDto)
+                .map(proposal -> {
+                    ProposalResponseDto dto = proposalMapper.toResponseDto(proposal);
+                    // Enrich with freelancer info from auth service
+                    enrichWithFreelancerInfo(dto, proposal.getFreelancerId());
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
     
@@ -207,6 +279,25 @@ public class ProposalService {
         } catch (Exception e) {
             log.error("Failed to publish proposal submitted event for proposal: {}", proposal.getId(), e);
             // Don't throw exception here to avoid failing the main transaction
+        }
+    }
+    
+    /**
+     * Enrich ProposalResponseDto with freelancer information from auth service
+     */
+    private void enrichWithFreelancerInfo(ProposalResponseDto dto, Long freelancerId) {
+        try {
+            Optional<UserResponseDto> userOpt = authServiceClient.getUserById(freelancerId);
+            if (userOpt.isPresent()) {
+                ProposalResponseDto.FreelancerInfo freelancerInfo = convertToFreelancerInfo(userOpt.get());
+                dto.setFreelancerInfo(freelancerInfo);
+                log.debug("Enhanced proposal {} with freelancer info for user: {}", dto.getId(), freelancerId);
+            } else {
+                log.warn("No user found in auth service for freelancer ID: {}", freelancerId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch freelancer info for freelancer {}: {}", freelancerId, e.getMessage());
+            // Continue without freelancer info rather than failing
         }
     }
 }

@@ -1,9 +1,9 @@
 package com.thefreelancer.microservices.workspace_service.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -13,6 +13,7 @@ public class RecentChatPartnerDto {
     private String handle;
     private String email;
     private long unreadCount;
+    private String role;
     private DirectMessageResponseDto lastMessage;
     private LocalDateTime lastActivity;
 }

@@ -40,7 +40,7 @@ public class GigService {
         
         Gig gig = gigMapper.toEntity(createDto);
         gig.setProfileId(userId); // Using userId as profileId since profile.userId is the primary key
-        gig.setStatus(Gig.Status.DRAFT); // New gigs start as draft
+        gig.setStatus(Gig.Status.ACTIVE); // New gigs start as draft
         
         Gig savedGig = gigRepository.save(gig);
         log.info("Successfully created gig with ID: {} for userId: {}", savedGig.getId(), userId);

@@ -150,7 +150,17 @@ public class ProposalController {
             log.info("Submitting proposal for authenticated freelancer userId: {}", authenticatedUserId);
             
             ProposalResponseDto proposal = proposalService.createProposal(proposalCreateDto);
-            log.info("Proposal submitted successfully with ID: {}", proposal.getId());
+            
+            // Log success with enhanced information
+            if (proposal.getFreelancerInfo() != null) {
+                log.info("Proposal submitted successfully with ID: {} by freelancer: {} ({})", 
+                    proposal.getId(), 
+                    proposal.getFreelancerInfo().getName(),
+                    proposal.getFreelancerInfo().getHandle());
+            } else {
+                log.info("Proposal submitted successfully with ID: {} by freelancer ID: {}", 
+                    proposal.getId(), authenticatedUserId);
+            }
             
             return ResponseEntity.status(HttpStatus.CREATED).body(proposal);
         } catch (NumberFormatException e) {
