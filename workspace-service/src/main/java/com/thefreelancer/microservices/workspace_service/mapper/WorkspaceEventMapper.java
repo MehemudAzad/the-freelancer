@@ -20,23 +20,25 @@ public class WorkspaceEventMapper {
                 .build();
     }
 
-    public WorkspaceEvent toEntity(WorkspaceEventRequestDto dto, Room room) {
-    return WorkspaceEvent.builder()
-        .room(room)
-        .title(dto.getTitle())
-        .description(dto.getDescription())
-        .eventType(dto.getEventType())
-        .startTime(dto.getStartTime())
-        .endTime(dto.getEndTime())
-        .build();
+    public WorkspaceEvent toEntity(WorkspaceEventRequestDto dto, Room room, String userId) {
+        return WorkspaceEvent.builder()
+            .room(room)
+            .title(dto.getTitle())
+            .description(dto.getDescription())
+            .eventType(dto.getEventType())
+            .startTime(dto.getStartTime())
+            .endTime(dto.getEndTime())
+            .createdById(userId)
+            .build();
     }
 
-    public void updateEntity(WorkspaceEvent event, WorkspaceEventRequestDto dto, Room room) {
-    event.setRoom(room);
-    event.setTitle(dto.getTitle());
-    event.setDescription(dto.getDescription());
-    event.setEventType(dto.getEventType());
-    event.setStartTime(dto.getStartTime());
-    event.setEndTime(dto.getEndTime());
+    public void updateEntity(WorkspaceEvent event, WorkspaceEventRequestDto dto, Room room, String userId) {
+        event.setRoom(room);
+        event.setTitle(dto.getTitle());
+        event.setDescription(dto.getDescription());
+        event.setEventType(dto.getEventType());
+        event.setStartTime(dto.getStartTime());
+        event.setEndTime(dto.getEndTime());
+        // Note: We don't update createdById as it should remain the original creator
     }
 }

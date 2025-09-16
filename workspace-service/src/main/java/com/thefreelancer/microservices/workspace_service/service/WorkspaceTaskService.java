@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -127,21 +128,95 @@ public class WorkspaceTaskService {
         log.info("WorkspaceTask updated successfully: {}", taskId);
         return taskMapper.toResponseDto(savedTask);
     }
+
+    @Transactional
+    public TaskResponseDto updateTaskStatus(String roomId, String taskId, String userId, String status) {
+        log.info("Updating WorkspaceTask status: {} in room: {} by user: {} to status: {}", taskId, roomId, userId, status);
+        
+        // Validate room access
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
+            .orElseThrow(() -> new ResourceNotFoundException("Room not found: " + roomId));
+        validateRoomAccess(room, userId);
+        
+        // Find and validate WorkspaceTask
+        Long taskIdLong = Long.parseLong(taskId);
+        WorkspaceTask workspaceTask = taskRepository.findById(taskIdLong)
+            .orElseThrow(() -> new ResourceNotFoundException("WorkspaceTask not found: " + taskId));
+
+        if (workspaceTask.getRoom() == null || !workspaceTask.getRoom().getId().equals(roomIdLong)) {
+            throw new IllegalArgumentException("WorkspaceTask does not belong to this room");
+        }
+
+        // Validate and update status
+        try {
+            WorkspaceTask.TaskStatus newStatus = WorkspaceTask.TaskStatus.valueOf(status.toUpperCase());
+            workspaceTask.setStatus(newStatus);
+            
+            // Set completed timestamp if status is COMPLETED
+            if (newStatus == WorkspaceTask.TaskStatus.COMPLETED) {
+                workspaceTask.setCompletedAt(java.time.LocalDateTime.now());
+            } else if (workspaceTask.getCompletedAt() != null) {
+                // Clear completed timestamp if moving away from COMPLETED status
+                workspaceTask.setCompletedAt(null);
+            }
+            
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid status: " + status + ". Valid statuses are: TODO, IN_PROGRESS, REVIEW, COMPLETED, BLOCKED");
+        }
+
+        WorkspaceTask savedTask = taskRepository.save(workspaceTask);
+        
+        // TODO: Publish WebSocket event for real-time updates
+        // TODO: Send notification on status change
+        
+        log.info("WorkspaceTask status updated successfully: {} to status: {}", taskId, status);
+        return taskMapper.toResponseDto(savedTask);
+    }
+
+    @Transactional
+    public void deleteTask(String roomId, String taskId, String userId) {
+        log.info("Deleting WorkspaceTask: {} in room: {} by user: {}", taskId, roomId, userId);
+        
+        // Validate room access
+        Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomIdLong)
+            .orElseThrow(() -> new ResourceNotFoundException("Room not found: " + roomId));
+        validateRoomAccess(room, userId);
+        
+        // Find and validate WorkspaceTask
+        Long taskIdLong = Long.parseLong(taskId);
+        WorkspaceTask workspaceTask = taskRepository.findById(taskIdLong)
+            .orElseThrow(() -> new ResourceNotFoundException("WorkspaceTask not found: " + taskId));
+
+        if (workspaceTask.getRoom() == null || !workspaceTask.getRoom().getId().equals(roomIdLong)) {
+            throw new IllegalArgumentException("WorkspaceTask does not belong to this room");
+        }
+
+        // Delete the task
+        taskRepository.delete(workspaceTask);
+        
+        // TODO: Publish WebSocket event for real-time updates
+        // TODO: Send notification about task deletion
+        
+        log.info("WorkspaceTask deleted successfully: {}", taskId);
+    }
     
     private TaskListResponseDto.TaskStats calculateTaskStats(Long roomId) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
         
         return TaskListResponseDto.TaskStats.builder()
             .todoCount(taskRepository.countByRoomIdAndStatus(roomId, WorkspaceTask.TaskStatus.TODO))
             .inProgressCount(taskRepository.countByRoomIdAndStatus(roomId, WorkspaceTask.TaskStatus.IN_PROGRESS))
             .reviewCount(taskRepository.countByRoomIdAndStatus(roomId, WorkspaceTask.TaskStatus.REVIEW))
             .doneCount(taskRepository.countByRoomIdAndStatus(roomId, WorkspaceTask.TaskStatus.COMPLETED))
-            .overdueTasks(taskRepository.countOverdueTasks(roomId, now))
+            .overdueTasks(taskRepository.countOverdueTasks(roomId, today))
             .build();
     }
     
     private void validateRoomAccess(Room room, String userId) {
-        if (!room.getClientId().equals(userId) && !room.getFreelancerId().equals(userId)) {
+        Long userIdLong = Long.parseLong(userId);
+        if (!room.getClientId().equals(userIdLong) && !room.getFreelancerId().equals(userIdLong)) {
             throw new IllegalArgumentException("User does not have access to this room");
         }
         

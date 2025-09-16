@@ -84,6 +84,49 @@ public class WorkspaceTaskController {
         TaskResponseDto response = taskService.updateTask(roomId, taskId, userId, updateDto);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Update task status only
+     */
+    @PatchMapping("/{taskId}/status")
+    public ResponseEntity<TaskResponseDto> updateTaskStatus(
+            @PathVariable String roomId,
+            @PathVariable String taskId,
+            @Valid @RequestBody TaskStatusUpdateDto statusUpdateDto,
+            HttpServletRequest request) {
+        
+        log.info("Updating task status: {} in room: {} to status: {}", taskId, roomId, statusUpdateDto.getStatus());
+        
+        // Extract user ID from request
+        String userId = extractUserIdFromRequest(request);
+        if (userId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        TaskResponseDto response = taskService.updateTaskStatus(roomId, taskId, userId, statusUpdateDto.getStatus());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Delete task
+     */
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> deleteTask(
+            @PathVariable String roomId,
+            @PathVariable String taskId,
+            HttpServletRequest request) {
+        
+        log.info("Deleting task: {} in room: {}", taskId, roomId);
+        
+        // Extract user ID from request
+        String userId = extractUserIdFromRequest(request);
+        if (userId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        taskService.deleteTask(roomId, taskId, userId);
+        return ResponseEntity.noContent().build();
+    }
     
     private String extractUserIdFromRequest(HttpServletRequest request) {
         // Try to get user ID from X-User-Id header first (from gateway)

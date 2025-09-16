@@ -31,20 +31,26 @@ public class WorkspaceEventService {
                 .map(workspaceEventMapper::toResponseDto);
     }
 
-    public WorkspaceEventResponseDto createEvent(WorkspaceEventRequestDto dto) {
+    public List<WorkspaceEventResponseDto> getEventsByRoomId(Long roomId) {
+        return workspaceEventRepository.findByRoomId(roomId).stream()
+                .map(workspaceEventMapper::toResponseDto)
+                .toList();
+    }
+
+    public WorkspaceEventResponseDto createEvent(WorkspaceEventRequestDto dto, String userId) {
         Room room = roomRepository.findById(dto.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
-        WorkspaceEvent event = workspaceEventMapper.toEntity(dto, room);
+        WorkspaceEvent event = workspaceEventMapper.toEntity(dto, room, userId);
         WorkspaceEvent saved = workspaceEventRepository.save(event);
         return workspaceEventMapper.toResponseDto(saved);
     }
 
-    public WorkspaceEventResponseDto updateEvent(Long id, WorkspaceEventRequestDto dto) {
+    public WorkspaceEventResponseDto updateEvent(Long id, WorkspaceEventRequestDto dto, String userId) {
         WorkspaceEvent event = workspaceEventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("WorkspaceEvent not found"));
         Room room = roomRepository.findById(dto.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
-        workspaceEventMapper.updateEntity(event, dto, room);
+        workspaceEventMapper.updateEntity(event, dto, room, userId);
         WorkspaceEvent saved = workspaceEventRepository.save(event);
         return workspaceEventMapper.toResponseDto(saved);
     }

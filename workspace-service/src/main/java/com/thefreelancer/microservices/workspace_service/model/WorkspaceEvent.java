@@ -40,9 +40,6 @@ public class WorkspaceEvent {
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
-    @Column(name = "attendees", columnDefinition = "jsonb")
-    private String attendees; // JSON array of user emails
-
     @Column(name = "created_by_id", nullable = false)
     private String createdById;
 

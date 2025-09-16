@@ -27,15 +27,26 @@ public class WorkspaceEventController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/room/{roomId}")
+    public ResponseEntity<List<WorkspaceEventResponseDto>> getEventsByRoomId(@PathVariable Long roomId) {
+        List<WorkspaceEventResponseDto> events = workspaceEventService.getEventsByRoomId(roomId);
+        return ResponseEntity.ok(events);
+    }
+
     @PostMapping
-    public ResponseEntity<WorkspaceEventResponseDto> createEvent(@RequestBody WorkspaceEventRequestDto requestDto) {
-        WorkspaceEventResponseDto created = workspaceEventService.createEvent(requestDto);
+    public ResponseEntity<WorkspaceEventResponseDto> createEvent(
+            @RequestBody WorkspaceEventRequestDto requestDto,
+            @RequestHeader(value = "X-User-Id") String userId) {
+        WorkspaceEventResponseDto created = workspaceEventService.createEvent(requestDto, userId);
         return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<WorkspaceEventResponseDto> updateEvent(@PathVariable Long id, @RequestBody WorkspaceEventRequestDto requestDto) {
-        WorkspaceEventResponseDto updated = workspaceEventService.updateEvent(id, requestDto);
+    public ResponseEntity<WorkspaceEventResponseDto> updateEvent(
+            @PathVariable Long id, 
+            @RequestBody WorkspaceEventRequestDto requestDto,
+            @RequestHeader(value = "X-User-Id") String userId) {
+        WorkspaceEventResponseDto updated = workspaceEventService.updateEvent(id, requestDto, userId);
         return ResponseEntity.ok(updated);
     }
 

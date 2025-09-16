@@ -23,6 +23,7 @@ import java.util.List;
 )
 public interface WorkspaceTaskMapper {
     
+    @Mapping(target = "roomId", source = "room.id")
     @Mapping(target = "status", source = "status", qualifiedByName = "statusToString")
     @Mapping(target = "priority", source = "priority", qualifiedByName = "priorityToString")
     @Mapping(target = "createdBy", source = "createdById")
