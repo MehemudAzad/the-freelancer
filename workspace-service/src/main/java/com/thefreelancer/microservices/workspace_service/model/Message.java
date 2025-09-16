@@ -36,11 +36,15 @@ public class Message {
     @Column(name = "sender_id", nullable = false)
     private Long senderId; // User ID from Auth Service (numeric)
 
+    @Column(name = "sender_name", nullable = false)
+    private String senderName; // Display name of the sender
+
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "message_type", nullable = false)
+    @Builder.Default
     private MessageType messageType = MessageType.TEXT;
 
     @ManyToOne(fetch = FetchType.LAZY)

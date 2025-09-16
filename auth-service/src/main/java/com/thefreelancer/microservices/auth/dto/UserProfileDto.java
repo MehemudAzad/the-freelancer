@@ -36,6 +36,7 @@ public class UserProfileDto {
         private String gitlabUsername;
         private String websiteUrl;
         private String linkedinUrl;
+        private String profilePictureUrl;
         private BigDecimal deliveryScore;
         private BigDecimal reviewAvg;
         private Integer reviewsCount;

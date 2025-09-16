@@ -129,6 +129,7 @@ public class UserController {
                 .gitlabUsername(profile.getGitlabUsername())
                 .websiteUrl(profile.getWebsiteUrl())
                 .linkedinUrl(profile.getLinkedinUrl())
+                .profilePictureUrl(profile.getProfilePictureUrl())
                 .deliveryScore(profile.getDeliveryScore())
                 .reviewAvg(profile.getReviewAvg())
                 .reviewsCount(profile.getReviewsCount())

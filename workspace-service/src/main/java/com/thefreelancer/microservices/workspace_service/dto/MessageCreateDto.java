@@ -17,6 +17,9 @@ public class MessageCreateDto {
     
     private Long senderId; // Set by WebSocket controller or extracted from auth headers
     
+    @NotBlank(message = "Sender name is required")
+    private String senderName;
+    
     @NotBlank(message = "Message content is required")
     @Size(max = 5000, message = "Message content cannot exceed 5000 characters")
     private String content;

@@ -40,7 +40,7 @@ public class MessageMapper {
             .id(message.getId())
             .roomId(message.getRoomId())
             .senderId(message.getSenderId())
-            .senderName(getSenderName(message.getSenderId())) // TODO: Implement user lookup
+            .senderName(message.getSenderName())
             .content(message.getContent())
             .messageType(message.getMessageType().name())
             .replyToId(message.getReplyToId())
@@ -67,6 +67,7 @@ public class MessageMapper {
         return Message.builder()
             .roomId(roomId)
             .senderId(senderId)
+            .senderName(createDto.getSenderName())
             .content(createDto.getContent())
             .messageType(Message.MessageType.valueOf(createDto.getMessageType().toUpperCase()))
             .replyToId(createDto.getReplyToId())
@@ -89,13 +90,4 @@ public class MessageMapper {
             .fileSize(attachmentDto.getFileSize())
             .build();
     }
-    
-    private String getSenderName(Long senderId) {
-        // TODO: Implement user service lookup or cache
-        if (senderId == null) return "Unknown";
-        // Reserve special system id (e.g., 0) if used; otherwise rely on message type
-        return "User " + senderId;
-    }
-
-    // replyToId is already Long in DTOs now
 }
