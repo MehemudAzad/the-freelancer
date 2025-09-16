@@ -35,9 +35,6 @@ public class ContractMilestone {
     @Column(name = "amount_cents", nullable = false)
     private BigInteger amountCents;
 
-    @Column(name = "currency", nullable = false, length = 3)
-    private String currency = "USD";
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private MilestoneStatus status = MilestoneStatus.PENDING;

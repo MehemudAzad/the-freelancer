@@ -20,19 +20,12 @@ public class NotificationEventListener {
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
     
-    @KafkaListener(topics = "proposal-submitted", groupId = "notification-service-group")
-    public void handleProposalSubmittedEvent(
-            @Payload String eventData,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            @Header(KafkaHeaders.PARTITION) int partition,
-            @Header(KafkaHeaders.OFFSET) long offset,
-            Acknowledgment acknowledgment) {
+    @KafkaListener(topics = "proposal-submitted", groupId = "notification-service-group", 
+                   containerFactory = "proposalSubmittedKafkaListenerContainerFactory")
+    public void handleProposalSubmittedEvent(ProposalSubmittedEvent event) {
         
         try {
-            log.info("Received proposal submitted event from topic: {}, partition: {}, offset: {}", 
-                    topic, partition, offset);
-            
-            ProposalSubmittedEvent event = objectMapper.readValue(eventData, ProposalSubmittedEvent.class);
+            log.info("Received proposal submitted event for proposal: {}", event.getProposalId());
             
             notificationService.createProposalSubmittedNotification(
                 event.getJobId(),
@@ -43,25 +36,18 @@ public class NotificationEventListener {
                 null // proposalCoverLetter - not available in simplified event
             );
             
-            acknowledgment.acknowledge();
             log.debug("Successfully processed proposal submitted event: {}", event.getProposalId());
-            
         } catch (Exception e) {
             log.error("Error processing proposal submitted event: {}", e.getMessage(), e);
-            // Don't acknowledge - let Kafka retry
         }
     }
     
-    @KafkaListener(topics = "proposal-accepted", groupId = "notification-service-group")
-    public void handleProposalAcceptedEvent(
-            @Payload String eventData,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            Acknowledgment acknowledgment) {
+    @KafkaListener(topics = "proposal-accepted", groupId = "notification-service-group", 
+                   containerFactory = "proposalAcceptedKafkaListenerContainerFactory")
+    public void handleProposalAcceptedEvent(ProposalAcceptedEvent event) {
         
         try {
-            log.info("Received proposal accepted event from topic: {}", topic);
-            
-            ProposalAcceptedEvent event = objectMapper.readValue(eventData, ProposalAcceptedEvent.class);
+            log.info("Received proposal accepted event for proposal: {}", event.getProposalId());
             
             notificationService.createProposalAcceptedNotification(
                 event.getJobId(),
@@ -72,7 +58,6 @@ public class NotificationEventListener {
                 "Your proposal has been accepted!" // Default message since acceptanceMessage might not exist
             );
             
-            acknowledgment.acknowledge();
             log.debug("Successfully processed proposal accepted event: {}", event.getProposalId());
             
         } catch (Exception e) {
@@ -80,16 +65,12 @@ public class NotificationEventListener {
         }
     }
     
-    @KafkaListener(topics = "proposal-rejected", groupId = "notification-service-group")
-    public void handleProposalRejectedEvent(
-            @Payload String eventData,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            Acknowledgment acknowledgment) {
+    @KafkaListener(topics = "proposal-rejected", groupId = "notification-service-group", 
+                   containerFactory = "proposalRejectedKafkaListenerContainerFactory")
+    public void handleProposalRejectedEvent(ProposalRejectedEvent event) {
         
         try {
-            log.info("Received proposal rejected event from topic: {}", topic);
-            
-            ProposalRejectedEvent event = objectMapper.readValue(eventData, ProposalRejectedEvent.class);
+            log.info("Received proposal rejected event for proposal: {}", event.getProposalId());
             
             notificationService.createProposalRejectedNotification(
                 event.getJobId(),
@@ -100,7 +81,6 @@ public class NotificationEventListener {
                 event.getFeedback() // Use feedback field
             );
             
-            acknowledgment.acknowledge();
             log.debug("Successfully processed proposal rejected event: {}", event.getProposalId());
             
         } catch (Exception e) {

@@ -1,6 +1,9 @@
 package com.thefreelancer.microservices.notification.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thefreelancer.microservices.notification.event.ProposalSubmittedEvent;
+import com.thefreelancer.microservices.notification.event.ProposalAcceptedEvent;
+import com.thefreelancer.microservices.notification.event.ProposalRejectedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,38 +31,69 @@ public class KafkaConsumerConfig {
 
     @Value("${spring.kafka.consumer.group-id:notification-service-group}")
     private String groupId;
-
-    @Bean
-    public ConsumerFactory<String, Object> consumerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest"); // Skip old messages
-        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        configProps.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30000);
-        configProps.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 10000);
-        
-        // Use ErrorHandlingDeserializer to handle malformed messages gracefully
-        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        
-        // Configure the actual deserializers
-        configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
-        configProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
-        
-        // JsonDeserializer configuration
-        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-        configProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "java.lang.Object");
-        
-        return new DefaultKafkaConsumerFactory<>(configProps);
+    
+    private final ObjectMapper objectMapper;
+    
+    public KafkaConsumerConfig(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory = 
+    public ConsumerFactory<String, ProposalSubmittedEvent> proposalSubmittedConsumerFactory() {
+        return createConsumerFactory(ProposalSubmittedEvent.class);
+    }
+
+    @Bean
+    public ConsumerFactory<String, ProposalAcceptedEvent> proposalAcceptedConsumerFactory() {
+        return createConsumerFactory(ProposalAcceptedEvent.class);
+    }
+
+    @Bean
+    public ConsumerFactory<String, ProposalRejectedEvent> proposalRejectedConsumerFactory() {
+        return createConsumerFactory(ProposalRejectedEvent.class);
+    }
+
+    private <T> ConsumerFactory<String, T> createConsumerFactory(Class<T> eventClass) {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        configProps.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30000);
+        configProps.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 10000);
+
+        JsonDeserializer<T> jsonDeserializer = new JsonDeserializer<>(eventClass, objectMapper);
+        jsonDeserializer.addTrustedPackages("*");
+        jsonDeserializer.setUseTypeHeaders(false);
+
+        ErrorHandlingDeserializer<T> errorHandlingDeserializer = new ErrorHandlingDeserializer<>(jsonDeserializer);
+
+        return new DefaultKafkaConsumerFactory<>(
+                configProps,
+                new StringDeserializer(),
+                errorHandlingDeserializer
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, ProposalSubmittedEvent> proposalSubmittedKafkaListenerContainerFactory() {
+        return createListenerContainerFactory(proposalSubmittedConsumerFactory());
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, ProposalAcceptedEvent> proposalAcceptedKafkaListenerContainerFactory() {
+        return createListenerContainerFactory(proposalAcceptedConsumerFactory());
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, ProposalRejectedEvent> proposalRejectedKafkaListenerContainerFactory() {
+        return createListenerContainerFactory(proposalRejectedConsumerFactory());
+    }
+
+    private <T> ConcurrentKafkaListenerContainerFactory<String, T> createListenerContainerFactory(ConsumerFactory<String, T> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, T> factory = 
             new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
+        factory.setConsumerFactory(consumerFactory);
         
         // Configure error handling
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
@@ -75,10 +109,5 @@ public class KafkaConsumerConfig {
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         
         return factory;
-    }
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
     }
 }

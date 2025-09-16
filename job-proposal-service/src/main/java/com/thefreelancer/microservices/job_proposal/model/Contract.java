@@ -40,9 +40,6 @@ public class Contract {
     @Column(name = "total_amount_cents", nullable = false)
     private BigInteger totalAmountCents;
 
-    @Column(name = "currency", nullable = false, length = 3)
-    private String currency = "USD";
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ContractStatus status = ContractStatus.ACTIVE;

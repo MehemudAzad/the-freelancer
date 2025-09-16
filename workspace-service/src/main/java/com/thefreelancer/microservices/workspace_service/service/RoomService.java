@@ -12,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -51,6 +54,16 @@ public class RoomService {
         Long eventCount = roomRepository.countEventsByRoomId(room.getId());
         
         return roomMapper.toResponseDtoWithCounts(room, messageCount, fileCount, taskCount, eventCount);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoomResponseDto> getMyRooms(String userId) {
+        log.info("Fetching all rooms for user: {}", userId);
+        Long userIdLong = Long.parseLong(userId);
+        List<Room> rooms = roomRepository.findAllByUserId(userIdLong);
+        return rooms.stream()
+                .map(roomMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
     
     @Transactional

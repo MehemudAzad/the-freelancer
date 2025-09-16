@@ -1,6 +1,5 @@
 package com.thefreelancer.microservices.job_proposal.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -11,8 +10,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class EventPublisherService {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void publishProposalSubmittedEvent(Long proposalId, Long jobId, Long freelancerId, Long clientId, String projectName, String freelancerName) {
         try {
@@ -25,16 +23,11 @@ public class EventPublisherService {
                     .freelancerName(freelancerName)
                     .build();
             
-            String eventString = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("proposal-submitted", proposalId.toString(), eventString)
-                    .thenAccept(result -> log.info("Successfully published proposal-submitted event for proposal: {}", proposalId))
-                    .exceptionally(ex -> {
-                        log.error("Failed to publish proposal-submitted event for proposal: {}", proposalId, ex);
-                        return null;
-                    });
+            kafkaTemplate.send("proposal-submitted", proposalId.toString(), event);
+            log.info("Published ProposalSubmittedEvent for proposalId: {}", proposalId);
             
         } catch (Exception e) {
-            log.error("Error creating proposal-submitted event for proposal: {}", proposalId, e);
+            log.error("Failed to publish ProposalSubmittedEvent for proposalId: {}", proposalId, e);
         }
     }
 
@@ -49,16 +42,11 @@ public class EventPublisherService {
                     .freelancerName(freelancerName)
                     .build();
 
-            String eventString = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("proposal-accepted", proposalId.toString(), eventString)
-                    .thenAccept(result -> log.info("Successfully published proposal-accepted event for proposal: {}", proposalId))
-                    .exceptionally(ex -> {
-                        log.error("Failed to publish proposal-accepted event for proposal: {}", proposalId, ex);
-                        return null;
-                    });
+            kafkaTemplate.send("proposal-accepted", proposalId.toString(), event);
+            log.info("Published ProposalAcceptedEvent for proposalId: {}", proposalId);
             
         } catch (Exception e) {
-            log.error("Error creating proposal-accepted event for proposal: {}", proposalId, e);
+            log.error("Failed to publish ProposalAcceptedEvent for proposalId: {}", proposalId, e);
         }
     }
 
@@ -73,16 +61,11 @@ public class EventPublisherService {
                     .feedback(feedback)
                     .build();
 
-            String eventString = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("proposal-rejected", proposalId.toString(), eventString)
-                    .thenAccept(result -> log.info("Successfully published proposal-rejected event for proposal: {}", proposalId))
-                    .exceptionally(ex -> {
-                        log.error("Failed to publish proposal-rejected event for proposal: {}", proposalId, ex);
-                        return null;
-                    });
+            kafkaTemplate.send("proposal-rejected", proposalId.toString(), event);
+            log.info("Published ProposalRejectedEvent for proposalId: {}", proposalId);
             
         } catch (Exception e) {
-            log.error("Error creating proposal-rejected event for proposal: {}", proposalId, e);
+            log.error("Failed to publish ProposalRejectedEvent for proposalId: {}", proposalId, e);
         }
     }
 

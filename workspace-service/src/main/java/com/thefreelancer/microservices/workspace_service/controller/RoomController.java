@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/workspaces")
 @RequiredArgsConstructor
@@ -19,6 +21,17 @@ import org.springframework.web.bind.annotation.*;
 public class RoomController {
     
     private final RoomService roomService;
+
+    @GetMapping("/rooms/my-rooms")
+    public ResponseEntity<List<RoomResponseDto>> getMyRooms(
+            @RequestHeader(value = "X-User-Id") String userIdHeader) {
+        log.info("GET /api/workspaces/rooms/my-rooms - fetching rooms for user {}", userIdHeader);
+        if (userIdHeader == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<RoomResponseDto> rooms = roomService.getMyRooms(userIdHeader);
+        return ResponseEntity.ok(rooms);
+    }
     
     // 1. Get workspace for contract
     @GetMapping("/contract/{contractId}")

@@ -67,9 +67,6 @@ public class ContractService {
             contract.setTotalAmountCents(proposal.getTotalCents());
         }
         
-        // Currency is always USD - set explicitly
-        contract.setCurrency("USD");
-        
         contract.setStatus(Contract.ContractStatus.ACTIVE);
         contract.setStartDate(request.getStartDate() != null ? request.getStartDate() : LocalDate.now());
         contract.setEndDate(request.getEndDate());
@@ -101,7 +98,6 @@ public class ContractService {
                     contractMilestone.setTitle(proposalMilestone.getTitle());
                     contractMilestone.setDescription(proposalMilestone.getDescription());
                     contractMilestone.setAmountCents(proposalMilestone.getAmountCents());
-                    contractMilestone.setCurrency("USD"); // Always USD
                     contractMilestone.setDueDate(proposalMilestone.getDueDate());
                     contractMilestone.setOrderIndex(proposalMilestone.getOrderIndex());
                     contractMilestone.setStatus(ContractMilestone.MilestoneStatus.PENDING);

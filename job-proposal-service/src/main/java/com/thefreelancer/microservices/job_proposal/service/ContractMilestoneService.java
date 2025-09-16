@@ -49,7 +49,6 @@ public class ContractMilestoneService {
         milestone.setTitle(createDto.getTitle());
         milestone.setDescription(createDto.getDescription());
         milestone.setAmountCents(createDto.getAmountCents());
-        milestone.setCurrency("USD"); // Always USD
         milestone.setDueDate(createDto.getDueDate());
         milestone.setOrderIndex(createDto.getOrderIndex() != null ? createDto.getOrderIndex() : nextOrderIndex);
         milestone.setStatus(ContractMilestone.MilestoneStatus.FUNDING_REQUIRED);

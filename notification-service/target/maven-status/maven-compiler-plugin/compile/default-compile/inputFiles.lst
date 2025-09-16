@@ -2,6 +2,7 @@
 /Users/mr.x/Desktop/the-freelancer/notification-service/src/main/java/com/thefreelancer/microservices/notification/client/AuthServiceClient.java
 /Users/mr.x/Desktop/the-freelancer/notification-service/src/main/java/com/thefreelancer/microservices/notification/client/UserResponse.java
 /Users/mr.x/Desktop/the-freelancer/notification-service/src/main/java/com/thefreelancer/microservices/notification/config/AsyncConfig.java
+/Users/mr.x/Desktop/the-freelancer/notification-service/src/main/java/com/thefreelancer/microservices/notification/config/JacksonConfig.java
 /Users/mr.x/Desktop/the-freelancer/notification-service/src/main/java/com/thefreelancer/microservices/notification/config/KafkaConsumerConfig.java
 /Users/mr.x/Desktop/the-freelancer/notification-service/src/main/java/com/thefreelancer/microservices/notification/config/SwaggerConfig.java
 /Users/mr.x/Desktop/the-freelancer/notification-service/src/main/java/com/thefreelancer/microservices/notification/config/WebClientConfig.java
