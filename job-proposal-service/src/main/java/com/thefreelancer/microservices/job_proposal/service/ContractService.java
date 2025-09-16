@@ -53,6 +53,16 @@ public class ContractService {
             throw new IllegalStateException("Cannot create contract for job that is not open");
         }
         
+        // Verify proposal is in ACCEPTED status
+        if (proposal.getStatus() != Proposal.ProposalStatus.ACCEPTED) {
+            throw new IllegalStateException("Cannot create contract for proposal that is not accepted. Current status: " + proposal.getStatus());
+        }
+        
+        // Verify no existing contract for this job
+        if (contractRepository.existsByJobId(job.getId())) {
+            throw new IllegalStateException("A contract already exists for this job");
+        }
+        
         // Create the contract
         Contract contract = new Contract();
         contract.setJob(job);
@@ -112,12 +122,35 @@ public class ContractService {
         }
         
         // Update proposal status to CONTRACTED
+        Proposal.ProposalStatus previousProposalStatus = proposal.getStatus();
         proposal.setStatus(Proposal.ProposalStatus.CONTRACTED);
         proposalRepository.save(proposal);
+        log.info("Updated proposal {} status: {} -> {}", proposal.getId(), previousProposalStatus, Proposal.ProposalStatus.CONTRACTED);
+        
+        // Decline all other proposals for this job (except the accepted one)
+        List<Proposal> otherProposals = proposalRepository.findByJobIdAndStatusIn(
+            job.getId(), 
+            List.of(Proposal.ProposalStatus.SUBMITTED, Proposal.ProposalStatus.ACCEPTED)
+        );
+        
+        int declinedCount = 0;
+        for (Proposal otherProposal : otherProposals) {
+            if (!otherProposal.getId().equals(proposal.getId())) {
+                otherProposal.setStatus(Proposal.ProposalStatus.DECLINED);
+                log.info("Declining competing proposal {} for job {}", otherProposal.getId(), job.getId());
+                declinedCount++;
+            }
+        }
+        if (!otherProposals.isEmpty()) {
+            proposalRepository.saveAll(otherProposals);
+            log.info("Declined {} competing proposals for job {}", declinedCount, job.getId());
+        }
         
         // Update job status to IN_PROGRESS
+        Job.JobStatus previousJobStatus = job.getStatus();
         job.setStatus(Job.JobStatus.IN_PROGRESS);
         jobRepository.save(job);
+        log.info("Updated job {} status: {} -> {}", job.getId(), previousJobStatus, Job.JobStatus.IN_PROGRESS);
 
         // Publish Kafka event for proposal acceptance
         publishProposalAcceptedEvent(proposal, job);
