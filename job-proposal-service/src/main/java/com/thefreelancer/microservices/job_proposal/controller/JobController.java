@@ -209,7 +209,7 @@ public class JobController {
         } catch (NumberFormatException e) {
             log.error("Invalid user ID format: {}", userIdHeader);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (RuntimeException | java.io.IOException e) {
+        } catch (RuntimeException e) {
             log.warn("Failed to create job with attachment: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
