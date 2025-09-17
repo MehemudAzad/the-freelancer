@@ -103,10 +103,10 @@ public class MessageService {
         if (beforeMessageId != null) {
             // Cursor-based pagination
             messagePage = messageRepository.findByRoomIdBeforeMessageOrderByCreatedAtDesc(
-                roomId, beforeMessageId, pageable);
+                roomIdLong, beforeMessageId, pageable);
         } else {
             // Regular pagination
-            messagePage = messageRepository.findByRoomIdOrderByCreatedAtDesc(roomId, pageable);
+            messagePage = messageRepository.findByRoomIdOrderByCreatedAtDesc(roomIdLong, pageable);
         }
         
         List<MessageResponseDto> messages = messageMapper.toResponseDtoList(messagePage.getContent());
@@ -189,7 +189,7 @@ public class MessageService {
         Message message = messageRepository.findById(messageId)
             .orElseThrow(() -> new IllegalArgumentException("Message not found: " + messageId));
         
-        if (!message.getRoomId().equals(roomId)) {
+        if (!message.getRoomId().equals(roomIdLong)) {
             throw new IllegalArgumentException("Message does not belong to this room");
         }
         
@@ -231,9 +231,9 @@ public class MessageService {
         
         if (messageType != null && !messageType.isEmpty()) {
             Message.MessageType type = Message.MessageType.valueOf(messageType.toUpperCase());
-            messagePage = messageRepository.searchByRoomIdAndTypeAndContent(roomId, type, searchTerm, pageable);
+            messagePage = messageRepository.searchByRoomIdAndTypeAndContent(roomIdLong, type, searchTerm, pageable);
         } else {
-            messagePage = messageRepository.searchByRoomIdAndContent(roomId, searchTerm, pageable);
+            messagePage = messageRepository.searchByRoomIdAndContent(roomIdLong, searchTerm, pageable);
         }
         
         List<MessageResponseDto> messages = messageMapper.toResponseDtoList(messagePage.getContent());
@@ -261,7 +261,7 @@ public class MessageService {
         
         Message systemMessage = Message.builder()
             .room(room)
-            .roomId(roomId)
+            .roomId(roomIdLong)
             .senderId(0L) // System sender ID as 0
             .content(content)
             .messageType(Message.MessageType.SYSTEM)
