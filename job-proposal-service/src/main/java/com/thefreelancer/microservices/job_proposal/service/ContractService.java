@@ -347,4 +347,23 @@ public class ContractService {
             // Don't throw exception here to avoid failing the main transaction
         }
     }
+
+    /**
+     * Check if client has completed at least one contract with freelancer
+     * Used by review service to validate review eligibility
+     */
+    @Transactional(readOnly = true)
+    public boolean hasCompletedContractWithFreelancer(Long clientId, Long freelancerId) {
+        log.debug("Checking completed contracts between client: {} and freelancer: {}", clientId, freelancerId);
+        
+        // Check if there's at least one completed contract between client and freelancer
+        boolean hasCompleted = contractRepository.existsByClientIdAndFreelancerIdAndStatus(
+            clientId, 
+            freelancerId, 
+            Contract.ContractStatus.COMPLETED
+        );
+        
+        log.debug("Client {} has completed contracts with freelancer {}: {}", clientId, freelancerId, hasCompleted);
+        return hasCompleted;
+    }
 }

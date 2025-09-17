@@ -1,5 +1,6 @@
 package com.thefreelancer.microservices.gig.controller;
 
+import com.thefreelancer.microservices.gig.client.JobProposalServiceClient;
 import com.thefreelancer.microservices.gig.dto.*;
 import com.thefreelancer.microservices.gig.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
     
     private final ReviewService reviewService;
+    private final JobProposalServiceClient jobProposalServiceClient;
     
     @Operation(summary = "Create review", description = "Create a new review for a gig")
     @ApiResponses(value = {
@@ -365,6 +367,41 @@ public class ReviewController {
         } catch (Exception e) {
             log.error("Error getting freelancer review summary: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Operation(summary = "Check if user can review freelancer", description = "Check if the current user can review a specific freelancer")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Check completed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+        @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
+    @GetMapping("/can-review-freelancer/{freelancerId}")
+    public ResponseEntity<Boolean> canReviewFreelancer(
+            @Parameter(description = "ID of the freelancer") @PathVariable Long freelancerId,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader) {
+        
+        log.info("GET /api/reviews/can-review-freelancer/{} - Checking review eligibility", freelancerId);
+        
+        // Check authentication
+        if (userIdHeader == null || userIdHeader.isEmpty()) {
+            log.warn("Authentication required for checking review eligibility");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
+        }
+        
+        try {
+            Long clientId = Long.parseLong(userIdHeader);
+            boolean canReview = jobProposalServiceClient.hasCompletedContractWithFreelancer(clientId, freelancerId);
+            
+            log.info("User {} can review freelancer {}: {}", clientId, freelancerId, canReview);
+            return ResponseEntity.ok(canReview);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.badRequest().body(false);
+        } catch (Exception e) {
+            log.error("Error checking review eligibility for user {} and freelancer {}: {}", 
+                     userIdHeader, freelancerId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(false);
         }
     }
 }
