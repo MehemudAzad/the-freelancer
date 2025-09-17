@@ -30,6 +30,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         "/api/gigs/search",  // Public search
         "/api/jobs/search",  // Public job search
         "/api/payments/webhooks", // Stripe webhooks (external)
+        "/api/ai",           // AI service endpoints (public for now)
         "/swagger-ui",       // Swagger UI
         "/api-docs",         // OpenAPI docs
         "/v3/api-docs"       // OpenAPI v3 docs
