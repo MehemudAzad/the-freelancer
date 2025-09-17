@@ -6,9 +6,11 @@ import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateWithMilest
 import com.thefreelancer.microservices.job_proposal.dto.ProposalResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalUpdateDto;
 import com.thefreelancer.microservices.job_proposal.dto.UserResponseDto;
+import com.thefreelancer.microservices.job_proposal.model.Contract;
 import com.thefreelancer.microservices.job_proposal.model.Job;
 import com.thefreelancer.microservices.job_proposal.model.Proposal;
 import com.thefreelancer.microservices.job_proposal.model.ProposalMilestone;
+import com.thefreelancer.microservices.job_proposal.repository.ContractRepository;
 import com.thefreelancer.microservices.job_proposal.repository.JobRepository;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalMilestoneRepository;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalRepository;
@@ -18,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -27,18 +29,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ProposalService {
-    
-    private final ProposalRepository proposalRepository;
+
     private final JobRepository jobRepository;
+    private final ProposalRepository proposalRepository;
     private final ProposalMilestoneRepository proposalMilestoneRepository;
-    private final ProposalMapper proposalMapper;
-    private final EventPublisherService eventPublisherService;
+    private final ContractRepository contractRepository; // Injected repository
     private final AuthServiceClient authServiceClient;
+    private final EventPublisherService eventPublisherService;
+    private final ProposalMapper proposalMapper;
     
     @Transactional(readOnly = true)
     public List<ProposalResponseDto> getMyProposals(Long freelancerId, String status) {
         log.info("Fetching proposals for freelancer: {} with status: {}", freelancerId, status);
-        
+
         List<Proposal> proposals;
         if (status != null && !status.trim().isEmpty()) {
             try {
@@ -46,14 +49,34 @@ public class ProposalService {
                 proposals = proposalRepository.findByFreelancerIdAndStatusOrderByCreatedAtDesc(freelancerId, statusEnum);
             } catch (IllegalArgumentException e) {
                 log.warn("Invalid status: {}", status);
-                proposals = List.of(); // Return empty list for invalid status
+                return List.of(); // Return empty list for invalid status
             }
         } else {
             proposals = proposalRepository.findByFreelancerIdOrderByCreatedAtDesc(freelancerId);
         }
-        
+
+        if (proposals.isEmpty()) {
+            return List.of();
+        }
+
+        // Get all proposal IDs
+        List<Long> proposalIds = proposals.stream()
+                .map(Proposal::getId)
+                .collect(Collectors.toList());
+
+        // Fetch all contracts for these proposals in one query
+        Map<Long, Long> proposalToContractIdMap = contractRepository.findByProposalIdIn(proposalIds).stream()
+                .collect(Collectors.toMap(c -> c.getProposal().getId(), Contract::getId));
+
         return proposals.stream()
-                .map(proposalMapper::toResponseDto)
+                .map(proposal -> {
+                    ProposalResponseDto dto = proposalMapper.toResponseDto(proposal);
+                    // Enrich with freelancer info from auth service
+                    enrichWithFreelancerInfo(dto, proposal.getFreelancerId());
+                    // Set the contract ID if it exists
+                    dto.setContractId(proposalToContractIdMap.get(proposal.getId()));
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
     
@@ -82,12 +105,9 @@ public class ProposalService {
         Proposal savedProposal = proposalRepository.save(proposal);
         log.info("Proposal created successfully with ID: {}", savedProposal.getId());
 
-<<<<<<< Updated upstream
         // Publish Kafka event
         publishProposalSubmittedEvent(savedProposal, job);
 
-        return proposalMapper.toResponseDto(savedProposal);
-=======
         // Create response DTO
         ProposalResponseDto responseDto = proposalMapper.toResponseDto(savedProposal);
         
@@ -143,7 +163,6 @@ public class ProposalService {
         freelancerInfo.setRating(0.0);
         freelancerInfo.setPortfolioUrl(null);
         return freelancerInfo;
-    }
     }
     
     @Transactional
@@ -226,14 +245,25 @@ public class ProposalService {
     @Transactional(readOnly = true)
     public List<ProposalResponseDto> getProposalsForJob(Long jobId) {
         log.info("Fetching proposals for job: {}", jobId);
-        
+
         List<Proposal> proposals = proposalRepository.findByJobIdOrderByCreatedAtDesc(jobId);
-        
+
+        // Get all proposal IDs
+        List<Long> proposalIds = proposals.stream()
+                .map(Proposal::getId)
+                .collect(Collectors.toList());
+
+        // Fetch all contracts for these proposals in one query
+        Map<Long, Long> proposalToContractIdMap = contractRepository.findByProposalIdIn(proposalIds).stream()
+                .collect(Collectors.toMap(c -> c.getProposal().getId(), Contract::getId));
+
         return proposals.stream()
                 .map(proposal -> {
                     ProposalResponseDto dto = proposalMapper.toResponseDto(proposal);
                     // Enrich with freelancer info from auth service
                     enrichWithFreelancerInfo(dto, proposal.getFreelancerId());
+                    // Set the contract ID if it exists
+                    dto.setContractId(proposalToContractIdMap.get(proposal.getId()));
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -242,22 +272,33 @@ public class ProposalService {
     @Transactional(readOnly = true)
     public List<ProposalResponseDto> getProposalsForJobByClient(Long jobId, Long clientId) {
         log.info("Fetching proposals for job: {} by client: {}", jobId, clientId);
-        
+
         // First validate that the client owns the job
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
-        
+
         if (!job.getClientId().equals(clientId)) {
             throw new RuntimeException("Access denied: You can only view proposals for your own jobs");
         }
-        
+
         List<Proposal> proposals = proposalRepository.findByJobIdOrderByCreatedAtDesc(jobId);
-        
+
+        // Get all proposal IDs
+        List<Long> proposalIds = proposals.stream()
+                .map(Proposal::getId)
+                .collect(Collectors.toList());
+
+        // Fetch all contracts for these proposals in one query
+        Map<Long, Long> proposalToContractIdMap = contractRepository.findByProposalIdIn(proposalIds).stream()
+                .collect(Collectors.toMap(c -> c.getProposal().getId(), Contract::getId));
+
         return proposals.stream()
                 .map(proposal -> {
                     ProposalResponseDto dto = proposalMapper.toResponseDto(proposal);
                     // Enrich with freelancer info from auth service
                     enrichWithFreelancerInfo(dto, proposal.getFreelancerId());
+                    // Set the contract ID if it exists
+                    dto.setContractId(proposalToContractIdMap.get(proposal.getId()));
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -300,4 +341,6 @@ public class ProposalService {
             // Continue without freelancer info rather than failing
         }
     }
+
+
 }

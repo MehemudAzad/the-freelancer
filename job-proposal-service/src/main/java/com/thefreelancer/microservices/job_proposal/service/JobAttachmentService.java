@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.thefreelancer.microservices.job_proposal.service.CloudinaryService.CloudinaryUploadResult;
 
-@Service
+// @Service  // TEMPORARILY DISABLED TO FIX STARTUP ISSUE
 @RequiredArgsConstructor
 @Slf4j
 public class JobAttachmentService {

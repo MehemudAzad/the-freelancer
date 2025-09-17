@@ -1,15 +1,18 @@
 package com.thefreelancer.microservices.job_proposal.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ProposalResponseDto {
     
     private Long id;
@@ -23,11 +26,13 @@ public class ProposalResponseDto {
     private String portfolioLinks;
     private String additionalNotes;
     private String status; // SUBMITTED, ACCEPTED, REJECTED, WITHDRAWN
+    private Long contractId; // ID of the contract if one exists
     private LocalDateTime submittedAt;
     private LocalDateTime updatedAt;
     
     // Enhanced freelancer information from auth-service
     private FreelancerInfo freelancerInfo;
+    private List<ProposalMilestoneDto> milestones;
     
     @Data
     @NoArgsConstructor

@@ -33,7 +33,7 @@ import java.util.Optional;
 public class JobController {
     
     private final JobService jobService;
-    private final JobAttachmentService jobAttachmentService;
+    // TEMPORARILY DISABLED: private final JobAttachmentService jobAttachmentService;
     
     // ====================
     // PUBLIC DISCOVERY APIs (No authentication required)
@@ -199,9 +199,11 @@ public class JobController {
             // Create job first
             JobResponseDto job = jobService.createJob(jobCreateDto, authenticatedUserId);
             log.info("Job successfully created with ID: {} for clientId: {}", job.getId(), job.getClientId());
-            // Upload attachment and link to job
-            JobAttachmentResponseDto attachment = jobAttachmentService.createJobAttachment(job.getId(), file, new JobAttachmentCreateDto());
-            log.info("Attachment successfully created with ID: {} for jobId: {}", attachment.getId(), job.getId());
+            
+            // TEMPORARILY DISABLED: Upload attachment and link to job
+            // JobAttachmentResponseDto attachment = jobAttachmentService.createJobAttachment(job.getId(), file, new JobAttachmentCreateDto());
+            // log.info("Attachment successfully created with ID: {} for jobId: {}", attachment.getId(), job.getId());
+            
             // Optionally, you can add the attachment info to the job response DTO if needed
             return ResponseEntity.status(HttpStatus.CREATED).body(job);
         } catch (NumberFormatException e) {

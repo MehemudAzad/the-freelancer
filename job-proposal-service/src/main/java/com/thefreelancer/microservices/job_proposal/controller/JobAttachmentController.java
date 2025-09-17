@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.io.IOException;
 
-@RestController
+// @RestController  // TEMPORARILY DISABLED TO FIX STARTUP ISSUE
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
 @Slf4j

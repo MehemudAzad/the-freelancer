@@ -43,8 +43,10 @@ public class RoomService {
     @Transactional(readOnly = true)
     public RoomResponseDto getRoomByContractId(Long contractId, String userId) {
         log.info("Getting workspace room for contract: {} by user: {}", contractId, userId);
+
+        Long userIdLongLong = Long.parseLong(userId);
         
-        Room room = roomRepository.findByContractIdAndUserId(contractId, userId)
+        Room room = roomRepository.findByContractIdAndUserId(contractId, userIdLongLong)
             .orElseThrow(() -> new IllegalArgumentException("Room not found for contract: " + contractId + " or access denied"));
         
         // Get counts for statistics

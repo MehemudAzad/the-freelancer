@@ -53,10 +53,15 @@ public class ContractService {
             throw new IllegalStateException("Cannot create contract for job that is not open");
         }
         
-        // Verify proposal is in ACCEPTED status
-        if (proposal.getStatus() != Proposal.ProposalStatus.ACCEPTED) {
-            throw new IllegalStateException("Cannot create contract for proposal that is not accepted. Current status: " + proposal.getStatus());
+        // Verify proposal is in SUBMITTED status, then accept it.
+        if (proposal.getStatus() != Proposal.ProposalStatus.SUBMITTED) {
+            throw new IllegalStateException("Cannot create contract. Proposal must be in SUBMITTED status. Current status: " + proposal.getStatus());
         }
+
+        // Accept the proposal
+        proposal.setStatus(Proposal.ProposalStatus.ACCEPTED);
+        proposalRepository.save(proposal);
+        log.info("Accepting proposal {} as part of contract creation.", proposal.getId());
         
         // Verify no existing contract for this job
         if (contractRepository.existsByJobId(job.getId())) {
