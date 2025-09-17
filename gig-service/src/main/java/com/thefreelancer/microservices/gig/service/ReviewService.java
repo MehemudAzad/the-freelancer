@@ -1,5 +1,6 @@
 package com.thefreelancer.microservices.gig.service;
 
+import com.thefreelancer.microservices.gig.client.JobProposalServiceClient;
 import com.thefreelancer.microservices.gig.dto.*;
 import com.thefreelancer.microservices.gig.mapper.ReviewMapper;
 import com.thefreelancer.microservices.gig.model.Review;
@@ -19,7 +20,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,32 +33,46 @@ public class ReviewService {
     private final ReviewMapper reviewMapper;
     private final GigService gigService; // For updating gig ratings
     private final ProfileService profileService; // For updating profile ratings
+    private final JobProposalServiceClient jobProposalServiceClient; // For contract validation
     
     @Transactional
     public ReviewResponseDto createReview(ReviewCreateDto createDto, Long reviewerId) {
-        log.info("Creating review for gig: {} by user: {}", createDto.getGigId(), reviewerId);
+        log.info("Creating review for freelancer: {} by user: {}", createDto.getFreelancerId(), reviewerId);
         
-        // Validate that the gig exists
-        if (!gigRepository.existsById(createDto.getGigId())) {
+        // Validate that the freelancer profile exists
+        if (!profileRepository.existsById(createDto.getFreelancerId())) {
+            throw new IllegalArgumentException("Freelancer profile not found with ID: " + createDto.getFreelancerId());
+        }
+        
+        // Optional: Validate gig exists if gigId is provided
+        if (createDto.getGigId() != null && !gigRepository.existsById(createDto.getGigId())) {
             throw new IllegalArgumentException("Gig not found with ID: " + createDto.getGigId());
         }
         
-        // Check if the user has already reviewed this gig
-        if (reviewRepository.existsByGigIdAndReviewerId(createDto.getGigId(), reviewerId)) {
-            throw new IllegalArgumentException("You have already reviewed this gig");
+        // Check if the user has already reviewed this freelancer
+        if (reviewRepository.existsByFreelancerIdAndReviewerId(createDto.getFreelancerId(), reviewerId)) {
+            throw new IllegalArgumentException("You have already reviewed this freelancer");
         }
         
         // Validate that the reviewer is not the freelancer
         if (createDto.getFreelancerId().equals(reviewerId)) {
-            throw new IllegalArgumentException("You cannot review your own gig");
+            throw new IllegalArgumentException("You cannot review yourself");
+        }
+        
+        // Validate that the client has completed at least one contract with the freelancer
+        if (!jobProposalServiceClient.hasCompletedContractWithFreelancer(reviewerId, createDto.getFreelancerId())) {
+            throw new IllegalArgumentException("You can only review freelancers you have completed work with");
         }
         
         // Create and save the review
         Review review = reviewMapper.toEntity(createDto, reviewerId);
         Review savedReview = reviewRepository.save(review);
         
-        // Update gig ratings asynchronously
-        updateGigRatings(createDto.getGigId());
+        // Update gig ratings only if gigId is provided
+        if (createDto.getGigId() != null) {
+            updateGigRatings(createDto.getGigId());
+        }
+        // Always update freelancer ratings
         updateFreelancerRatings(createDto.getFreelancerId());
         
         log.info("Review created successfully with ID: {}", savedReview.getId());

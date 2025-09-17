@@ -29,6 +29,7 @@ public class Routes {
 	public RouterFunction<ServerResponse> gigServiceRoute() {
 		return GatewayRouterFunctions.route("gig-service")
 				.route(RequestPredicates.path("/api/gigs/**"), this::forwardToGigService)
+				.route(RequestPredicates.path("/api/reviews/**"), this::forwardToGigService)
 				.build();
 	}
 

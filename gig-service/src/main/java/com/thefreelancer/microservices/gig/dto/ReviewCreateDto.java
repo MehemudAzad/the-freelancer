@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ReviewCreateDto {
     
-    @NotNull(message = "Gig ID is required")
-    private Long gigId;
+    // Remove gigId requirement - reviews are now user-centric
+    private Long gigId; // Optional - if review is related to a specific gig
     
     @NotNull(message = "Freelancer ID is required")
     private Long freelancerId;
