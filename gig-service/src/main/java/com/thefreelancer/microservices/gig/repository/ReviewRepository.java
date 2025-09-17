@@ -147,6 +147,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // Check if user has already reviewed a gig
     boolean existsByGigIdAndReviewerId(Long gigId, Long reviewerId);
     
+    // Check if user has already reviewed a freelancer (for user-centric reviews)
+    boolean existsByFreelancerIdAndReviewerId(Long freelancerId, Long reviewerId);
+    
     // Profile rating calculations
     @Query("SELECT AVG(r.overallRating) FROM Review r WHERE r.freelancerId = :freelancerId AND r.status = 'PUBLISHED'")
     Double calculateAverageRatingForFreelancer(@Param("freelancerId") Long freelancerId);

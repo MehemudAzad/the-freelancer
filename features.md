@@ -55,6 +55,14 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [ ] `DELETE /api/gigs/{gigId}/media/{mediaId}` - Remove media file
 - [ ] `PUT /api/gigs/{gigId}/media/reorder` - Reorder media display sequence
 
+### Reviews & Reputation
+- [x] `POST /api/reviews` - Create review (requires completed contract with freelancer) ✅ **COMPLETED**
+- [x] `GET /api/reviews/can-review-freelancer/{freelancerId}` - Check if user can review freelancer ✅ **COMPLETED**
+- [ ] `GET /api/reviews/freelancer/{freelancerId}` - Get reviews for a freelancer
+- [ ] `GET /api/reviews/client/{clientId}` - Get reviews given by a client
+- [ ] `PUT /api/reviews/{reviewId}` - Update review (limited time window)
+- [ ] `DELETE /api/reviews/{reviewId}` - Delete review (admin only)
+
 ---
 
 ## 💼 **Job Proposal Service APIs** (Port: 8083)
@@ -99,6 +107,7 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `GET /api/contracts/{contractId}` - Get contract details ✅ **COMPLETED**
 - [x] `GET /api/contracts/my-contracts` - Get user's contracts (CLIENT/FREELANCER) ✅ **COMPLETED**
 - [x] `PUT /api/contracts/{contractId}/status` - Update contract status (active/paused/completed) ✅ **COMPLETED**
+- [x] `GET /api/contracts/can-review-freelancer/{freelancerId}` - Check if user can review freelancer ✅ **COMPLETED**
 
 ### Contract Milestones
 - [x] ~~`POST /api/contracts/{contractId}/milestones`~~ - ❌ **DEPRECATED** (Milestones auto-created from proposal)

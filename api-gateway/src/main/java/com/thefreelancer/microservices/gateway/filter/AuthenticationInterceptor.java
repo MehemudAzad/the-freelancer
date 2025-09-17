@@ -3,6 +3,7 @@ package com.thefreelancer.microservices.gateway.filter;
 import com.thefreelancer.microservices.gateway.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         "/api/gigs/search",  // Public search
         "/api/jobs/search",  // Public job search
         "/api/payments/webhooks", // Stripe webhooks (external)
+        "/api/ai",           // AI service endpoints (public for now)
         "/swagger-ui",       // Swagger UI
         "/api-docs",         // OpenAPI docs
         "/v3/api-docs"       // OpenAPI v3 docs
@@ -118,6 +120,21 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        // Special case: GET /api/reviews/{id} is public (individual review details)
+        if ("GET".equals(method) && requestURI.matches("/api/reviews/\\d+")) {
+            return true;
+        }
+
+        // Special case: GET /api/reviews/freelancers/{id} is public (freelancer reviews)
+        if ("GET".equals(method) && requestURI.matches("/api/reviews/freelancers/\\d+")) {
+            return true;
+        }
+
+        // Special case: GET /api/reviews/gigs/{id} is public (gig reviews)
+        if ("GET".equals(method) && requestURI.matches("/api/reviews/gigs/\\d+")) {
+            return true;
+        }
+
         // Special case: Job attachments by kind should be public (GET only)
         if ("GET".equals(method) && requestURI.matches("/api/jobs/\\d+/attachments/\\w+")) {
             return true;
@@ -135,6 +152,21 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
         // Special case: Individual proposal milestone details are public (GET only)
         if ("GET".equals(method) && requestURI.matches("/api/proposals/\\d+/milestones/\\d+")) {
+            return true;
+        }
+
+        // Special case: Individual proposal milestone details are public (GET only)
+        if ("GET".equals(method) && requestURI.matches("/api/reviews/\\d+")) {
+            return true;
+        }
+
+        // Special case: Individual proposal milestone details are public (GET only)
+        if ("GET".equals(method) && requestURI.matches("/api/reviews/freelancers/\\d+")) {
+            return true;
+        }
+
+        // Special case: Individual proposal milestone details are public (GET only)
+        if ("GET".equals(method) && requestURI.matches("/api/reviews/freelancers/\\d+/summary")) {
             return true;
         }
 

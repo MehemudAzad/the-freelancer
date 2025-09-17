@@ -130,4 +130,47 @@ public class ContractController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @Operation(summary = "Check if client has completed contracts with freelancer (Internal API)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Check completed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid parameters")
+    })
+    @GetMapping("/internal/has-completed-contract")
+    public ResponseEntity<Boolean> hasCompletedContractWithFreelancer(
+            @Parameter(description = "Client ID") @RequestParam Long clientId,
+            @Parameter(description = "Freelancer ID") @RequestParam Long freelancerId) {
+        
+        log.info("Checking completed contracts between client: {} and freelancer: {}", clientId, freelancerId);
+        
+        try {
+            boolean hasCompleted = contractService.hasCompletedContractWithFreelancer(clientId, freelancerId);
+            return ResponseEntity.ok(hasCompleted);
+        } catch (Exception e) {
+            log.error("Error checking completed contracts", e);
+            return ResponseEntity.badRequest().body(false);
+        }
+    }
+
+    @Operation(summary = "Check if user can review freelancer (Public API)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Check completed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid parameters")
+    })
+    @GetMapping("/can-review-freelancer/{freelancerId}")
+    public ResponseEntity<Boolean> canReviewFreelancer(
+            @Parameter(description = "Freelancer ID") @PathVariable Long freelancerId,
+            @RequestHeader("X-User-Id") String userId) {
+        
+        log.info("Checking if user {} can review freelancer {}", userId, freelancerId);
+        
+        try {
+            Long clientId = Long.parseLong(userId);
+            boolean canReview = contractService.hasCompletedContractWithFreelancer(clientId, freelancerId);
+            return ResponseEntity.ok(canReview);
+        } catch (Exception e) {
+            log.error("Error checking if user can review freelancer", e);
+            return ResponseEntity.badRequest().body(false);
+        }
+    }
 }
