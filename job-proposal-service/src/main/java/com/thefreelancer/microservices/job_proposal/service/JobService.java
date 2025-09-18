@@ -9,6 +9,8 @@ import com.thefreelancer.microservices.job_proposal.mapper.JobMapper;
 import com.thefreelancer.microservices.job_proposal.model.Job;
 import com.thefreelancer.microservices.job_proposal.repository.JobRepository;
 import com.thefreelancer.microservices.job_proposal.client.AuthServiceClient;
+import com.thefreelancer.microservices.job_proposal.client.GigServiceClient;
+import com.thefreelancer.microservices.job_proposal.dto.JobDataForEmbeddingDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class JobService {
     private final JobRepository jobRepository;
     private final JobMapper jobMapper;
     private final AuthServiceClient authServiceClient;
+    private final GigServiceClient gigServiceClient;
     
     @Transactional
     public JobResponseDto createJob(JobCreateDto createDto, Long clientId) {
@@ -46,6 +49,18 @@ public class JobService {
         
         Job savedJob = jobRepository.save(job);
         log.info("Successfully created job with ID: {} for clientId: {}", savedJob.getId(), clientId);
+
+        // After saving the job, trigger embedding generation
+        JobDataForEmbeddingDto embeddingDto = JobDataForEmbeddingDto.builder()
+                .jobId(savedJob.getId())
+                .projectName(savedJob.getProjectName())
+                .description(savedJob.getDescription())
+                .skills(savedJob.getSkills().toArray(new String[0]))
+                .build();
+        gigServiceClient.triggerJobEmbeddingGeneration(embeddingDto).subscribe(
+                null,
+                error -> log.error("Error triggering embedding generation for new job {}: {}", savedJob.getId(), error.getMessage())
+        );
         
         return jobMapper.toResponseDto(savedJob);
     }    public Optional<JobResponseDto> getJobById(Long jobId) {
@@ -83,6 +98,19 @@ public class JobService {
         job.setEditedAt(java.time.LocalDateTime.now());
         Job updatedJob = jobRepository.save(job);
         log.info("Successfully updated job with ID: {}", jobId);
+
+        // After updating the job, trigger embedding generation
+        JobDataForEmbeddingDto embeddingDto = JobDataForEmbeddingDto.builder()
+                .jobId(updatedJob.getId())
+                .projectName(updatedJob.getProjectName())
+                .description(updatedJob.getDescription())
+                .skills(updatedJob.getSkills().toArray(new String[0]))
+                .build();
+        gigServiceClient.triggerJobEmbeddingGeneration(embeddingDto).subscribe(
+                null,
+                error -> log.error("Error triggering embedding generation for updated job {}: {}", updatedJob.getId(), error.getMessage())
+        );
+
         return Optional.of(jobMapper.toResponseDto(updatedJob));
     }
     

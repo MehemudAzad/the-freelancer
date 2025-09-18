@@ -5,10 +5,8 @@ import com.thefreelancer.microservices.job_proposal.dto.InviteResponseDto;
 import com.thefreelancer.microservices.job_proposal.model.Invite;
 import com.thefreelancer.microservices.job_proposal.model.Job;
 import org.mapstruct.*;
-import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
-@Component
 public interface InviteMapper {
     
     @Mapping(target = "id", ignore = true)

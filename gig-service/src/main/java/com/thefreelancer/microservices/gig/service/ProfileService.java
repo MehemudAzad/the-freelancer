@@ -13,27 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ProfileService {
-    @Transactional
-    public Optional<ProfileResponseDto> updateProfilePictureUrl(Long userId, String profilePictureUrl) {
-        Optional<Profile> profileOpt = profileRepository.findByUserId(userId);
-        if (profileOpt.isPresent()) {
-            Profile profile = profileOpt.get();
-            profile.setProfilePictureUrl(profilePictureUrl);
-            profileRepository.save(profile);
-            return Optional.of(profileMapper.toResponseDto(profile));
-        }
-        return Optional.empty();
-    }
     
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
     private final ReviewRepository reviewRepository;
+    private final ProfileEmbeddingService profileEmbeddingService;
     
     public Profile createInitialProfile(Long userId, String name, String role) {
         // Check if profile already exists
@@ -52,6 +43,19 @@ public class ProfileService {
         
         Profile savedProfile = profileRepository.save(profile);
         log.info("Created initial profile for userId: {}", userId);
+
+        // Trigger embedding generation using Spring AI
+        try {
+            List<String> skills = savedProfile.getSkills() != null ? List.of(savedProfile.getSkills()) : List.of();
+            profileEmbeddingService.storeProfileEmbedding(
+                savedProfile.getUserId(),
+                savedProfile.getHeadline(),
+                savedProfile.getBio(),
+                skills
+            );
+        } catch (Exception e) {
+            log.warn("Failed to generate embedding for new profile {}: {}", userId, e.getMessage());
+        }
         
         return savedProfile;
     }
@@ -77,6 +81,19 @@ public class ProfileService {
         
         Profile updatedProfile = profileRepository.save(profile);
         log.info("Successfully updated profile for userId: {}", userId);
+
+        // Regenerate embedding for updated profile
+        try {
+            List<String> skills = updatedProfile.getSkills() != null ? List.of(updatedProfile.getSkills()) : List.of();
+            profileEmbeddingService.storeProfileEmbedding(
+                updatedProfile.getUserId(),
+                updatedProfile.getHeadline(),
+                updatedProfile.getBio(),
+                skills
+            );
+        } catch (Exception e) {
+            log.warn("Failed to regenerate embedding for updated profile {}: {}", userId, e.getMessage());
+        }
         
         return Optional.of(profileMapper.toResponseDto(updatedProfile));
     }
@@ -105,4 +122,17 @@ public class ProfileService {
         log.info("Updated profile ratings for userId: {} - Avg: {}, Count: {}", 
                 userId, profile.getReviewAvg(), profile.getReviewsCount());
     }
+
+        @Transactional
+    public Optional<ProfileResponseDto> updateProfilePictureUrl(Long userId, String profilePictureUrl) {
+        Optional<Profile> profileOpt = profileRepository.findByUserId(userId);
+        if (profileOpt.isPresent()) {
+            Profile profile = profileOpt.get();
+            profile.setProfilePictureUrl(profilePictureUrl);
+            profileRepository.save(profile);
+            return Optional.of(profileMapper.toResponseDto(profile));
+        }
+        return Optional.empty();
+    }
+
 }
