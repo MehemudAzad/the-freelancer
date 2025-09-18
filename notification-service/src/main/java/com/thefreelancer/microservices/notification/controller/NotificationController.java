@@ -29,36 +29,85 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final NotificationDeliveryService deliveryService;
     
-    @Operation(summary = "Get user notifications", description = "Retrieves paginated notifications for a specific user")
+    @Operation(summary = "Get user notifications", description = "Retrieves paginated notifications for the authenticated user")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved notifications"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+        @ApiResponse(responseCode = "401", description = "Authentication required")
     })
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user")
     public ResponseEntity<Page<NotificationResponseDto>> getUserNotifications(
-            @Parameter(description = "User ID", required = true) @PathVariable Long userId,
-            @Parameter(description = "Pagination parameters") Pageable pageable) {
+            @Parameter(description = "Pagination parameters") Pageable pageable,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
         
-        Page<NotificationResponseDto> notifications = notificationService.getNotificationsByRecipient(userId, pageable);
-        return ResponseEntity.ok(notifications);
+        log.info("GET /api/notifications/user - Getting authenticated user's notifications");
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for getting notifications");
+            return ResponseEntity.status(401).build();
+        }
+        
+        try {
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
+            Page<NotificationResponseDto> notifications = notificationService.getNotificationsByRecipient(authenticatedUserId, pageable);
+            return ResponseEntity.ok(notifications);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(400).build();
+        }
     }
     
-    @Operation(summary = "Get unread notifications", description = "Retrieves paginated unread notifications for a specific user")
-    @GetMapping("/user/{userId}/unread")
+    @Operation(summary = "Get unread notifications", description = "Retrieves paginated unread notifications for the authenticated user")
+    @GetMapping("/user/unread")
     public ResponseEntity<Page<NotificationResponseDto>> getUnreadNotifications(
-            @Parameter(description = "User ID", required = true) @PathVariable Long userId,
-            Pageable pageable) {
+            Pageable pageable,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
         
-        Page<NotificationResponseDto> notifications = notificationService.getUnreadNotifications(userId, pageable);
-        return ResponseEntity.ok(notifications);
+        log.info("GET /api/notifications/user/unread - Getting authenticated user's unread notifications");
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for getting unread notifications");
+            return ResponseEntity.status(401).build();
+        }
+        
+        try {
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
+            Page<NotificationResponseDto> notifications = notificationService.getUnreadNotifications(authenticatedUserId, pageable);
+            return ResponseEntity.ok(notifications);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(400).build();
+        }
     }
     
-    @Operation(summary = "Get unread count", description = "Returns the count of unread notifications for a user")
-    @GetMapping("/user/{userId}/unread/count")
+    @Operation(summary = "Get unread count", description = "Returns the count of unread notifications for the authenticated user")
+    @GetMapping("/user/unread/count")
     public ResponseEntity<Map<String, Long>> getUnreadCount(
-            @Parameter(description = "User ID", required = true) @PathVariable Long userId) {
-        long count = notificationService.getUnreadCount(userId);
-        return ResponseEntity.ok(Map.of("count", count));
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.info("GET /api/notifications/user/unread/count - Getting authenticated user's unread count");
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for getting unread count");
+            return ResponseEntity.status(401).build();
+        }
+        
+        try {
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
+            long count = notificationService.getUnreadCount(authenticatedUserId);
+            return ResponseEntity.ok(Map.of("count", count));
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(400).build();
+        }
     }
     
     @Operation(summary = "Get notification by ID", description = "Retrieves a specific notification by its ID")
@@ -80,12 +129,29 @@ public class NotificationController {
         return ResponseEntity.notFound().build();
     }
     
-    @Operation(summary = "Mark all notifications as read", description = "Marks all notifications for a user as read")
-    @PutMapping("/user/{userId}/read-all")
+    @Operation(summary = "Mark all notifications as read", description = "Marks all notifications for the authenticated user as read")
+    @PutMapping("/user/read-all")
     public ResponseEntity<Map<String, Integer>> markAllAsRead(
-            @Parameter(description = "User ID", required = true) @PathVariable Long userId) {
-        int updatedCount = notificationService.markAllAsRead(userId);
-        return ResponseEntity.ok(Map.of("updatedCount", updatedCount));
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.info("PUT /api/notifications/user/read-all - Marking all notifications as read for authenticated user");
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for marking all notifications as read");
+            return ResponseEntity.status(401).build();
+        }
+        
+        try {
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
+            int updatedCount = notificationService.markAllAsRead(authenticatedUserId);
+            return ResponseEntity.ok(Map.of("updatedCount", updatedCount));
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(400).build();
+        }
     }
     
     // Internal API for inter-service communication
@@ -230,11 +296,28 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
     
-    @GetMapping("/user/{userId}/stats")
+    @GetMapping("/user/stats")
     public ResponseEntity<NotificationDeliveryService.NotificationStats> getNotificationStats(
-            @PathVariable Long userId,
-            @RequestParam(defaultValue = "30") int days) {
-        NotificationDeliveryService.NotificationStats stats = deliveryService.getDeliveryStats(userId, days);
-        return ResponseEntity.ok(stats);
+            @RequestParam(defaultValue = "30") int days,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        
+        log.info("GET /api/notifications/user/stats - Getting notification stats for authenticated user");
+        
+        // Check authentication
+        if (userIdHeader == null || userRole == null) {
+            log.warn("Authentication required for getting notification stats");
+            return ResponseEntity.status(401).build();
+        }
+        
+        try {
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
+            NotificationDeliveryService.NotificationStats stats = deliveryService.getDeliveryStats(authenticatedUserId, days);
+            return ResponseEntity.ok(stats);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(400).build();
+        }
     }
 }

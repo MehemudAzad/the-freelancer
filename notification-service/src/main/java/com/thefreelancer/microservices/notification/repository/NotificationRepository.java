@@ -71,4 +71,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // Find notifications that need retry (failed status and retry count < max)
     @Query("SELECT n FROM Notification n WHERE n.status = 'FAILED' AND n.retryCount < :maxRetries")
     List<Notification> findFailedNotificationsForRetry(@Param("maxRetries") int maxRetries);
+    
+    // Idempotency check - check if notification already exists for the same event
+    boolean existsByRecipientIdAndTypeAndJobIdAndProposalIdAndContractId(
+        Long recipientId, NotificationType type, Long jobId, Long proposalId, Long contractId);
+    
+    // Find specific notification by recipient, type and jobId for duplicate checking
+    @Query("SELECT n FROM Notification n WHERE n.recipientId = :recipientId AND n.type = :type AND n.jobId = :jobId ORDER BY n.createdAt DESC")
+    List<Notification> findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(
+        @Param("recipientId") Long recipientId, @Param("type") NotificationType type, @Param("jobId") Long jobId);
 }

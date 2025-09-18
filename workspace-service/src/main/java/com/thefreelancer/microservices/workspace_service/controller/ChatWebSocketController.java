@@ -13,8 +13,6 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.security.Principal;
-
 /**
  * WebSocket controller for real-time chat functionality
  */
@@ -141,6 +139,32 @@ public class ChatWebSocketController {
             new UserStatusDto(userId, online, System.currentTimeMillis()));
     }
 
+    /**
+     * Send direct message to a specific user (used by REST API and WebSocket)
+     */
+    public void sendDirectMessageToUser(String userId, DirectMessageResponseDto message) {
+        log.info("Broadcasting direct message to user: {} via WebSocket", userId);
+        messagingTemplate.convertAndSend("/topic/user/" + userId + "/directMessages", message);
+    }
+
+    /**
+     * Send direct message read status to a specific user
+     */
+    public void sendDirectMessageReadStatus(String userId, String readByUserId) {
+        log.debug("Broadcasting read status to user: {} - read by: {}", userId, readByUserId);
+        messagingTemplate.convertAndSend("/topic/user/" + userId + "/directMessageRead", 
+            new DirectMessageReadStatusDto(readByUserId, System.currentTimeMillis()));
+    }
+
+    /**
+     * Send typing indicator for direct messages to a specific user
+     */
+    public void sendDirectMessageTypingToUser(String userId, String typingUserId, boolean isTyping) {
+        log.debug("Broadcasting typing indicator to user: {} - {} is typing: {}", userId, typingUserId, isTyping);
+        messagingTemplate.convertAndSend("/topic/user/" + userId + "/directMessageTyping", 
+            new DirectMessageTypingStatusWebSocketDto(typingUserId, isTyping, System.currentTimeMillis()));
+    }
+
     // Direct Message WebSocket Handlers
     
     /**
@@ -178,6 +202,10 @@ public class ChatWebSocketController {
             }
             
             DirectMessageResponseDto response = directMessageService.sendMessage(messageDto, userId);
+            
+            // Broadcast to both sender and receiver
+            sendDirectMessageToUser(userId, response);
+            sendDirectMessageToUser(receiverId, response);
             
             log.info("Direct message sent successfully via WebSocket: {}", response.getId());
             
@@ -257,6 +285,28 @@ public class ChatWebSocketController {
         public UserStatusDto(String userId, boolean online, long timestamp) {
             this.userId = userId;
             this.online = online;
+            this.timestamp = timestamp;
+        }
+    }
+
+    public static class DirectMessageReadStatusDto {
+        public String readByUserId;
+        public long timestamp;
+        
+        public DirectMessageReadStatusDto(String readByUserId, long timestamp) {
+            this.readByUserId = readByUserId;
+            this.timestamp = timestamp;
+        }
+    }
+
+    public static class DirectMessageTypingStatusWebSocketDto {
+        public String userId;
+        public boolean isTyping;
+        public long timestamp;
+        
+        public DirectMessageTypingStatusWebSocketDto(String userId, boolean isTyping, long timestamp) {
+            this.userId = userId;
+            this.isTyping = isTyping;
             this.timestamp = timestamp;
         }
     }

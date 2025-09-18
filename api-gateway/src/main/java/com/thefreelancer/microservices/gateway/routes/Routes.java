@@ -16,8 +16,9 @@ public class Routes {
 	private static final String GIG_SERVICE_URL = "http://localhost:8082";
 	private static final String JOB_PROPOSAL_SERVICE_URL = "http://localhost:8083";
 	private static final String WORKSPACE_SERVICE_URL = "http://localhost:8084";
-	private static final String PAYMENT_SERVICE_URL = "http://localhost:8087";
+	private static final String NOTIFICATION_SERVICE_URL = "http://localhost:8085";
 	private static final String AI_SERVICE_URL = "http://localhost:8086";
+	private static final String PAYMENT_SERVICE_URL = "http://localhost:8087";
 
 	@Bean
 	public RouterFunction<ServerResponse> authServiceRoute() {
@@ -59,6 +60,13 @@ public class Routes {
 				.route(RequestPredicates.path("/api/direct-messages/**"), this::forwardToWorkspaceService)
 				.build();
 	}
+
+	@Bean
+	public RouterFunction<ServerResponse> notificationServiceRoute() {
+		return GatewayRouterFunctions.route("notification-service")
+				.route(RequestPredicates.path("/api/notifications/**"), this::forwardToNotificationService)
+				.build();
+	}
 	
 
 	@Bean
@@ -90,6 +98,10 @@ public class Routes {
 
 	private ServerResponse forwardToWorkspaceService(ServerRequest request) {
 		return forwardWithUserContext(request, WORKSPACE_SERVICE_URL);
+	}
+
+	private ServerResponse forwardToNotificationService(ServerRequest request) {
+		return forwardWithUserContext(request, NOTIFICATION_SERVICE_URL);
 	}
 
 	private ServerResponse forwardToPaymentService(ServerRequest request) {

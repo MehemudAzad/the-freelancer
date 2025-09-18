@@ -44,7 +44,7 @@ public class NotificationEventListener {
     
     @KafkaListener(topics = "proposal-accepted", groupId = "notification-service-group", 
                    containerFactory = "proposalAcceptedKafkaListenerContainerFactory")
-    public void handleProposalAcceptedEvent(ProposalAcceptedEvent event) {
+    public void handleProposalAcceptedEvent(ProposalAcceptedEvent event, Acknowledgment acknowledgment) {
         
         try {
             log.info("Received proposal accepted event for proposal: {}", event.getProposalId());
@@ -59,9 +59,11 @@ public class NotificationEventListener {
             );
             
             log.debug("Successfully processed proposal accepted event: {}", event.getProposalId());
+            acknowledgment.acknowledge(); // Acknowledge successful processing
             
         } catch (Exception e) {
             log.error("Error processing proposal accepted event: {}", e.getMessage(), e);
+            // Don't acknowledge on error - message will be retried
         }
     }
     

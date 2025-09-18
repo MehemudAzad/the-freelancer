@@ -7,6 +7,7 @@ import com.thefreelancer.microservices.job_proposal.dto.workspace.RoomResponseDt
 import com.thefreelancer.microservices.job_proposal.exception.ResourceNotFoundException;
 import com.thefreelancer.microservices.job_proposal.model.*;
 import com.thefreelancer.microservices.job_proposal.repository.*;
+import com.thefreelancer.microservices.job_proposal.client.GigServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class ContractService {
     private final ObjectMapper objectMapper;
     private final WorkspaceClient workspaceClient;
     private final EventPublisherService eventPublisherService;
+    private final GigServiceClient gigServiceClient;
 
     /**
      * Create a new contract from an accepted proposal
@@ -54,7 +56,7 @@ public class ContractService {
         }
         
         // Verify proposal is in ACCEPTED status
-        if (proposal.getStatus() != Proposal.ProposalStatus.ACCEPTED) {
+        if (proposal.getStatus() != Proposal.ProposalStatus.SUBMITTED) {
             throw new IllegalStateException("Cannot create contract for proposal that is not accepted. Current status: " + proposal.getStatus());
         }
         
@@ -155,6 +157,17 @@ public class ContractService {
         // Publish Kafka event for proposal acceptance
         publishProposalAcceptedEvent(proposal, job);
 
+        // Remove job from vector database since it's no longer available for matching
+        try {
+            gigServiceClient.deleteJobEmbedding(job.getId()).subscribe(
+                    unused -> log.info("Successfully removed job {} from vector database", job.getId()),
+                    error -> log.error("Failed to remove job {} from vector database: {}", job.getId(), error.getMessage())
+            );
+        } catch (Exception e) {
+            log.error("Error calling gig service to delete job embedding for job {}: {}", job.getId(), e.getMessage(), e);
+            // Don't fail the contract creation if embedding deletion fails
+        }
+
         // Create workspace room for the contract
         try {
             RoomCreateDto roomCreateDto = RoomCreateDto.builder()
@@ -173,6 +186,9 @@ public class ContractService {
             // Don't fail the contract creation if room creation fails
             // The room can be created manually later if needed
         }
+
+        // Publish ContractCreatedEvent for notifications
+        publishContractCreatedEvent(savedContract, job, proposal);
         
         log.info("Contract creation completed successfully: {}", savedContract.getId());
         return convertToResponseDto(savedContract, true); // Include milestones in response
@@ -339,6 +355,33 @@ public class ContractService {
             );
         } catch (Exception e) {
             log.error("Failed to publish proposal accepted event for proposal: {}", proposal.getId(), e);
+            // Don't throw exception here to avoid failing the main transaction
+        }
+    }
+
+    private void publishContractCreatedEvent(Contract contract, Job job, Proposal proposal) {
+        try {
+            // Get user names - you might want to fetch these from user service
+            String clientName = "Client-" + contract.getClientId(); // Placeholder
+            String freelancerName = "Freelancer-" + contract.getFreelancerId(); // Placeholder
+            
+            eventPublisherService.publishContractCreatedEvent(
+                contract.getId(),
+                job.getId(),
+                proposal.getId(),
+                contract.getClientId(),
+                contract.getFreelancerId(),
+                job.getProjectName(),
+                clientName,
+                freelancerName,
+                contract.getStartDate() != null ? contract.getStartDate().atStartOfDay() : null,
+                contract.getEndDate() != null ? contract.getEndDate().atStartOfDay() : null,
+                contract.getTotalAmountCents() != null ? contract.getTotalAmountCents().longValue() : null,
+                "USD", // Placeholder - you might want to get this from job or contract
+                contract.getTermsJson()
+            );
+        } catch (Exception e) {
+            log.error("Failed to publish contract created event for contract: {}", contract.getId(), e);
             // Don't throw exception here to avoid failing the main transaction
         }
     }

@@ -25,6 +25,7 @@ import java.util.List;
 public class DirectMessageController {
     
     private final DirectMessageService directMessageService;
+    private final ChatWebSocketController chatWebSocketController;
 
     @Operation(summary = "Get recent chat partners", description = "Get top 10 users you've chatted with recently")
     @ApiResponses(value = {
@@ -74,6 +75,11 @@ public class DirectMessageController {
         
         try {
             DirectMessageResponseDto response = directMessageService.sendMessage(createDto, userIdHeader);
+            
+            // Broadcast the message to both sender and receiver via WebSocket
+            chatWebSocketController.sendDirectMessageToUser(userIdHeader, response);
+            chatWebSocketController.sendDirectMessageToUser(createDto.getReceiverId().toString(), response);
+            
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request for sending direct message: {}", e.getMessage());
@@ -166,6 +172,10 @@ public class DirectMessageController {
         
         try {
             directMessageService.markConversationAsRead(userIdHeader, otherUserId);
+            
+            // Broadcast read status to the other user via WebSocket
+            chatWebSocketController.sendDirectMessageReadStatus(otherUserId, userIdHeader);
+            
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             log.error("Error marking conversation as read: {}", e.getMessage(), e);
@@ -357,6 +367,10 @@ public class DirectMessageController {
         
         try {
             directMessageService.sendTypingIndicator(userIdHeader, otherUserId, isTyping);
+            
+            // Broadcast typing indicator via WebSocket
+            chatWebSocketController.sendDirectMessageTypingToUser(otherUserId, userIdHeader, isTyping);
+            
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             log.error("Error sending typing indicator: {}", e.getMessage(), e);

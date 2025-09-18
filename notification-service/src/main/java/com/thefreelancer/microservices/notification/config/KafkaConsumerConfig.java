@@ -57,10 +57,12 @@ public class KafkaConsumerConfig {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // Changed from latest
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         configProps.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30000);
         configProps.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 10000);
+        configProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 10); // Process fewer records at once
+        configProps.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 40000);
 
         JsonDeserializer<T> jsonDeserializer = new JsonDeserializer<>(eventClass, objectMapper);
         jsonDeserializer.addTrustedPackages("*");
@@ -88,6 +90,46 @@ public class KafkaConsumerConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ProposalRejectedEvent> proposalRejectedKafkaListenerContainerFactory() {
         return createListenerContainerFactory(proposalRejectedConsumerFactory());
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = 
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(createStringConsumerFactory());
+        
+        // Configure error handling
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
+            (record, exception) -> {
+                // Log and skip the problematic message
+                System.err.println("Skipping message due to deserialization error: " + exception.getMessage());
+                System.err.println("Record: " + record);
+            },
+            new FixedBackOff(1000L, 3) // 3 retries with 1 second delay
+        );
+        
+        factory.setCommonErrorHandler(errorHandler);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        
+        return factory;
+    }
+
+    private ConsumerFactory<String, String> createStringConsumerFactory() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // Changed from latest
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        configProps.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30000);
+        configProps.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 10000);
+        configProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 10); // Process fewer records at once
+        configProps.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 40000);
+
+        return new DefaultKafkaConsumerFactory<>(
+                configProps,
+                new StringDeserializer(),
+                new StringDeserializer()
+        );
     }
 
     private <T> ConcurrentKafkaListenerContainerFactory<String, T> createListenerContainerFactory(ConsumerFactory<String, T> consumerFactory) {

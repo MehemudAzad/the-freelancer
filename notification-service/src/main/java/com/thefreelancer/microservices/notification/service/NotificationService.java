@@ -43,6 +43,13 @@ public class NotificationService {
         return notificationRepository.findById(notificationId);
     }
     
+    // Idempotency check to prevent duplicate notifications
+    private boolean isDuplicateNotification(Long recipientId, Notification.NotificationType type, 
+                                          Long jobId, Long proposalId, Long contractId) {
+        return notificationRepository.existsByRecipientIdAndTypeAndJobIdAndProposalIdAndContractId(
+                recipientId, type, jobId, proposalId, contractId);
+    }
+    
     // Mark notifications as read
     public Notification markAsRead(Long notificationId) {
         Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
@@ -63,6 +70,13 @@ public class NotificationService {
     public Notification createProposalSubmittedNotification(Long jobId, Long clientId, Long freelancerId, 
                                                            String jobTitle, String freelancerName, 
                                                            String proposalCover) {
+        // Check for duplicate notification
+        if (isDuplicateNotification(clientId, Notification.NotificationType.PROPOSAL_SUBMITTED, jobId, null, null)) {
+            log.info("Duplicate PROPOSAL_SUBMITTED notification detected for recipient: {}, jobId: {} - skipping", clientId, jobId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(clientId, 
+                    Notification.NotificationType.PROPOSAL_SUBMITTED, jobId).stream().findFirst().orElse(null);
+        }
+        
         Notification notification = Notification.builder()
                 .recipientId(clientId)
                 .senderId(freelancerId)
@@ -81,6 +95,13 @@ public class NotificationService {
     public Notification createProposalAcceptedNotification(Long jobId, Long freelancerId, Long clientId, 
                                                           String jobTitle, String clientName, 
                                                           String acceptanceMessage) {
+        // Check for duplicate notification
+        if (isDuplicateNotification(freelancerId, Notification.NotificationType.PROPOSAL_ACCEPTED, jobId, null, null)) {
+            log.info("Duplicate PROPOSAL_ACCEPTED notification detected for recipient: {}, jobId: {} - skipping", freelancerId, jobId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(freelancerId, 
+                    Notification.NotificationType.PROPOSAL_ACCEPTED, jobId).stream().findFirst().orElse(null);
+        }
+        
         Notification notification = Notification.builder()
                 .recipientId(freelancerId)
                 .senderId(clientId)
@@ -115,32 +136,51 @@ public class NotificationService {
     
     public Notification createContractCreatedNotification(Long contractId, Long jobId, Long clientId, 
                                                          Long freelancerId, String jobTitle) {
-        // Notify both client and freelancer
-        Notification clientNotification = Notification.builder()
-                .recipientId(clientId)
-                .senderId(freelancerId)
-                .type(Notification.NotificationType.CONTRACT_CREATED)
-                .title("Contract Created")
-                .message(String.format("Contract has been created for job '%s'. Project can now begin!", jobTitle))
-                .jobId(jobId)
-                .contractId(contractId)
-                .status(Notification.NotificationStatus.PENDING)
-                .build();
+        // Check for duplicate notifications
+        boolean clientNotificationExists = isDuplicateNotification(clientId, Notification.NotificationType.CONTRACT_CREATED, jobId, null, contractId);
+        boolean freelancerNotificationExists = isDuplicateNotification(freelancerId, Notification.NotificationType.CONTRACT_CREATED, jobId, null, contractId);
         
-        Notification freelancerNotification = Notification.builder()
-                .recipientId(freelancerId)
-                .senderId(clientId)
-                .type(Notification.NotificationType.CONTRACT_CREATED)
-                .title("Contract Created")
-                .message(String.format("Contract has been created for job '%s'. You can start working!", jobTitle))
-                .jobId(jobId)
-                .contractId(contractId)
-                .status(Notification.NotificationStatus.PENDING)
-                .build();
+        if (clientNotificationExists && freelancerNotificationExists) {
+            log.info("Duplicate CONTRACT_CREATED notifications detected for contractId: {} - skipping both", contractId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(freelancerId, 
+                    Notification.NotificationType.CONTRACT_CREATED, jobId).stream().findFirst().orElse(null);
+        }
         
-        // Send both notifications
-        createAndSendNotification(clientNotification);
-        return createAndSendNotification(freelancerNotification);
+        // Create client notification only if it doesn't exist
+        if (!clientNotificationExists) {
+            Notification clientNotification = Notification.builder()
+                    .recipientId(clientId)
+                    .senderId(freelancerId)
+                    .type(Notification.NotificationType.CONTRACT_CREATED)
+                    .title("Contract Created")
+                    .message(String.format("Contract has been created for job '%s'. Project can now begin!", jobTitle))
+                    .jobId(jobId)
+                    .contractId(contractId)
+                    .status(Notification.NotificationStatus.PENDING)
+                    .build();
+            createAndSendNotification(clientNotification);
+        } else {
+            log.info("Skipping duplicate CONTRACT_CREATED notification for client: {}, contractId: {}", clientId, contractId);
+        }
+        
+        // Create freelancer notification only if it doesn't exist
+        if (!freelancerNotificationExists) {
+            Notification freelancerNotification = Notification.builder()
+                    .recipientId(freelancerId)
+                    .senderId(clientId)
+                    .type(Notification.NotificationType.CONTRACT_CREATED)
+                    .title("Contract Created")
+                    .message(String.format("Contract has been created for job '%s'. You can start working!", jobTitle))
+                    .jobId(jobId)
+                    .contractId(contractId)
+                    .status(Notification.NotificationStatus.PENDING)
+                    .build();
+            return createAndSendNotification(freelancerNotification);
+        } else {
+            log.info("Skipping duplicate CONTRACT_CREATED notification for freelancer: {}, contractId: {}", freelancerId, contractId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(freelancerId, 
+                    Notification.NotificationType.CONTRACT_CREATED, jobId).stream().findFirst().orElse(null);
+        }
     }
     
     public Notification createJobSubmittedNotification(Long jobId, Long contractId, Long clientId, 

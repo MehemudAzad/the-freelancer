@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -69,6 +71,35 @@ public class EventPublisherService {
         }
     }
 
+    public void publishContractCreatedEvent(Long contractId, Long jobId, Long proposalId, Long clientId, Long freelancerId, 
+                                           String jobTitle, String clientName, String freelancerName, LocalDateTime startDate, 
+                                           LocalDateTime endDate, Long totalBudget, String currency, String contractTerms) {
+        try {
+            ContractCreatedEvent event = ContractCreatedEvent.builder()
+                    .contractId(contractId)
+                    .jobId(jobId)
+                    .proposalId(proposalId)
+                    .clientId(clientId)
+                    .freelancerId(freelancerId)
+                    .jobTitle(jobTitle)
+                    .clientName(clientName)
+                    .freelancerName(freelancerName)
+                    .createdAt(LocalDateTime.now())
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .totalBudget(totalBudget)
+                    .currency(currency)
+                    .contractTerms(contractTerms)
+                    .build();
+
+            kafkaTemplate.send("contract-created", contractId.toString(), event);
+            log.info("Published ContractCreatedEvent for contractId: {}", contractId);
+            
+        } catch (Exception e) {
+            log.error("Failed to publish ContractCreatedEvent for contractId: {}", contractId, e);
+        }
+    }
+
     // Event DTOs
     @lombok.Data
     @lombok.Builder
@@ -107,5 +138,26 @@ public class EventPublisherService {
         private String projectName;
         private String freelancerName;
         private String feedback;
+    }
+
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class ContractCreatedEvent {
+        private Long contractId;
+        private Long jobId;
+        private Long proposalId;
+        private Long clientId;
+        private Long freelancerId;
+        private String jobTitle;
+        private String clientName;
+        private String freelancerName;
+        private LocalDateTime createdAt;
+        private String contractTerms;
+        private LocalDateTime startDate;
+        private LocalDateTime endDate;
+        private Long totalBudget;
+        private String currency;
     }
 }
