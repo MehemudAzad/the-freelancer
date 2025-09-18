@@ -40,7 +40,7 @@ public class WebhookService {
                 Long jobId = Long.parseLong(milestoneIdStr);
                 
                 // Update escrow status to HELD
-                escrowRepository.findByMilestoneId(jobId)
+                escrowRepository.findByJobId(jobId)
                     .ifPresentOrElse(
                         escrow -> {
                             escrow.setStatus(Escrow.EscrowStatus.HELD);
@@ -82,7 +82,7 @@ public class WebhookService {
                 Long jobId = Long.parseLong(milestoneIdStr);
                 
                 // Update escrow status to FAILED
-                escrowRepository.findByMilestoneId(jobId)
+                escrowRepository.findByJobId(jobId)
                     .ifPresentOrElse(
                         escrow -> {
                             escrow.setStatus(Escrow.EscrowStatus.FAILED);
@@ -124,7 +124,7 @@ public class WebhookService {
                 Long jobId = Long.parseLong(milestoneIdStr);
                 
                 // Update escrow status to CANCELED
-                escrowRepository.findByMilestoneId(jobId)
+                escrowRepository.findByJobId(jobId)
                     .ifPresentOrElse(
                         escrow -> {
                             escrow.setStatus(Escrow.EscrowStatus.CANCELED);
@@ -170,7 +170,7 @@ public class WebhookService {
                 log.info("Created payout record for transfer: {} with status PAID", transfer.getId());
                 
                 // Update escrow status to RELEASED since transfer is being processed
-                escrowRepository.findByMilestoneId(jobId)
+                escrowRepository.findByJobId(jobId)
                     .ifPresent(escrow -> {
                         escrow.setStatus(Escrow.EscrowStatus.RELEASED);
                         escrow.setUpdatedAt(LocalDateTime.now());
@@ -213,7 +213,7 @@ public class WebhookService {
                         log.warn("Updated payout status to FAILED due to reversal for transfer: {}", transfer.getId());
                         
                         // Update escrow status back to HELD
-                        escrowRepository.findByMilestoneId(payout.getJobId())
+                        escrowRepository.findByJobId(payout.getJobId())
                             .ifPresent(escrow -> {
                                 escrow.setStatus(Escrow.EscrowStatus.HELD);
                                 escrow.setUpdatedAt(LocalDateTime.now());

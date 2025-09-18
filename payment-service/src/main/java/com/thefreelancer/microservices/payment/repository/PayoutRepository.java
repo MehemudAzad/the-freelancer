@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface PayoutRepository extends JpaRepository<Payout, String> {
     
-    Optional<Payout> findByMilestoneId(Long milestoneId);
+    Optional<Payout> findByJobId(Long jobId);
     
     Optional<Payout> findByTransferId(String transferId);
     

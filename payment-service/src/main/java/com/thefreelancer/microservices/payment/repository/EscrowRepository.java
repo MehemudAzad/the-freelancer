@@ -12,14 +12,14 @@ import java.util.Optional;
 @Repository
 public interface EscrowRepository extends JpaRepository<Escrow, String> {
     
-    Optional<Escrow> findByMilestoneId(Long milestoneId);
+    Optional<Escrow> findByJobId(Long jobId);
     
     Optional<Escrow> findByPaymentIntentId(String paymentIntentId);
     
     List<Escrow> findByStatus(Escrow.EscrowStatus status);
     
-    @Query("SELECT e FROM Escrow e WHERE e.milestoneId IN :milestoneIds")
-    List<Escrow> findByMilestoneIds(@Param("milestoneIds") List<Long> milestoneIds);
+    @Query("SELECT e FROM Escrow e WHERE e.jobId IN :jobIds")
+    List<Escrow> findByJobIds(@Param("jobIds") List<Long> jobIds);
     
-    boolean existsByMilestoneId(Long milestoneId);
+    boolean existsByJobId(Long jobId);
 }

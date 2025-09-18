@@ -157,4 +157,25 @@ public class UserService {
         
         return Optional.of(userWithProfile);
     }
+    
+    /**
+     * Update user's Stripe account ID
+     */
+    @Transactional
+    public boolean updateStripeAccountId(String email, String stripeAccountId) {
+        log.info("Updating stripe account ID for user: {}", email);
+        
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            log.warn("User not found with email: {}", email);
+            return false;
+        }
+        
+        User user = userOpt.get();
+        user.setStripeAccountId(stripeAccountId);
+        userRepository.save(user);
+        
+        log.info("Successfully updated stripe account ID for user: {}", email);
+        return true;
+    }
 }

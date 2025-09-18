@@ -39,7 +39,7 @@ public class EscrowService {
         log.info("Creating escrow for milestone: {}", createDto.getJobId());
         
         // Check if escrow already exists for this milestone
-        if (escrowRepository.existsByMilestoneId(createDto.getJobId())) {
+        if (escrowRepository.existsByJobId(createDto.getJobId())) {
             throw new IllegalArgumentException("Escrow already exists for milestone: " + createDto.getJobId());
         }
         
@@ -122,7 +122,7 @@ public class EscrowService {
     public void releaseEscrow(Long jobId, String destinationAccountId) {
         log.info("Releasing escrow for milestone: {} to account: {}", jobId, destinationAccountId);
         
-        Escrow escrow = escrowRepository.findByMilestoneId(jobId)
+        Escrow escrow = escrowRepository.findByJobId(jobId)
             .orElseThrow(() -> new IllegalArgumentException("Escrow not found for milestone: " + jobId));
         
         if (escrow.getStatus() != Escrow.EscrowStatus.HELD) {
@@ -241,7 +241,7 @@ public class EscrowService {
     }
     
     public Optional<EscrowResponseDto> getEscrowByMilestone(Long jobId) {
-        return escrowRepository.findByMilestoneId(jobId)
+        return escrowRepository.findByJobId(jobId)
             .map(this::convertToDto);
     }
     

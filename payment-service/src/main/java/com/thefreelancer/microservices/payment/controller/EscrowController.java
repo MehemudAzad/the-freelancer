@@ -68,18 +68,14 @@ public class EscrowController {
         @ApiResponse(responseCode = "400", description = "Invalid request or escrow not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping("/{escrowId}/release")
+    @PostMapping("/job/{jobId}/release")
     public ResponseEntity<Void> releaseEscrow(
-            @Parameter(description = "Escrow ID to release") @PathVariable String escrowId,
+            @Parameter(description = "Job ID to release escrow for") @PathVariable Long jobId,
             @Parameter(description = "Stripe connected account ID of the freelancer") @RequestParam String destinationAccountId) {
-        log.info("Releasing escrow: {} to account: {}", escrowId, destinationAccountId);
+        log.info("Releasing escrow for job: {} to account: {}", jobId, destinationAccountId);
         
         try {
-            // Find escrow by ID to get milestone ID
-            EscrowResponseDto escrow = escrowService.getEscrowByMilestone(Long.parseLong(escrowId))
-                .orElseThrow(() -> new IllegalArgumentException("Escrow not found"));
-            
-            escrowService.releaseEscrow(escrow.getJobId(), destinationAccountId);
+            escrowService.releaseEscrow(jobId, destinationAccountId);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             log.warn("Invalid escrow release request: {}", e.getMessage());

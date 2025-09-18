@@ -3,10 +3,10 @@ package com.thefreelancer.microservices.payment.controller;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Account;
 import com.stripe.model.AccountLink;
+import com.thefreelancer.microservices.payment.client.AuthServiceClient;
 import com.thefreelancer.microservices.payment.dto.ConnectedAccountDto;
 import com.thefreelancer.microservices.payment.service.StripeService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class AccountController {
 
     private final StripeService stripeService;
+    private final AuthServiceClient authServiceClient;
 
     /**
      * Create Stripe Express account for freelancer
@@ -49,6 +50,17 @@ public class AccountController {
                 accountDto.getEmail(), 
                 accountDto.getCountry()
             );
+            
+            // Update the user's stripe account ID in the auth service
+            boolean authUpdated = authServiceClient.updateUserStripeAccountId(
+                accountDto.getEmail(), 
+                account.getId()
+            );
+            
+            if (!authUpdated) {
+                log.warn("Failed to update stripe account ID in auth service for user: {}", accountDto.getEmail());
+                // Note: We don't fail the entire operation as the Stripe account was created successfully
+            }
             
             ConnectedAccountDto response = ConnectedAccountDto.builder()
                 .accountId(account.getId())
