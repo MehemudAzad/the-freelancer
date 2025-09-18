@@ -48,17 +48,20 @@ public class RecommendationService {
         
         // Create search query from profile
         String searchQuery = createSearchQueryFromProfile(profile);
+        log.info("Searching for jobs with query: '{}' for user: {}", searchQuery, userId);
         
         // Find similar jobs using Spring AI vector search
         List<Document> similarJobs = jobEmbeddingService.findSimilarJobs(searchQuery, request.getLimit(), 0.7);
+        log.info("Found {} similar jobs for user: {}", similarJobs.size(), userId);
         
         if (similarJobs.isEmpty()) {
+            log.warn("No similar jobs found for user: {} with query: '{}'", userId, searchQuery);
             return RecommendationResponseDto.builder()
                 .userId(userId)
                 .recommendations(Collections.emptyList())
                 .totalRecommendations(0)
                 .averageMatchScore(0.0)
-                .message("No jobs available for recommendations at the moment")
+                .message("No jobs available for recommendations at the moment. This might be because: 1) No jobs have been posted yet, 2) No job embeddings have been generated, or 3) No jobs match your skills.")
                 .build();
         }
         
@@ -116,30 +119,49 @@ public class RecommendationService {
         try {
             Map<String, Object> metadata = document.getMetadata();
             
+            // Log metadata for debugging
+            log.debug("Converting document with metadata: {}", metadata);
+            
             if (!"job".equals(metadata.get("documentType"))) {
+                log.debug("Skipping non-job document with type: {}", metadata.get("documentType"));
                 return null; // Skip non-job documents
             }
             
-            Long jobId = Long.parseLong(metadata.get("jobId").toString());
-            String projectName = (String) metadata.get("projectName");
-            String description = (String) metadata.get("description");
-            String skills = (String) metadata.get("skills");
+            // Safely parse jobId
+            Object jobIdObj = metadata.get("jobId");
+            if (jobIdObj == null) {
+                log.warn("JobId is null in document metadata");
+                return null;
+            }
+            Long jobId = Long.parseLong(jobIdObj.toString());
+            
+            String projectName = metadata.get("projectName") != null ? metadata.get("projectName").toString() : "";
+            String description = metadata.get("description") != null ? metadata.get("description").toString() : "";
+            String skills = metadata.get("skills") != null ? metadata.get("skills").toString() : "";
             
             // Calculate match score based on similarity (Spring AI provides this)
-            double matchScore = document.getMetadata().containsKey("distance") 
-                ? 1.0 - (Double) document.getMetadata().get("distance") 
-                : 0.8; // Default score
+            double matchScore = 0.8; // Default score
+            if (document.getMetadata().containsKey("distance")) {
+                Object distanceObj = document.getMetadata().get("distance");
+                if (distanceObj instanceof Number) {
+                    double distance = ((Number) distanceObj).doubleValue();
+                    matchScore = Math.max(0.0, Math.min(1.0, 1.0 - distance)); // Clamp between 0 and 1
+                } else {
+                    log.warn("Distance metadata is not a number: {}", distanceObj);
+                }
+            }
             
             return JobRecommendationDto.builder()
                 .jobId(jobId)
                 .projectName(projectName)
                 .description(description)
-                .skills(skills != null ? Arrays.asList(skills.split(",")) : Arrays.asList())
+                .skills(skills != null && !skills.isEmpty() ? Arrays.asList(skills.split(",")) : Arrays.asList())
                 .matchScore(matchScore)
                 .matchReason("Skills alignment and profile compatibility")
                 .build();
         } catch (Exception e) {
-            log.error("Error converting document to recommendation", e);
+            log.error("Error converting document to recommendation: {}", e.getMessage(), e);
+            log.error("Document metadata: {}", document.getMetadata());
             return null;
         }
     }

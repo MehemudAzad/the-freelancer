@@ -28,6 +28,7 @@ public class GigService {
     private final ProfileRepository profileRepository;
     private final GigMapper gigMapper;
     private final AuthServiceClient authServiceClient;
+    private final GigEmbeddingService gigEmbeddingService;
     
     @Transactional
     public GigResponseDto createGig(Long userId, GigCreateDto createDto) {
@@ -44,6 +45,13 @@ public class GigService {
         
         Gig savedGig = gigRepository.save(gig);
         log.info("Successfully created gig with ID: {} for userId: {}", savedGig.getId(), userId);
+        
+        // Store gig embedding for semantic search
+        try {
+            gigEmbeddingService.storeGigEmbedding(savedGig);
+        } catch (Exception e) {
+            log.warn("Failed to store gig embedding for gig {}: {}", savedGig.getId(), e.getMessage());
+        }
         
         return gigMapper.toResponseDto(savedGig);
     }
@@ -153,6 +161,13 @@ public class GigService {
         Gig updatedGig = gigRepository.save(gig);
         log.info("Successfully updated gig with ID: {}", gigId);
         
+        // Update gig embedding for semantic search
+        try {
+            gigEmbeddingService.updateGigEmbedding(updatedGig);
+        } catch (Exception e) {
+            log.warn("Failed to update gig embedding for gig {}: {}", updatedGig.getId(), e.getMessage());
+        }
+        
         return Optional.of(gigMapper.toResponseDto(updatedGig));
     }
     
@@ -163,6 +178,13 @@ public class GigService {
         if (!gigRepository.existsById(gigId)) {
             log.warn("Gig not found with ID: {}", gigId);
             return false;
+        }
+        
+        // Delete gig embedding first
+        try {
+            gigEmbeddingService.deleteGigEmbedding(gigId);
+        } catch (Exception e) {
+            log.warn("Failed to delete gig embedding for gig {}: {}", gigId, e.getMessage());
         }
         
         gigRepository.deleteById(gigId);

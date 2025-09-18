@@ -31,6 +31,8 @@ public class Routes {
 		return GatewayRouterFunctions.route("gig-service")
 				.route(RequestPredicates.path("/api/gigs/**"), this::forwardToGigService)
 				.route(RequestPredicates.path("/api/reviews/**"), this::forwardToGigService)
+				.route(RequestPredicates.path("/api/recommendations/**"), this::forwardToGigService)
+				.route(RequestPredicates.path("/api/internal/embeddings/**"), this::forwardToGigService)
 				.build();
 	}
 

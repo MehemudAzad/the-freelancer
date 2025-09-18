@@ -6,7 +6,10 @@ import com.thefreelancer.microservices.gig.dto.GigCreateDto;
 import com.thefreelancer.microservices.gig.dto.GigResponseDto;
 import com.thefreelancer.microservices.gig.dto.GigUpdateDto;
 import com.thefreelancer.microservices.gig.dto.GigWithFreelancerResponseDto;
+import com.thefreelancer.microservices.gig.dto.GigSearchRequestDto;
+import com.thefreelancer.microservices.gig.dto.GigSearchResponseDto;
 import com.thefreelancer.microservices.gig.service.GigService;
+import com.thefreelancer.microservices.gig.service.GigSemanticSearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,6 +35,7 @@ public class GigController {
     
     private final GigService gigService;
     private final GigMediaService gigMediaService;
+    private final GigSemanticSearchService gigSemanticSearchService;
     
     //! public
     @Operation(summary = "Get gig by ID", description = "Fetch a specific gig by its ID")
@@ -106,6 +110,94 @@ public class GigController {
         
         List<GigWithFreelancerResponseDto> gigs = gigService.searchGigsWithFreelancerInfo(category, tags, freelancerId);
         return ResponseEntity.ok(gigs);
+    }
+    
+    // =====================================================
+    // SEMANTIC SEARCH ENDPOINTS
+    // =====================================================
+    
+    @PostMapping("/search/semantic")
+    @Operation(summary = "Semantic search for gigs", description = "Search for gigs using natural language queries with AI-powered semantic search")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid search request")
+    })
+    public ResponseEntity<GigSearchResponseDto> semanticSearchGigs(
+            @Valid @RequestBody GigSearchRequestDto request) {
+        
+        log.info("POST /api/gigs/search/semantic - Performing semantic search with query: '{}'", request.getQuery());
+        
+        try {
+            GigSearchResponseDto response = gigSemanticSearchService.searchGigs(request);
+            log.info("Semantic search completed - found {} results", response.getTotalResults());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error performing semantic search: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(GigSearchResponseDto.builder()
+                    .query(request.getQuery())
+                    .results(List.of())
+                    .totalResults(0)
+                    .searchType("semantic")
+                    .error("Search service temporarily unavailable")
+                    .build());
+        }
+    }
+    
+    @GetMapping("/search/semantic")
+    @Operation(summary = "Semantic search for gigs (GET)", description = "Search for gigs using natural language queries via GET request")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid search parameters")
+    })
+    public ResponseEntity<GigSearchResponseDto> semanticSearchGigsGet(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(defaultValue = "0") Integer offset,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double minRating) {
+        
+        log.info("GET /api/gigs/search/semantic - Performing semantic search with query: '{}'", q);
+        
+        GigSearchRequestDto request = GigSearchRequestDto.builder()
+            .query(q)
+            .limit(limit)
+            .offset(offset)
+            .category(category)
+            .minRating(minRating)
+            .build();
+        
+        return semanticSearchGigs(request);
+    }
+    
+    @GetMapping("/search/semantic/category/{category}")
+    @Operation(summary = "Semantic search by category", description = "Search for gigs within a specific category using semantic search")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid category or search parameters")
+    })
+    public ResponseEntity<GigSearchResponseDto> semanticSearchByCategory(
+            @PathVariable String category,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "20") Integer limit) {
+        
+        log.info("GET /api/gigs/search/semantic/category/{} - Searching in category with additional query: '{}'", category, q);
+        
+        try {
+            GigSearchResponseDto response = gigSemanticSearchService.searchGigsByCategory(category, q, limit);
+            log.info("Category semantic search completed - found {} results", response.getTotalResults());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error performing category semantic search: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(GigSearchResponseDto.builder()
+                    .query(category + (q != null ? " " + q : ""))
+                    .results(List.of())
+                    .totalResults(0)
+                    .searchType("category_semantic")
+                    .error("Search service temporarily unavailable")
+                    .build());
+        }
     }
     
     @PutMapping("/{gigId}")
