@@ -35,7 +35,7 @@ public class AuthServiceClient {
                 .baseUrl(authServiceUrl)
                 .build()
                 .get()
-                .uri("/api/auth/users/{userId}", userId)
+                .uri("/api/auth/public/users/{userId}", userId)
                 .retrieve()
                 .bodyToMono(UserResponseDto.class)
                 .timeout(Duration.ofSeconds(5))

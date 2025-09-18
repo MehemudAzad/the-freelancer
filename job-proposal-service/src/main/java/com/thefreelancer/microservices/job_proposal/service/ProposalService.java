@@ -1,12 +1,15 @@
 package com.thefreelancer.microservices.job_proposal.service;
 
+import com.thefreelancer.microservices.job_proposal.client.AuthServiceClient;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalCreateWithMilestonesDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalResponseDto;
 import com.thefreelancer.microservices.job_proposal.dto.ProposalUpdateDto;
+import com.thefreelancer.microservices.job_proposal.dto.UserResponseDto;
 import com.thefreelancer.microservices.job_proposal.model.Job;
 import com.thefreelancer.microservices.job_proposal.model.Proposal;
 import com.thefreelancer.microservices.job_proposal.model.ProposalMilestone;
+import com.thefreelancer.microservices.job_proposal.repository.ContractRepository;
 import com.thefreelancer.microservices.job_proposal.repository.JobRepository;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalMilestoneRepository;
 import com.thefreelancer.microservices.job_proposal.repository.ProposalRepository;
@@ -28,8 +31,10 @@ public class ProposalService {
     private final ProposalRepository proposalRepository;
     private final JobRepository jobRepository;
     private final ProposalMilestoneRepository proposalMilestoneRepository;
+    private final ContractRepository contractRepository;
     private final ProposalMapper proposalMapper;
     private final EventPublisherService eventPublisherService;
+    private final AuthServiceClient authServiceClient;
     
     @Transactional(readOnly = true)
     public List<ProposalResponseDto> getMyProposals(Long freelancerId, String status) {
@@ -187,7 +192,27 @@ public class ProposalService {
         List<Proposal> proposals = proposalRepository.findByJobIdOrderByCreatedAtDesc(jobId);
         
         return proposals.stream()
-                .map(proposalMapper::toResponseDto)
+                .map(proposal -> {
+                    // Fetch user information for each freelancer
+                    Optional<UserResponseDto> userInfo = authServiceClient.getUserById(proposal.getFreelancerId());
+                    
+                    // Fetch contract ID for the proposal
+                    Optional<Long> contractId = contractRepository.findContractIdByProposalId(proposal.getId());
+                    
+                    ProposalResponseDto responseDto;
+                    if (userInfo.isPresent()) {
+                        log.debug("Found user info for freelancer: {}", proposal.getFreelancerId());
+                        responseDto = proposalMapper.toResponseDtoWithUserInfo(proposal, userInfo.get());
+                    } else {
+                        log.warn("User info not found for freelancer: {}, using default mapping", proposal.getFreelancerId());
+                        responseDto = proposalMapper.toResponseDto(proposal);
+                    }
+                    
+                    // Set contract ID if it exists
+                    contractId.ifPresent(responseDto::setContractId);
+                    
+                    return responseDto;
+                })
                 .collect(Collectors.toList());
     }
     

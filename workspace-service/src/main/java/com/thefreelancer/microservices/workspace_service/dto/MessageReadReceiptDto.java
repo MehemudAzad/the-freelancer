@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MessageReadReceiptDto {
     
-    private String messageId;
+    private Long messageId;
     private Long userId;
     private LocalDateTime readAt;
 }

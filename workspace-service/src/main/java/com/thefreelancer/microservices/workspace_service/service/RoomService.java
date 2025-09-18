@@ -41,7 +41,7 @@ public class RoomService {
     }
     
     @Transactional(readOnly = true)
-    public RoomResponseDto getRoomByContractId(Long contractId, String userId) {
+    public RoomResponseDto getRoomByContractId(Long contractId, Long userId) {
         log.info("Getting workspace room for contract: {} by user: {}", contractId, userId);
         
         Room room = roomRepository.findByContractIdAndUserId(contractId, userId)
@@ -67,7 +67,7 @@ public class RoomService {
     }
     
     @Transactional
-    public RoomResponseDto updateRoomSettings(Long roomId, RoomSettingsUpdateDto settingsDto, String userId) {
+    public RoomResponseDto updateRoomSettings(Long roomId, RoomSettingsUpdateDto settingsDto, Long userId) {
         log.info("Updating room settings for room: {} by user: {}", roomId, userId);
         
         Room room = roomRepository.findByIdAndUserId(roomId, userId)
@@ -83,7 +83,7 @@ public class RoomService {
     }
     
     @Transactional
-    public RoomResponseDto updateRoomStatus(Long roomId, RoomStatusUpdateDto statusDto, String userId) {
+    public RoomResponseDto updateRoomStatus(Long roomId, RoomStatusUpdateDto statusDto, Long userId) {
         log.info("Updating room status for room: {} to status: {} by user: {}", roomId, statusDto.getStatus(), userId);
         
         Room room = roomRepository.findByIdAndUserId(roomId, userId)
@@ -102,7 +102,7 @@ public class RoomService {
     }
     
     @Transactional(readOnly = true)
-    public boolean hasAccess(Long roomId, String userId) {
+    public boolean hasAccess(Long roomId, Long userId) {
         return roomRepository.findByIdAndUserId(roomId, userId).isPresent();
     }
 }

@@ -17,10 +17,10 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     boolean existsByContractId(Long contractId);
     
     @Query("SELECT r FROM Room r WHERE r.contractId = :contractId AND (r.clientId = :userId OR r.freelancerId = :userId)")
-    Optional<Room> findByContractIdAndUserId(@Param("contractId") Long contractId, @Param("userId") String userId);
+    Optional<Room> findByContractIdAndUserId(@Param("contractId") Long contractId, @Param("userId") Long userId);
     
     @Query("SELECT r FROM Room r WHERE r.id = :roomId AND (r.clientId = :userId OR r.freelancerId = :userId)")
-    Optional<Room> findByIdAndUserId(@Param("roomId") Long roomId, @Param("userId") String userId);
+    Optional<Room> findByIdAndUserId(@Param("roomId") Long roomId, @Param("userId") Long userId);
 
     @Query("SELECT r FROM Room r WHERE r.clientId = :userId OR r.freelancerId = :userId")
     List<Room> findAllByUserId(@Param("userId") Long userId);

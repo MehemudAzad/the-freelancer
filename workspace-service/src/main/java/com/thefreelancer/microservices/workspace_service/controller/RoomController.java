@@ -56,13 +56,17 @@ public class RoomController {
         }
         
         try {
-            String authenticatedUserId = userIdHeader;
+            // Convert String userId to Long
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
             log.info("Getting workspace for contract: {} by user: {}", contractId, authenticatedUserId);
             
             RoomResponseDto room = roomService.getRoomByContractId(contractId, authenticatedUserId);
             log.info("Successfully retrieved workspace for contract: {}", contractId);
             
             return ResponseEntity.ok(room);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (IllegalArgumentException e) {
             log.error("Room not found for contract {}: {}", contractId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -135,13 +139,17 @@ public class RoomController {
         }
         
         try {
-            String authenticatedUserId = userIdHeader;
+            // Convert String userId to Long
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
             log.info("Updating settings for room: {} by user: {}", roomId, authenticatedUserId);
             
             RoomResponseDto room = roomService.updateRoomSettings(roomId, settingsDto, authenticatedUserId);
             log.info("Successfully updated settings for room: {}", roomId);
             
             return ResponseEntity.ok(room);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (IllegalArgumentException e) {
             log.error("Room not found or access denied for room {}: {}", roomId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -175,13 +183,17 @@ public class RoomController {
         }
         
         try {
-            String authenticatedUserId = userIdHeader;
+            // Convert String userId to Long
+            Long authenticatedUserId = Long.parseLong(userIdHeader);
             log.info("Updating status for room: {} to: {} by user: {}", roomId, statusDto.getStatus(), authenticatedUserId);
             
             RoomResponseDto room = roomService.updateRoomStatus(roomId, statusDto, authenticatedUserId);
             log.info("Successfully updated status for room: {} to: {}", roomId, statusDto.getStatus());
             
             return ResponseEntity.ok(room);
+        } catch (NumberFormatException e) {
+            log.error("Invalid user ID format: {}", userIdHeader);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (IllegalArgumentException e) {
             log.error("Room not found or access denied for room {}: {}", roomId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

@@ -27,7 +27,7 @@ public class MessageCreateDto {
     @Builder.Default
     private String messageType = "TEXT"; // TEXT, FILE, IMAGE, VIDEO, DOCUMENT, SYSTEM
     
-    private String replyToId; // For threaded conversations (message UUID)
+    private Long replyToId; // For threaded conversations (message ID)
     
     private List<MessageAttachmentDto> attachments; // File attachments
     

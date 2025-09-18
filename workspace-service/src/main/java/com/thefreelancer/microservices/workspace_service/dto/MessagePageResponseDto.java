@@ -20,6 +20,6 @@ public class MessagePageResponseDto {
     private int totalPages;
     private boolean hasNext;
     private boolean hasPrevious;
-    private String nextCursor; // For cursor-based pagination
-    private String previousCursor;
+    private Long nextCursor; // For cursor-based pagination
+    private Long previousCursor;
 }

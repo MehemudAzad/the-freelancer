@@ -14,13 +14,13 @@ import java.util.List;
 @AllArgsConstructor
 public class MessageResponseDto {
     
-    private String id;
-    private String roomId;
+    private Long id;
+    private Long roomId;
     private Long senderId;
     private String senderName; // We'll populate this from user service or cache
     private String content;
     private String messageType;
-    private String replyToId;
+    private Long replyToId;
     private MessageResponseDto replyToMessage; // Nested message for thread context
     private List<MessageAttachmentDto> attachments;
     private LocalDateTime editedAt;

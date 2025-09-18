@@ -68,4 +68,10 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
      * Check if client has completed contracts with freelancer (for review validation)
      */
     boolean existsByClientIdAndFreelancerIdAndStatus(Long clientId, Long freelancerId, Contract.ContractStatus status);
+    
+    /**
+     * Get contract ID by proposal ID
+     */
+    @Query("SELECT c.id FROM Contract c WHERE c.proposal.id = :proposalId")
+    Optional<Long> findContractIdByProposalId(@Param("proposalId") Long proposalId);
 }

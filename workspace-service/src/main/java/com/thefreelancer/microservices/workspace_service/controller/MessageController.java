@@ -35,7 +35,7 @@ public class MessageController {
     })
     @PostMapping("/{roomId}/messages")
     public ResponseEntity<MessageResponseDto> sendMessage(
-            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
+            @Parameter(description = "ID of the workspace room") @PathVariable Long roomId,
             @Valid @RequestBody MessageCreateDto createDto,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,

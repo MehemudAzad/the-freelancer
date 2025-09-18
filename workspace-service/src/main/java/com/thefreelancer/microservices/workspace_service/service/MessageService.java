@@ -29,12 +29,11 @@ public class MessageService {
     private final SimpMessagingTemplate messagingTemplate;
     
     @Transactional
-    public MessageResponseDto sendMessage(String roomId, String senderId, MessageCreateDto createDto) {
+    public MessageResponseDto sendMessage(Long roomId, String senderId, MessageCreateDto createDto) {
         log.info("Sending message to room: {} from user: {}", roomId, senderId);
         
         // Validate room exists and user has access
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
         // parse sender id to numeric
@@ -81,13 +80,16 @@ public class MessageService {
     }
     
     @Transactional(readOnly = true)
-    public MessagePageResponseDto getMessageHistory(String roomId, String userId, 
-                                                  int page, int size, String beforeMessageId) {
-        log.info("Getting message history for room: {} by user: {}", roomId, userId);
+    public MessagePageResponseDto getMessageHistory(Long roomId, String userId, 
+                                                  int page, int size, Long beforeMessageId) {
+        log.info("Getting unread message count for room: {} by user: {}", roomId, userId);
+        
+        // // Validate room exists
+        // Room room = roomRepository.findById(roomId)
+        //     .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
         // Validate room access
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         Long userIdLong = null;
         try {
@@ -125,13 +127,12 @@ public class MessageService {
     }
     
     @Transactional
-    public MessageResponseDto editMessage(String roomId, String messageId, String userId, 
+    public MessageResponseDto editMessage(Long roomId, Long messageId, String userId, 
                                         MessageUpdateDto updateDto) {
         log.info("Editing message: {} in room: {} by user: {}", messageId, roomId, userId);
         
         // Validate room access
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         Long userIdLong = null;
         try {
@@ -170,12 +171,11 @@ public class MessageService {
     }
     
     @Transactional
-    public void deleteMessage(String roomId, String messageId, String userId) {
+    public void deleteMessage(Long roomId, Long messageId, String userId) {
         log.info("Deleting message: {} in room: {} by user: {}", messageId, roomId, userId);
         
         // Validate room access
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         Long userIdLong = null;
         try {
@@ -209,13 +209,13 @@ public class MessageService {
     }
     
     @Transactional(readOnly = true)
-    public MessagePageResponseDto searchMessages(String roomId, String userId, String searchTerm, 
+    public MessagePageResponseDto searchMessages(Long roomId, String userId, String searchTerm, 
                                                 String messageType, int page, int size) {
         log.info("Searching messages in room: {} for term: '{}' by user: {}", roomId, searchTerm, userId);
         
         // Validate room access
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        // Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
         Long userIdLong = null;
@@ -252,11 +252,11 @@ public class MessageService {
     }
     
     @Transactional
-    public MessageResponseDto createSystemMessage(String roomId, String content) {
+    public MessageResponseDto createSystemMessage(Long roomId, String content) {
         log.info("Creating system message in room: {}", roomId);
         
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        // Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
         Message systemMessage = Message.builder()
@@ -277,12 +277,12 @@ public class MessageService {
     
     // ===== REAL-TIME CHAT METHODS =====
     
-    public void sendTypingIndicator(String roomId, TypingStatusDto typingStatus) {
+    public void sendTypingIndicator(Long roomId, TypingStatusDto typingStatus) {
         log.debug("Broadcasting typing indicator for user {} in room {}", typingStatus.getUserId(), roomId);
         
         // Validate room access
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        // Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         validateRoomAccess(room, typingStatus.getUserId());        // Set timestamp
         typingStatus.setTimestamp(System.currentTimeMillis());
@@ -297,12 +297,16 @@ public class MessageService {
     }
     
     @Transactional
-    public void markMessagesAsRead(String roomId, List<String> messageIds, String userId) {
-        log.info("Marking {} messages as read for user {} in room {}", messageIds.size(), userId, roomId);
+    public void markMessagesAsRead(Long roomId, List<Long> messageIds, String userId) {
+        log.info("Marking {} messages as read in room: {} by user: {}", messageIds.size(), roomId, userId);
+        
+        // // Validate room exists
+        // Room room = roomRepository.findById(roomId)
+        //     .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
         // Validate room access
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        // Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         Long userIdLong = null;
         try {
@@ -313,7 +317,7 @@ public class MessageService {
         validateRoomAccess(room, userIdLong);
         
         // For each message, broadcast read receipt
-        for (String messageId : messageIds) {
+        for (Long messageId : messageIds) {
             try {
                 // Verify message exists and belongs to this room
                 Message message = messageRepository.findById(messageId)
@@ -345,12 +349,12 @@ public class MessageService {
     }
     
     @Transactional(readOnly = true)
-    public long getUnreadMessageCount(String roomId, String userId) {
+    public long getUnreadMessageCount(Long roomId, String userId) {
         log.debug("Getting unread message count for user {} in room {}", userId, roomId);
         
         // Validate room access
-        Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomIdLong)
+        // Long roomIdLong = Long.parseLong(roomId);
+        Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         Long userIdLong = null;
         try {

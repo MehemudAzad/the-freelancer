@@ -53,7 +53,7 @@ public class MessageMapper {
             .build();
     }
     
-    public Message toEntity(MessageCreateDto createDto, String roomId, Long senderId) {
+    public Message toEntity(MessageCreateDto createDto, Long roomId, Long senderId) {
         com.fasterxml.jackson.databind.JsonNode attachmentsNode = null;
         if (createDto.getAttachments() != null && !createDto.getAttachments().isEmpty()) {
             try {
