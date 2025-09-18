@@ -10,6 +10,8 @@ import com.thefreelancer.microservices.job_proposal.repository.*;
 import com.thefreelancer.microservices.job_proposal.client.GigServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,10 @@ public class ContractService {
     private final WorkspaceClient workspaceClient;
     private final EventPublisherService eventPublisherService;
     private final GigServiceClient gigServiceClient;
+    
+    @Autowired
+    @Lazy
+    private InviteService inviteService;
 
     /**
      * Create a new contract from an accepted proposal
@@ -190,9 +196,156 @@ public class ContractService {
         // Publish ContractCreatedEvent for notifications
         publishContractCreatedEvent(savedContract, job, proposal);
         
+        // Invalidate all pending invites for this job
+        try {
+            inviteService.invalidateInvitesForJob(job.getId(), "Contract created from proposal");
+        } catch (Exception e) {
+            log.error("Failed to invalidate invites for job {}: {}", job.getId(), e.getMessage());
+            // Don't fail contract creation if invite invalidation fails
+        }
+        
         log.info("Contract creation completed successfully: {}", savedContract.getId());
         return convertToResponseDto(savedContract, true); // Include milestones in response
-    }    /**
+    }
+    
+    /**
+     * Create a new contract from an accepted invitation
+     * This is called when a freelancer accepts an invitation
+     */
+    @Transactional
+    public ContractResponseDto createContractFromInvite(ContractCreateDto request) {
+        log.info("Creating contract from invitation for job {} with freelancer {}", 
+                request.getJobId(), request.getFreelancerId());
+        
+        // Validate the job exists
+        Job job = jobRepository.findById(request.getJobId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + request.getJobId()));
+        
+        // Verify job is still open
+        if (job.getStatus() != Job.JobStatus.OPEN) {
+            throw new IllegalStateException("Cannot create contract for job that is not open");
+        }
+        
+        // Verify no existing contract for this job
+        if (contractRepository.existsByJobId(job.getId())) {
+            throw new IllegalStateException("A contract already exists for this job");
+        }
+        
+        // Create the contract (no proposal needed for invite-based contracts)
+        Contract contract = new Contract();
+        contract.setJob(job);
+        contract.setProposal(null); // No proposal for invite-based contracts
+        contract.setClientId(request.getClientId());
+        contract.setFreelancerId(request.getFreelancerId());
+        
+        // Set total amount from the request or fallback to job max budget
+        if (request.getTotalAmountCents() != null) {
+            contract.setTotalAmountCents(java.math.BigInteger.valueOf(request.getTotalAmountCents()));
+        } else if (job.getMaxBudgetCents() != null) {
+            contract.setTotalAmountCents(job.getMaxBudgetCents());
+        }
+        
+        contract.setStatus(Contract.ContractStatus.ACTIVE);
+        contract.setStartDate(request.getStartDate() != null ? request.getStartDate() : LocalDate.now());
+        contract.setEndDate(request.getEndDate());
+        contract.setPaymentModel(Contract.PaymentModel.FIXED);
+        
+        // Set terms as JSON
+        if (request.getTerms() != null) {
+            try {
+                contract.setTermsJson(objectMapper.writeValueAsString(request.getTerms()));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to serialize contract terms", e);
+            }
+        }
+        
+        // Save the contract first
+        Contract savedContract = contractRepository.save(contract);
+        log.info("Contract created from invitation with ID: {}", savedContract.getId());
+        
+        // Create default milestone if none provided
+        // For invite-based contracts, we'll create a single milestone with the full amount
+        ContractMilestone milestone = new ContractMilestone();
+        milestone.setContract(savedContract);
+        milestone.setTitle("Project Completion");
+        milestone.setDescription("Complete all project requirements as discussed");
+        milestone.setAmountCents(savedContract.getTotalAmountCents());
+        milestone.setDueDate(savedContract.getEndDate());
+        milestone.setOrderIndex(1);
+        milestone.setStatus(ContractMilestone.MilestoneStatus.PENDING);
+        
+        contractMilestoneRepository.save(milestone);
+        log.info("Created default milestone for invite-based contract: {}", savedContract.getId());
+        
+        // Decline all other proposals for this job
+        List<Proposal> otherProposals = proposalRepository.findByJobIdAndStatusIn(
+            job.getId(), 
+            List.of(Proposal.ProposalStatus.SUBMITTED, Proposal.ProposalStatus.ACCEPTED)
+        );
+        
+        int declinedCount = 0;
+        for (Proposal proposal : otherProposals) {
+            proposal.setStatus(Proposal.ProposalStatus.DECLINED);
+            log.info("Declining proposal {} for job {} due to invite acceptance", proposal.getId(), job.getId());
+            declinedCount++;
+        }
+        if (!otherProposals.isEmpty()) {
+            proposalRepository.saveAll(otherProposals);
+            log.info("Declined {} proposals for job {} due to invite acceptance", declinedCount, job.getId());
+        }
+        
+        // Update job status to IN_PROGRESS
+        Job.JobStatus previousJobStatus = job.getStatus();
+        job.setStatus(Job.JobStatus.IN_PROGRESS);
+        jobRepository.save(job);
+        log.info("Updated job {} status: {} -> {} due to invite acceptance", 
+                job.getId(), previousJobStatus, Job.JobStatus.IN_PROGRESS);
+
+        // Remove job from vector database since it's no longer available for matching
+        try {
+            gigServiceClient.deleteJobEmbedding(job.getId()).subscribe(
+                    unused -> log.info("Successfully removed job {} from vector database after invite acceptance", job.getId()),
+                    error -> log.error("Failed to remove job {} from vector database: {}", job.getId(), error.getMessage())
+            );
+        } catch (Exception e) {
+            log.error("Error calling gig service to delete job embedding for job {}: {}", job.getId(), e.getMessage(), e);
+            // Don't fail the contract creation if embedding deletion fails
+        }
+
+        // Create workspace room for the contract
+        try {
+            RoomCreateDto roomCreateDto = RoomCreateDto.builder()
+                .contractId(savedContract.getId())
+                .jobTitle(job.getProjectName())
+                .clientId(savedContract.getClientId().toString())
+                .freelancerId(savedContract.getFreelancerId().toString())
+                .build();
+            
+            RoomResponseDto roomResponse = workspaceClient.createRoom(roomCreateDto);
+            log.info("Successfully created workspace room {} for invite-based contract {}", 
+                    roomResponse.getId(), savedContract.getId());
+        } catch (Exception e) {
+            log.error("Failed to create workspace room for invite-based contract {}: {}", 
+                    savedContract.getId(), e.getMessage(), e);
+            // Don't fail the contract creation if room creation fails
+        }
+
+        // Publish ContractCreatedEvent for notifications (modified for invite-based)
+        publishContractCreatedEventFromInvite(savedContract, job);
+        
+        // Invalidate all other pending invites for this job
+        try {
+            inviteService.invalidateInvitesForJob(job.getId(), "Contract created from accepted invitation");
+        } catch (Exception e) {
+            log.error("Failed to invalidate invites for job {}: {}", job.getId(), e.getMessage());
+            // Don't fail contract creation if invite invalidation fails
+        }
+        
+        log.info("Contract creation from invitation completed successfully: {}", savedContract.getId());
+        return convertToResponseDto(savedContract, true); // Include milestones in response
+    }
+
+    /**
      * Get contract by ID
      */
     public ContractResponseDto getContract(Long contractId, String userId) {
@@ -257,8 +410,11 @@ public class ContractService {
         ContractResponseDto dto = new ContractResponseDto();
         dto.setId(contract.getId());
         dto.setJobId(contract.getJob().getId());
-    dto.setJobTitle(contract.getJob().getProjectName());
-        dto.setProposalId(contract.getProposal().getId());
+        dto.setJobTitle(contract.getJob().getProjectName());
+        
+        // Handle nullable proposal for invitation-based contracts
+        dto.setProposalId(contract.getProposal() != null ? contract.getProposal().getId() : null);
+        
         dto.setClientId(contract.getClientId());
         dto.setFreelancerId(contract.getFreelancerId());
         dto.setTotalAmountCents(contract.getTotalAmountCents());
@@ -382,6 +538,33 @@ public class ContractService {
             );
         } catch (Exception e) {
             log.error("Failed to publish contract created event for contract: {}", contract.getId(), e);
+            // Don't throw exception here to avoid failing the main transaction
+        }
+    }
+    
+    private void publishContractCreatedEventFromInvite(Contract contract, Job job) {
+        try {
+            // Get user names - you might want to fetch these from user service
+            String clientName = "Client-" + contract.getClientId(); // Placeholder
+            String freelancerName = "Freelancer-" + contract.getFreelancerId(); // Placeholder
+            
+            eventPublisherService.publishContractCreatedEvent(
+                contract.getId(),
+                job.getId(),
+                null, // No proposal ID for invite-based contracts
+                contract.getClientId(),
+                contract.getFreelancerId(),
+                job.getProjectName(),
+                clientName,
+                freelancerName,
+                contract.getStartDate() != null ? contract.getStartDate().atStartOfDay() : null,
+                contract.getEndDate() != null ? contract.getEndDate().atStartOfDay() : null,
+                contract.getTotalAmountCents() != null ? contract.getTotalAmountCents().longValue() : null,
+                "USD", // Placeholder - you might want to get this from job or contract
+                contract.getTermsJson()
+            );
+        } catch (Exception e) {
+            log.error("Failed to publish contract created event from invite for contract: {}", contract.getId(), e);
             // Don't throw exception here to avoid failing the main transaction
         }
     }

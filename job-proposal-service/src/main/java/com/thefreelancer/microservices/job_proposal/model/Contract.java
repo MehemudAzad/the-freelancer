@@ -28,7 +28,7 @@ public class Contract {
     private Job job;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "proposal_id", nullable = false)
+    @JoinColumn(name = "proposal_id", nullable = true)
     private Proposal proposal;
 
     @Column(name = "client_id", nullable = false)

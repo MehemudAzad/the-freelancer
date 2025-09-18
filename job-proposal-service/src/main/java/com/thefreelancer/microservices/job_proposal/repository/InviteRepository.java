@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface InviteRepository extends JpaRepository<Invite, Long> {
     
-    List<Invite> findByJobId(Long jobId);
+    List<Invite> findByJob_Id(Long jobId);
     
     List<Invite> findByFreelancerId(Long freelancerId);
     
@@ -17,5 +17,7 @@ public interface InviteRepository extends JpaRepository<Invite, Long> {
     
     List<Invite> findByFreelancerIdAndStatus(Long freelancerId, Invite.InviteStatus status);
     
-    boolean existsByJobIdAndFreelancerId(Long jobId, Long freelancerId);
+    List<Invite> findByJob_IdAndStatus(Long jobId, Invite.InviteStatus status);
+    
+    boolean existsByJob_IdAndFreelancerId(Long jobId, Long freelancerId);
 }

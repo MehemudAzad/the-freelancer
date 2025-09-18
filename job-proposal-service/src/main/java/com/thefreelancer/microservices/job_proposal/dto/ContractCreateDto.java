@@ -3,6 +3,7 @@ package com.thefreelancer.microservices.job_proposal.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,15 +13,20 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ContractCreateDto {
     
     @NotNull(message = "Job ID is required")
     private Long jobId;
     
-    @NotNull(message = "Proposal ID is required")
+    // Proposal ID is optional for invite-based contracts
     private Long proposalId;
     
-    @NotNull(message = "Total amount is required")
+    // Client ID and Freelancer ID for invite-based contracts
+    private Long clientId;
+    private Long freelancerId;
+    
+    // Total amount is optional - can be derived from job budget or proposal
     @Positive(message = "Total amount must be positive")
     private Long totalAmountCents;
     
