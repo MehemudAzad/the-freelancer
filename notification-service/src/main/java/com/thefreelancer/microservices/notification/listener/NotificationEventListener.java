@@ -20,6 +20,91 @@ public class NotificationEventListener {
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
     
+    // ========== INVITE NOTIFICATIONS (1-3) ==========
+    
+    @KafkaListener(topics = "invite-sent", groupId = "notification-service-group")
+    public void handleInviteSentEvent(
+            @Payload String eventData,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            Acknowledgment acknowledgment) {
+        
+        try {
+            log.info("Received invite sent event from topic: {}", topic);
+            
+            InviteSentEvent event = objectMapper.readValue(eventData, InviteSentEvent.class);
+            
+            notificationService.createInviteSentNotification(
+                event.getClientId(),
+                event.getFreelancerId(),
+                event.getJobId(),
+                event.getJobTitle(),
+                event.getFreelancerName()
+            );
+            
+            acknowledgment.acknowledge();
+            log.debug("Successfully processed invite sent event: {}", event.getInviteId());
+            
+        } catch (Exception e) {
+            log.error("Error processing invite sent event: {}", e.getMessage(), e);
+        }
+    }
+    
+    @KafkaListener(topics = "invite-accepted", groupId = "notification-service-group")
+    public void handleInviteAcceptedEvent(
+            @Payload String eventData,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            Acknowledgment acknowledgment) {
+        
+        try {
+            log.info("Received invite accepted event from topic: {}", topic);
+            
+            InviteAcceptedEvent event = objectMapper.readValue(eventData, InviteAcceptedEvent.class);
+            
+            notificationService.createInviteAcceptedNotification(
+                event.getClientId(),
+                event.getFreelancerId(),
+                event.getJobId(),
+                event.getJobTitle(),
+                event.getFreelancerName()
+            );
+            
+            acknowledgment.acknowledge();
+            log.debug("Successfully processed invite accepted event: {}", event.getInviteId());
+            
+        } catch (Exception e) {
+            log.error("Error processing invite accepted event: {}", e.getMessage(), e);
+        }
+    }
+    
+    @KafkaListener(topics = "invite-received", groupId = "notification-service-group")
+    public void handleInviteReceivedEvent(
+            @Payload String eventData,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            Acknowledgment acknowledgment) {
+        
+        try {
+            log.info("Received invite received event from topic: {}", topic);
+            
+            InviteReceivedEvent event = objectMapper.readValue(eventData, InviteReceivedEvent.class);
+            
+            notificationService.createInviteReceivedNotification(
+                event.getFreelancerId(),
+                event.getClientId(),
+                event.getJobId(),
+                event.getJobTitle(),
+                event.getClientName()
+            );
+            
+            acknowledgment.acknowledge();
+            log.debug("Successfully processed invite received event: {}", event.getInviteId());
+            
+        } catch (Exception e) {
+            log.error("Error processing invite received event: {}", e.getMessage(), e);
+        }
+    }
+    
+    // ========== PROPOSAL NOTIFICATIONS (4-6) ==========
+    
     @KafkaListener(topics = "proposal-submitted", groupId = "notification-service-group", 
                    containerFactory = "proposalSubmittedKafkaListenerContainerFactory")
     public void handleProposalSubmittedEvent(ProposalSubmittedEvent event) {
@@ -27,13 +112,13 @@ public class NotificationEventListener {
         try {
             log.info("Received proposal submitted event for proposal: {}", event.getProposalId());
             
+            // Notification #5: A freelancer has submitted a proposal on your job -> client (inbox only)
             notificationService.createProposalSubmittedNotification(
-                event.getJobId(),
                 event.getClientId(),
                 event.getFreelancerId(),
+                event.getJobId(),
                 event.getProjectName(),
-                event.getFreelancerName(),
-                null // proposalCoverLetter - not available in simplified event
+                event.getFreelancerName()
             );
             
             log.debug("Successfully processed proposal submitted event: {}", event.getProposalId());
@@ -49,13 +134,13 @@ public class NotificationEventListener {
         try {
             log.info("Received proposal accepted event for proposal: {}", event.getProposalId());
             
+            // Notification #4: Proposal accepted -> freelancer (email + inbox)
             notificationService.createProposalAcceptedNotification(
-                event.getJobId(),
                 event.getFreelancerId(),
                 event.getClientId(),
+                event.getJobId(),
                 event.getProjectName(),
-                "Client", // TODO: Get actual client name
-                "Your proposal has been accepted!" // Default message since acceptanceMessage might not exist
+                "Client" // TODO: Get actual client name from event
             );
             
             log.debug("Successfully processed proposal accepted event: {}", event.getProposalId());
@@ -67,99 +152,37 @@ public class NotificationEventListener {
         }
     }
     
-    @KafkaListener(topics = "proposal-rejected", groupId = "notification-service-group", 
-                   containerFactory = "proposalRejectedKafkaListenerContainerFactory")
-    public void handleProposalRejectedEvent(ProposalRejectedEvent event) {
-        
-        try {
-            log.info("Received proposal rejected event for proposal: {}", event.getProposalId());
-            
-            notificationService.createProposalRejectedNotification(
-                event.getJobId(),
-                event.getFreelancerId(),
-                null, // clientId - not available in simplified event
-                event.getProjectName(),
-                "Client", // TODO: Get actual client name
-                event.getFeedback() // Use feedback field
-            );
-            
-            log.debug("Successfully processed proposal rejected event: {}", event.getProposalId());
-            
-        } catch (Exception e) {
-            log.error("Error processing proposal rejected event: {}", e.getMessage(), e);
-        }
-    }
-    
-    @KafkaListener(topics = "job-posted", groupId = "notification-service-group")
-    public void handleJobPostedEvent(
+    @KafkaListener(topics = "escrow-funded", groupId = "notification-service-group")
+    public void handleEscrowFundedEvent(
             @Payload String eventData,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             Acknowledgment acknowledgment) {
         
         try {
-            log.info("Received job posted event from topic: {}", topic);
+            log.info("Received escrow funded event from topic: {}", topic);
             
-            JobPostedEvent event = objectMapper.readValue(eventData, JobPostedEvent.class);
+            EscrowFundedEvent event = objectMapper.readValue(eventData, EscrowFundedEvent.class);
             
-                // Create budget range string
-                String budgetRange = null;
-                if (event.getMinBudget() != null && event.getMaxBudget() != null) {
-                    budgetRange = String.format("%d-%d %s", 
-                        event.getMinBudget(), event.getMaxBudget(), 
-                        event.getCurrency() != null ? event.getCurrency() : "USD");
-                } else if (event.getMinBudget() != null) {
-                    budgetRange = String.format("From %d %s", 
-                        event.getMinBudget(), 
-                        event.getCurrency() != null ? event.getCurrency() : "USD");
-                }
-            
-                // Create the job posted notification
-                notificationService.createJobPostedNotification(
-                    event.getJobId(),
-                    event.getJobTitle(),
-                    event.getClientName(),
-                    event.getJobDescription(),
-                    event.getRequiredSkills(),
-                    budgetRange,
-                    event.getJobCategory()
-                );
-            
-                log.info("Created job posted notification for job: {} by {}", event.getJobTitle(), event.getClientName());
-            
-            acknowledgment.acknowledge();
-            log.debug("Successfully processed job posted event: {}", event.getJobId());
-            
-        } catch (Exception e) {
-            log.error("Error processing job posted event: {}", e.getMessage(), e);
-        }
-    }
-    
-    @KafkaListener(topics = "contract-created", groupId = "notification-service-group")
-    public void handleContractCreatedEvent(
-            @Payload String eventData,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            Acknowledgment acknowledgment) {
-        
-        try {
-            log.info("Received contract created event from topic: {}", topic);
-            
-            ContractCreatedEvent event = objectMapper.readValue(eventData, ContractCreatedEvent.class);
-            
-            notificationService.createContractCreatedNotification(
-                event.getContractId(),
-                event.getJobId(),
+            // Notification #6: You have accepted the proposal and payment escrow has been made -> client (email + inbox)
+            notificationService.createEscrowFundedNotification(
                 event.getClientId(),
                 event.getFreelancerId(),
-                event.getJobTitle()
+                event.getJobId(),
+                event.getJobTitle(),
+                event.getFreelancerName(),
+                event.getAmountCents(),
+                event.getCurrency()
             );
             
             acknowledgment.acknowledge();
-            log.debug("Successfully processed contract created event: {}", event.getContractId());
+            log.debug("Successfully processed escrow funded event: {}", event.getEscrowId());
             
         } catch (Exception e) {
-            log.error("Error processing contract created event: {}", e.getMessage(), e);
+            log.error("Error processing escrow funded event: {}", e.getMessage(), e);
         }
     }
+    
+    // ========== JOB SUBMISSION NOTIFICATIONS (7-10) ==========
     
     @KafkaListener(topics = "job-submitted", groupId = "notification-service-group")
     public void handleJobSubmittedEvent(
@@ -172,10 +195,11 @@ public class NotificationEventListener {
             
             JobSubmittedEvent event = objectMapper.readValue(eventData, JobSubmittedEvent.class);
             
+            // Notification #7: Freelancer for jobId has submitted please review -> client (email + inbox)
             notificationService.createJobSubmittedNotification(
-                event.getJobId(),
-                null, // contractId - not available in this event, will be null
                 event.getClientId(),
+                event.getFreelancerId(),
+                event.getJobId(),
                 event.getJobTitle(),
                 event.getFreelancerName()
             );
@@ -188,33 +212,7 @@ public class NotificationEventListener {
         }
     }
     
-    @KafkaListener(topics = "payment-released", groupId = "notification-service-group")
-    public void handlePaymentReleasedEvent(
-            @Payload String eventData,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            Acknowledgment acknowledgment) {
-        
-        try {
-            log.info("Received payment released event from topic: {}", topic);
-            
-            PaymentReleasedEvent event = objectMapper.readValue(eventData, PaymentReleasedEvent.class);
-            
-            double amount = event.getAmountCents() / 100.0; // Convert cents to dollars
-            notificationService.createPaymentReleasedNotification(
-                event.getJobId(),
-                event.getFreelancerId(),
-                amount,
-                event.getCurrency(),
-                event.getJobTitle()
-            );
-            
-            acknowledgment.acknowledge();
-            log.debug("Successfully processed payment released event: {}", event.getPaymentId());
-            
-        } catch (Exception e) {
-            log.error("Error processing payment released event: {}", e.getMessage(), e);
-        }
-    }
+
     
     @KafkaListener(topics = "job-accepted", groupId = "notification-service-group")
     public void handleJobAcceptedEvent(
@@ -227,10 +225,11 @@ public class NotificationEventListener {
             
             JobAcceptedEvent event = objectMapper.readValue(eventData, JobAcceptedEvent.class);
             
+            // Notification #9: Client has accepted your submission. Payment has been transferred -> freelancer (email + inbox)
             notificationService.createJobAcceptedNotification(
-                event.getJobId(),
-                event.getContractId(),
                 event.getFreelancerId(),
+                event.getClientId(),
+                event.getJobId(),
                 event.getJobTitle(),
                 event.getClientName()
             );
@@ -254,10 +253,11 @@ public class NotificationEventListener {
             
             JobRejectedEvent event = objectMapper.readValue(eventData, JobRejectedEvent.class);
             
+            // Notification #8: Client reject/revision your job submission -> freelancer (inbox only)
             notificationService.createJobRejectedNotification(
-                event.getJobId(),
-                event.getContractId(),
                 event.getFreelancerId(),
+                event.getClientId(),
+                event.getJobId(),
                 event.getJobTitle(),
                 event.getClientName(),
                 event.getFeedback()
@@ -271,37 +271,32 @@ public class NotificationEventListener {
         }
     }
     
-    @KafkaListener(topics = "message-sent", groupId = "notification-service-group")
-    public void handleMessageSentEvent(
+    @KafkaListener(topics = "review-reminder", groupId = "notification-service-group")
+    public void handleReviewReminderEvent(
             @Payload String eventData,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             Acknowledgment acknowledgment) {
         
         try {
-            log.info("Received message sent event from topic: {}", topic);
+            log.info("Received review reminder event from topic: {}", topic);
             
-            MessageSentEvent event = objectMapper.readValue(eventData, MessageSentEvent.class);
+            ReviewReminderEvent event = objectMapper.readValue(eventData, ReviewReminderEvent.class);
             
-            // Only create notification if recipient is different from sender
-            if (!event.getSenderId().equals(event.getRecipientId())) {
-                String messagePreview = event.getMessageContent().length() > 50 
-                    ? event.getMessageContent().substring(0, 50) + "..."
-                    : event.getMessageContent();
-                    
-                notificationService.createMessageReceivedNotification(
-                    event.getRecipientId(),
-                    event.getSenderId(),
-                    event.getSenderName(),
-                    event.getRoomId(),
-                    messagePreview
-                );
-            }
+            // Notification #10: After job submission you have accepted, go and review the freelancer -> client (email + inbox)
+            notificationService.createReviewReminderNotification(
+                event.getClientId(),
+                event.getFreelancerId(),
+                event.getJobId(),
+                event.getJobTitle(),
+                event.getFreelancerName()
+            );
             
             acknowledgment.acknowledge();
-            log.debug("Successfully processed message sent event: {}", event.getMessageId());
+            log.debug("Successfully processed review reminder event: {}", event.getJobId());
             
         } catch (Exception e) {
-            log.error("Error processing message sent event: {}", e.getMessage(), e);
+            log.error("Error processing review reminder event: {}", e.getMessage(), e);
         }
     }
+    
 }

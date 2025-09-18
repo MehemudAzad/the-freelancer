@@ -1,7 +1,7 @@
 package com.thefreelancer.microservices.notification.service;
 
 import com.thefreelancer.microservices.notification.client.AuthServiceClient;
-import com.thefreelancer.microservices.notification.client.UserResponse;
+import com.thefreelancer.microservices.notification.dto.UserResponse;
 import com.thefreelancer.microservices.notification.model.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +37,12 @@ public class EmailService {
             return;
         }
         
+        // Only send emails for specific notification types as per requirements
+        if (!shouldSendEmail(notification.getType())) {
+            log.debug("Email not required for notification type: {}", notification.getType());
+            return;
+        }
+        
         try {
             UserResponse recipient = authServiceClient.getUserById(notification.getRecipientId());
 
@@ -59,6 +65,37 @@ public class EmailService {
         }
     }
     
+    /**
+     * Determines if an email should be sent for the given notification type.
+     * Based on requirements:
+     * - INVITE_ACCEPTED (email) - #2
+     * - INVITE_RECEIVED (email) - #3  
+     * - PROPOSAL_ACCEPTED (email) - #4
+     * - ESCROW_FUNDED (email) - #6
+     * - JOB_SUBMITTED (email) - #7
+     * - JOB_ACCEPTED (email) - #9
+     * - REVIEW_REMINDER (email) - #10
+     * 
+     * All other notifications go to inbox only.
+     */
+    private boolean shouldSendEmail(Notification.NotificationType notificationType) {
+        return switch (notificationType) {
+            case INVITE_ACCEPTED,       // #2: invite accepted -> client (email)
+                 INVITE_RECEIVED,       // #3: you have an invite -> freelancer (email)
+                 PROPOSAL_ACCEPTED,     // #4: proposal accepted -> freelancer (email)
+                 ESCROW_FUNDED,         // #6: payment escrow made -> client (email)
+                 JOB_SUBMITTED,         // #7: job submitted -> client (email)
+                 JOB_ACCEPTED,          // #9: job accepted -> freelancer (email)
+                 REVIEW_REMINDER        // #10: review reminder -> client (email)
+                 -> true;
+            case INVITE_SENT,           // #1: invite sent -> client (inbox only)
+                 PROPOSAL_SUBMITTED,    // #5: proposal submitted -> client (inbox only)
+                 JOB_REJECTED           // #8: job rejected -> freelancer (inbox only)
+                 -> false;
+            default -> false;
+        };
+    }
+    
     private void sendHtmlEmail(UserResponse recipient, Notification notification) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -73,16 +110,16 @@ public class EmailService {
     
     private String buildEmailSubject(Notification notification) {
         return switch (notification.getType()) {
+            case INVITE_SENT -> "Invitation Sent - FreelancerHub";
+            case INVITE_ACCEPTED -> "Invitation Accepted! - FreelancerHub";
+            case INVITE_RECEIVED -> "You Have an Invitation! - FreelancerHub";
             case PROPOSAL_SUBMITTED -> "New Proposal Received - FreelancerHub";
             case PROPOSAL_ACCEPTED -> "Proposal Accepted! - FreelancerHub";
-            case PROPOSAL_REJECTED -> "Proposal Update - FreelancerHub";
-            case CONTRACT_CREATED -> "Contract Created - FreelancerHub";
+            case ESCROW_FUNDED -> "Payment Escrow Created - FreelancerHub";
             case JOB_SUBMITTED -> "Job Submitted for Review - FreelancerHub";
-                case JOB_POSTED -> "New Job Opportunity - FreelancerHub";
-                case JOB_ACCEPTED -> "Job Accepted - FreelancerHub";
-                case JOB_REJECTED -> "Job Review Update - FreelancerHub";
-            case PAYMENT_RECEIVED -> "Payment Received - FreelancerHub";
-            case MESSAGE_RECEIVED -> "New Message - FreelancerHub";
+            case JOB_REJECTED -> "Job Revision Requested - FreelancerHub";
+            case JOB_ACCEPTED -> "Job Accepted - Payment Transferred! - FreelancerHub";
+            case REVIEW_REMINDER -> "Please Review Freelancer - FreelancerHub";
             default -> notification.getTitle() + " - FreelancerHub";
         };
     }
@@ -117,6 +154,27 @@ public class EmailService {
         
         // Add notification-specific content
         switch (notification.getType()) {
+            case INVITE_SENT:
+                html.append("<p>You have successfully sent an invitation to work on your project.</p>");
+                if (notification.getJobId() != null) {
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>View Job</a>");
+                }
+                break;
+                
+            case INVITE_ACCEPTED:
+                html.append("<p>Great news! The freelancer has accepted your invitation and is ready to work on your project.</p>");
+                if (notification.getJobId() != null) {
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>Start Project</a>");
+                }
+                break;
+                
+            case INVITE_RECEIVED:
+                html.append("<p>You have been personally invited to work on this exciting project. Review the details and accept if you're interested!</p>");
+                if (notification.getJobId() != null) {
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("/invite' class='button'>View Invitation</a>");
+                }
+                break;
+                
             case PROPOSAL_SUBMITTED:
                 html.append("<p>A new proposal has been submitted for your job. Review it now to find the perfect freelancer for your project.</p>");
                 if (notification.getJobId() != null) {
@@ -126,63 +184,44 @@ public class EmailService {
                 
             case PROPOSAL_ACCEPTED:
                 html.append("<p>Congratulations! Your proposal has been accepted. You can now start working on this exciting project.</p>");
-                if (notification.getContractId() != null) {
-                    html.append("<a href='").append(frontendUrl).append("/contracts/").append(notification.getContractId()).append("' class='button'>View Contract</a>");
+                if (notification.getJobId() != null) {
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("/contract' class='button'>View Contract</a>");
                 }
                 break;
                 
-            case CONTRACT_CREATED:
-                html.append("<p>A new contract has been created. You can now collaborate and track progress in your workspace.</p>");
-                if (notification.getContractId() != null) {
-                    html.append("<a href='").append(frontendUrl).append("/workspace/").append(notification.getContractId()).append("' class='button'>Open Workspace</a>");
+            case ESCROW_FUNDED:
+                html.append("<p>Payment has been secured in escrow for this project. Work can now begin!</p>");
+                if (notification.getJobId() != null) {
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("/workspace' class='button'>Open Workspace</a>");
                 }
                 break;
                 
             case JOB_SUBMITTED:
                 html.append("<p>A job has been submitted and is ready for your review. Please check the details and provide feedback.</p>");
                 if (notification.getJobId() != null) {
-                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>Review Job</a>");
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("/review' class='button'>Review Job</a>");
                 }
                 break;
                 
-                case JOB_POSTED:
-                    html.append("<p>A new job opportunity that matches your skills has been posted! Check it out and submit a proposal if you're interested.</p>");
-                    if (notification.getJobId() != null) {
-                        html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>View Job Details</a>");
-                    }
-                    break;
+            case JOB_REJECTED:
+                html.append("<p>Your job submission needs some revisions. Please review the feedback and resubmit when ready.</p>");
+                if (notification.getJobId() != null) {
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("/feedback' class='button'>View Feedback</a>");
+                }
+                break;
                 
-                case JOB_ACCEPTED:
-                    html.append("<p>Excellent work! Your job submission has been accepted. Payment will be processed shortly.</p>");
-                    if (notification.getJobId() != null) {
-                        html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>View Job</a>");
-                    }
-                    break;
-                
-                case JOB_REJECTED:
-                    html.append("<p>Your job submission needs some revisions. Please review the feedback and resubmit when ready.</p>");
-                    if (notification.getJobId() != null) {
-                        html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>View Feedback</a>");
-                    }
-                    break;
-                
-            case PAYMENT_RECEIVED:
-                html.append("<p>Great news! Your payment has been processed and should appear in your account soon.</p>");
+            case JOB_ACCEPTED:
+                html.append("<p>Excellent work! Your job submission has been accepted. Payment has been transferred to your account!</p>");
+                if (notification.getJobId() != null) {
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("' class='button'>View Job</a>");
+                }
                 html.append("<a href='").append(frontendUrl).append("/dashboard/earnings' class='button'>View Earnings</a>");
                 break;
                 
-            case MESSAGE_RECEIVED:
-                html.append("<p>You have a new message in your workspace. Stay connected with your project team.</p>");
-                if (notification.getMetadata() != null && notification.getMetadata().contains("roomId")) {
-                    try {
-                        String roomId = notification.getMetadata().substring(
-                            notification.getMetadata().indexOf("roomId\":") + 8,
-                            notification.getMetadata().indexOf("}", notification.getMetadata().indexOf("roomId\":"))
-                        );
-                        html.append("<a href='").append(frontendUrl).append("/workspace/room/").append(roomId).append("' class='button'>View Message</a>");
-                    } catch (Exception e) {
-                        log.warn("Could not parse roomId from metadata: {}", notification.getMetadata());
-                    }
+            case REVIEW_REMINDER:
+                html.append("<p>Your project has been completed successfully. Please take a moment to review the freelancer to help our community.</p>");
+                if (notification.getJobId() != null) {
+                    html.append("<a href='").append(frontendUrl).append("/jobs/").append(notification.getJobId()).append("/review-freelancer' class='button'>Leave Review</a>");
                 }
                 break;
                 
@@ -208,38 +247,5 @@ public class EmailService {
             .append("</html>");
         
         return html.toString();
-    }
-    
-    // Send simple text email as fallback
-    private void sendSimpleEmail(UserResponse recipient, Notification notification) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(recipient.getEmail());
-        message.setSubject(buildEmailSubject(notification));
-        message.setText(buildTextEmailBody(recipient, notification));
-        
-        mailSender.send(message);
-    }
-    
-    private String buildTextEmailBody(UserResponse recipient, Notification notification) {
-        StringBuilder body = new StringBuilder();
-        body.append("Hello ").append(recipient.getName() != null ? recipient.getName() : "User").append(",\n\n");
-        body.append(notification.getMessage()).append("\n\n");
-        
-        if (notification.getJobId() != null) {
-            body.append("Job ID: ").append(notification.getJobId()).append("\n");
-        }
-        if (notification.getContractId() != null) {
-            body.append("Contract ID: ").append(notification.getContractId()).append("\n");
-        }
-        
-        body.append("\nYou can view more details by logging into your FreelancerHub account at: ")
-            .append(frontendUrl).append("\n\n");
-        body.append("Best regards,\n");
-        body.append("The FreelancerHub Team\n\n");
-        body.append("You received this email because you have an account with FreelancerHub.\n");
-        body.append("Manage your notification preferences: ").append(frontendUrl).append("/settings/notifications");
-        
-        return body.toString();
     }
 }

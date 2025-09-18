@@ -2,30 +2,30 @@ version: '3.8'
 
 services:
   # Zookeeper - Required for Kafka
-  # zookeeper:
-  #   image: confluentinc/cp-zookeeper:7.5.0
-  #   hostname: zookeeper
-  #   container_name: zookeeper
-  #   ports:
-  #     - "2181:2181"
-  #   environment:
-  #     ZOOKEEPER_CLIENT_PORT: 2181
-  #     ZOOKEEPER_TICK_TIME: 2000
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
 
-  # broker:
-  #   image: confluentinc/cp-kafka:7.5.0
-  #   container_name: broker
-  #   ports:
-  #     - "9092:9092"
-  #     - "29092:29092"
-  #   depends_on:
-  #     - zookeeper
-  #   environment:
-  #     KAFKA_BROKER_ID: 1
-  #     KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
-  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  broker:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: broker
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   # schema-registry:
   #   image: confluentinc/cp-schema-registry:7.5.0
@@ -56,18 +56,18 @@ services:
       
 
   # Auth Service Database
-  # auth-postgres:
-  #   image: postgres:16-alpine
-  #   container_name: auth-postgres-db
-  #   environment:
-  #     - POSTGRES_USER=admin
-  #     - POSTGRES_PASSWORD=password
-  #     - POSTGRES_DB=auth_db
-  #   ports:
-  #     - "5433:5432"
-  #   volumes:
-  #     - ./auth-service/postgres-data:/var/lib/postgresql/data
-  #     - ./auth-service/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+  auth-postgres:
+    image: postgres:16-alpine
+    container_name: auth-postgres-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=auth_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./auth-service/postgres-data:/var/lib/postgresql/data
+      - ./auth-service/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   # Gig Service Database
   gig-postgres:
@@ -123,17 +123,17 @@ services:
   #     - ./payment-service/postgres-data:/var/lib/postgresql/data
 
   # Notification Service Database
-  # notification-postgres:
-  #   image: postgres:16-alpine
-  #   container_name: notification-postgres-db
-  #   environment:
-  #     - POSTGRES_USER=admin
-  #     - POSTGRES_PASSWORD=password
-  #     - POSTGRES_DB=notification_db
-  #   ports:
-  #     - "5438:5432"
-  #   volumes:
-  #     - ./notification-service/postgres-data:/var/lib/postgresql/data
-  #     - ./notification-service/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+  notification-postgres:
+    image: postgres:16-alpine
+    container_name: notification-postgres-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=notification_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - ./notification-service/postgres-data:/var/lib/postgresql/data
+      - ./notification-service/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
 
 

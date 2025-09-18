@@ -159,136 +159,156 @@ public class NotificationController {
     @Operation(summary = "Create proposal submitted notification", description = "Internal API to create notification when a proposal is submitted")
     @PostMapping("/internal/proposal-submitted")
     public ResponseEntity<Notification> createProposalSubmittedNotification(
-            @RequestParam Long jobId,
             @RequestParam Long clientId,
             @RequestParam Long freelancerId,
+            @RequestParam Long jobId,
             @RequestParam String jobTitle,
-            @RequestParam String freelancerName,
-            @RequestParam(required = false) String proposalCover) {
+            @RequestParam String freelancerName) {
         
         Notification notification = notificationService.createProposalSubmittedNotification(
-            jobId, clientId, freelancerId, jobTitle, freelancerName, proposalCover);
+            clientId, freelancerId, jobId, jobTitle, freelancerName);
         
         return ResponseEntity.ok(notification);
     }
 
-    // API to create a message received notification (no email)
-    @PostMapping("/internal/message-received")
-    public ResponseEntity<Notification> createMessageReceivedNotification(
-            @RequestParam Long recipientId,
-            @RequestParam Long senderId,
-            @RequestParam String senderName,
-            @RequestParam Long roomId,
-            @RequestParam String messagePreview) {
-        Notification notification = notificationService.createMessageReceivedNotification(
-                recipientId, senderId, senderName, roomId, messagePreview);
-        return ResponseEntity.ok(notification);
-    }
+
     
     @PostMapping("/internal/proposal-accepted")
     public ResponseEntity<Notification> createProposalAcceptedNotification(
-            @RequestParam Long jobId,
             @RequestParam Long freelancerId,
             @RequestParam Long clientId,
+            @RequestParam Long jobId,
             @RequestParam String jobTitle,
-            @RequestParam String clientName,
-            @RequestParam(required = false) String acceptanceMessage) {
+            @RequestParam String clientName) {
         
         Notification notification = notificationService.createProposalAcceptedNotification(
-            jobId, freelancerId, clientId, jobTitle, clientName, acceptanceMessage);
+            freelancerId, clientId, jobId, jobTitle, clientName);
         
         return ResponseEntity.ok(notification);
     }
     
-    @PostMapping("/internal/proposal-rejected")
-    public ResponseEntity<Notification> createProposalRejectedNotification(
-            @RequestParam Long jobId,
-            @RequestParam Long freelancerId,
-            @RequestParam Long clientId,
-            @RequestParam String jobTitle,
-            @RequestParam String clientName,
-            @RequestParam(required = false) String rejectionMessage) {
-        
-        Notification notification = notificationService.createProposalRejectedNotification(
-            jobId, freelancerId, clientId, jobTitle, clientName, rejectionMessage);
-        
-        return ResponseEntity.ok(notification);
-    }
+
     
-        @Operation(
-            summary = "Create Job Posted Notification",
-            description = "Creates a notification when a client posts a new job. This is used internally by the job service.",
-            tags = {"Internal APIs"}
-        )
-        @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Job posted notification created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-        })
-        @PostMapping("/internal/job-posted")
-        public ResponseEntity<Notification> createJobPostedNotification(
-                @Parameter(description = "Job ID", required = true)
-                @RequestParam Long jobId,
-                @Parameter(description = "Job title", required = true)
-                @RequestParam String jobTitle,
-                @Parameter(description = "Client name", required = true)
-                @RequestParam String clientName,
-                @Parameter(description = "Job description")
-                @RequestParam(required = false) String jobDescription,
-                @Parameter(description = "Required skills for the job")
-                @RequestParam(required = false) String[] requiredSkills,
-                @Parameter(description = "Budget range (e.g., '$1000-$5000')")
-                @RequestParam(required = false) String budgetRange,
-                @Parameter(description = "Job category")
-                @RequestParam(required = false) String category) {
-        
-            Notification notification = notificationService.createJobPostedNotification(
-                jobId, jobTitle, clientName, jobDescription, requiredSkills, budgetRange, category);
-        
-            return ResponseEntity.ok(notification);
-        }
+
     
-    @PostMapping("/internal/contract-created")
-    public ResponseEntity<Notification> createContractCreatedNotification(
-            @RequestParam Long contractId,
-            @RequestParam Long jobId,
-            @RequestParam Long clientId,
-            @RequestParam Long freelancerId,
-            @RequestParam String jobTitle) {
-        
-        Notification notification = notificationService.createContractCreatedNotification(
-            contractId, jobId, clientId, freelancerId, jobTitle);
-        
-        return ResponseEntity.ok(notification);
-    }
+
     
     @PostMapping("/internal/job-submitted")
     public ResponseEntity<Notification> createJobSubmittedNotification(
-            @RequestParam Long jobId,
-            @RequestParam Long contractId,
             @RequestParam Long clientId,
+            @RequestParam Long freelancerId,
+            @RequestParam Long jobId,
             @RequestParam String jobTitle,
             @RequestParam String freelancerName) {
         
         Notification notification = notificationService.createJobSubmittedNotification(
-            jobId, contractId, clientId, jobTitle, freelancerName);
+            clientId, freelancerId, jobId, jobTitle, freelancerName);
+        
+        return ResponseEntity.ok(notification);
+    }
+
+    // Additional internal APIs for the 10 required notification types
+    
+    @PostMapping("/internal/invite-sent")
+    public ResponseEntity<Notification> createInviteSentNotification(
+            @RequestParam Long clientId,
+            @RequestParam Long freelancerId,
+            @RequestParam Long jobId,
+            @RequestParam String jobTitle,
+            @RequestParam String freelancerName) {
+        
+        Notification notification = notificationService.createInviteSentNotification(
+            clientId, freelancerId, jobId, jobTitle, freelancerName);
         
         return ResponseEntity.ok(notification);
     }
     
-    @PostMapping("/internal/payment-released")
-    public ResponseEntity<Notification> createPaymentReleasedNotification(
-            @RequestParam Long jobId,
+    @PostMapping("/internal/invite-accepted")
+    public ResponseEntity<Notification> createInviteAcceptedNotification(
+            @RequestParam Long clientId,
             @RequestParam Long freelancerId,
-            @RequestParam Double amount,
-            @RequestParam String currency,
-            @RequestParam String jobTitle) {
+            @RequestParam Long jobId,
+            @RequestParam String jobTitle,
+            @RequestParam String freelancerName) {
         
-        Notification notification = notificationService.createPaymentReleasedNotification(
-            jobId, freelancerId, amount, currency, jobTitle);
+        Notification notification = notificationService.createInviteAcceptedNotification(
+            clientId, freelancerId, jobId, jobTitle, freelancerName);
         
         return ResponseEntity.ok(notification);
     }
+    
+    @PostMapping("/internal/invite-received")
+    public ResponseEntity<Notification> createInviteReceivedNotification(
+            @RequestParam Long freelancerId,
+            @RequestParam Long clientId,
+            @RequestParam Long jobId,
+            @RequestParam String jobTitle,
+            @RequestParam String clientName) {
+        
+        Notification notification = notificationService.createInviteReceivedNotification(
+            freelancerId, clientId, jobId, jobTitle, clientName);
+        
+        return ResponseEntity.ok(notification);
+    }
+    
+    @PostMapping("/internal/escrow-funded")
+    public ResponseEntity<Notification> createEscrowFundedNotification(
+            @RequestParam Long clientId,
+            @RequestParam Long freelancerId,
+            @RequestParam Long jobId,
+            @RequestParam String jobTitle,
+            @RequestParam String freelancerName) {
+        
+        Notification notification = notificationService.createEscrowFundedNotification(
+            clientId, freelancerId, jobId, jobTitle, freelancerName);
+        
+        return ResponseEntity.ok(notification);
+    }
+    
+    @PostMapping("/internal/job-rejected")
+    public ResponseEntity<Notification> createJobRejectedNotification(
+            @RequestParam Long freelancerId,
+            @RequestParam Long clientId,
+            @RequestParam Long jobId,
+            @RequestParam String jobTitle,
+            @RequestParam String clientName,
+            @RequestParam(required = false) String rejectionReason) {
+        
+        Notification notification = notificationService.createJobRejectedNotification(
+            freelancerId, clientId, jobId, jobTitle, clientName, rejectionReason);
+        
+        return ResponseEntity.ok(notification);
+    }
+    
+    @PostMapping("/internal/job-accepted")
+    public ResponseEntity<Notification> createJobAcceptedNotification(
+            @RequestParam Long freelancerId,
+            @RequestParam Long clientId,
+            @RequestParam Long jobId,
+            @RequestParam String jobTitle,
+            @RequestParam String clientName) {
+        
+        Notification notification = notificationService.createJobAcceptedNotification(
+            freelancerId, clientId, jobId, jobTitle, clientName);
+        
+        return ResponseEntity.ok(notification);
+    }
+    
+    @PostMapping("/internal/review-reminder")
+    public ResponseEntity<Notification> createReviewReminderNotification(
+            @RequestParam Long clientId,
+            @RequestParam Long freelancerId,
+            @RequestParam Long jobId,
+            @RequestParam String jobTitle,
+            @RequestParam String freelancerName) {
+        
+        Notification notification = notificationService.createReviewReminderNotification(
+            clientId, freelancerId, jobId, jobTitle, freelancerName);
+        
+        return ResponseEntity.ok(notification);
+    }
+    
+
     
     @PutMapping("/{notificationId}/delivered")
     public ResponseEntity<Void> markAsDelivered(@PathVariable Long notificationId) {

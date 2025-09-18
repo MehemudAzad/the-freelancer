@@ -136,4 +136,23 @@ public class PublicUserController {
         
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Get basic user information by ID (for microservice communication)
+     * Returns only essential user data without profile information
+     */
+    @GetMapping("/{id}/basic")
+    public ResponseEntity<UserResponseDto> getBasicUserById(@PathVariable Long id) {
+        log.debug("Getting basic user info by ID: {}", id);
+        
+        Optional<UserResponseDto> user = userService.getUserById(id);
+        
+        if (user.isPresent()) {
+            log.debug("Successfully found basic user info for ID: {}", id);
+            return ResponseEntity.ok(user.get());
+        } else {
+            log.warn("User not found with ID: {}", id);
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

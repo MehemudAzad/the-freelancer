@@ -75,15 +75,6 @@
 			<scope>runtime</scope>
 		</dependency>
 		<!-- Flyway for database migrations -->
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
-		</dependency>
-		<!-- Flyway support for PostgreSQL -->
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-postgresql</artifactId>
-		</dependency>
 
 		<!-- PostgreSQL JDBC driver -->
 		<dependency>

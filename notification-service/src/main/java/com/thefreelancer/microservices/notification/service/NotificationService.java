@@ -66,36 +66,87 @@ public class NotificationService {
         return notificationRepository.markAllAsReadForUser(recipientId, LocalDateTime.now());
     }
     
-    // Create different types of notifications
-    public Notification createProposalSubmittedNotification(Long jobId, Long clientId, Long freelancerId, 
-                                                           String jobTitle, String freelancerName, 
-                                                           String proposalCover) {
-        // Check for duplicate notification
-        if (isDuplicateNotification(clientId, Notification.NotificationType.PROPOSAL_SUBMITTED, jobId, null, null)) {
-            log.info("Duplicate PROPOSAL_SUBMITTED notification detected for recipient: {}, jobId: {} - skipping", clientId, jobId);
+        // Create different types of notifications based on the 10 specific requirements
+
+    // INVITE NOTIFICATIONS (3 types)
+    
+    // #1: Invite sent -> client notification (inbox only)
+    public Notification createInviteSentNotification(Long clientId, Long freelancerId, Long jobId, 
+                                                    String jobTitle, String freelancerName) {
+        if (isDuplicateNotification(clientId, Notification.NotificationType.INVITE_SENT, jobId, null, null)) {
+            log.info("Duplicate INVITE_SENT notification detected for recipient: {}, jobId: {} - skipping", clientId, jobId);
             return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(clientId, 
-                    Notification.NotificationType.PROPOSAL_SUBMITTED, jobId).stream().findFirst().orElse(null);
+                    Notification.NotificationType.INVITE_SENT, jobId).stream().findFirst().orElse(null);
         }
         
         Notification notification = Notification.builder()
                 .recipientId(clientId)
                 .senderId(freelancerId)
-                .type(Notification.NotificationType.PROPOSAL_SUBMITTED)
-                .title("New Proposal Received")
-                .message(String.format("You received a new proposal from %s for your job '%s'", 
+                .type(Notification.NotificationType.INVITE_SENT)
+                .title("Invite Sent")
+                .message(String.format("You have sent an invite to %s for your job '%s'", 
                         freelancerName, jobTitle))
                 .jobId(jobId)
                 .status(Notification.NotificationStatus.PENDING)
-                .metadata(String.format("{\"proposalCover\":\"%s\"}", proposalCover != null ? proposalCover : ""))
+                .metadata(String.format("{\"freelancerName\":\"%s\"}", freelancerName))
                 .build();
         
         return createAndSendNotification(notification);
     }
     
-    public Notification createProposalAcceptedNotification(Long jobId, Long freelancerId, Long clientId, 
-                                                          String jobTitle, String clientName, 
-                                                          String acceptanceMessage) {
-        // Check for duplicate notification
+    // #2: Invite accepted -> client notification (email)
+    public Notification createInviteAcceptedNotification(Long clientId, Long freelancerId, Long jobId, 
+                                                        String jobTitle, String freelancerName) {
+        if (isDuplicateNotification(clientId, Notification.NotificationType.INVITE_ACCEPTED, jobId, null, null)) {
+            log.info("Duplicate INVITE_ACCEPTED notification detected for recipient: {}, jobId: {} - skipping", clientId, jobId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(clientId, 
+                    Notification.NotificationType.INVITE_ACCEPTED, jobId).stream().findFirst().orElse(null);
+        }
+        
+        Notification notification = Notification.builder()
+                .recipientId(clientId)
+                .senderId(freelancerId)
+                .type(Notification.NotificationType.INVITE_ACCEPTED)
+                .title("Invite Accepted!")
+                .message(String.format("%s has accepted your invite for the job '%s'", 
+                        freelancerName, jobTitle))
+                .jobId(jobId)
+                .status(Notification.NotificationStatus.PENDING)
+                .metadata(String.format("{\"freelancerName\":\"%s\"}", freelancerName))
+                .build();
+        
+        return createAndSendNotification(notification);
+    }
+    
+    // #3: You have an invite -> freelancer notification (email)
+    public Notification createInviteReceivedNotification(Long freelancerId, Long clientId, Long jobId, 
+                                                        String jobTitle, String clientName) {
+        if (isDuplicateNotification(freelancerId, Notification.NotificationType.INVITE_RECEIVED, jobId, null, null)) {
+            log.info("Duplicate INVITE_RECEIVED notification detected for recipient: {}, jobId: {} - skipping", freelancerId, jobId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(freelancerId, 
+                    Notification.NotificationType.INVITE_RECEIVED, jobId).stream().findFirst().orElse(null);
+        }
+        
+        Notification notification = Notification.builder()
+                .recipientId(freelancerId)
+                .senderId(clientId)
+                .type(Notification.NotificationType.INVITE_RECEIVED)
+                .title("You Have an Invite!")
+                .message(String.format("%s has invited you to work on '%s'", 
+                        clientName, jobTitle))
+                .jobId(jobId)
+                .status(Notification.NotificationStatus.PENDING)
+                .metadata(String.format("{\"clientName\":\"%s\"}", clientName))
+                .build();
+        
+        return createAndSendNotification(notification);
+    }
+
+    // PROPOSAL NOTIFICATIONS (3 types)
+    
+    // #4: Proposal accepted -> freelancer notification (email)
+    public Notification createProposalAcceptedNotification(Long freelancerId, Long clientId, Long jobId, 
+                                                          String jobTitle, String clientName) {
         if (isDuplicateNotification(freelancerId, Notification.NotificationType.PROPOSAL_ACCEPTED, jobId, null, null)) {
             log.info("Duplicate PROPOSAL_ACCEPTED notification detected for recipient: {}, jobId: {} - skipping", freelancerId, jobId);
             return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(freelancerId, 
@@ -111,185 +162,140 @@ public class NotificationService {
                         clientName, jobTitle))
                 .jobId(jobId)
                 .status(Notification.NotificationStatus.PENDING)
-                .metadata(String.format("{\"acceptanceMessage\":\"%s\"}", acceptanceMessage != null ? acceptanceMessage : ""))
+                .metadata(String.format("{\"clientName\":\"%s\"}", clientName))
                 .build();
         
         return createAndSendNotification(notification);
     }
     
-    public Notification createProposalRejectedNotification(Long jobId, Long freelancerId, Long clientId, 
-                                                          String jobTitle, String clientName, 
-                                                          String rejectionMessage) {
+    // #5: Freelancer submitted proposal -> client notification (inbox only)
+    public Notification createProposalSubmittedNotification(Long clientId, Long freelancerId, Long jobId, 
+                                                           String jobTitle, String freelancerName) {
+        if (isDuplicateNotification(clientId, Notification.NotificationType.PROPOSAL_SUBMITTED, jobId, null, null)) {
+            log.info("Duplicate PROPOSAL_SUBMITTED notification detected for recipient: {}, jobId: {} - skipping", clientId, jobId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(clientId, 
+                    Notification.NotificationType.PROPOSAL_SUBMITTED, jobId).stream().findFirst().orElse(null);
+        }
+        
+        Notification notification = Notification.builder()
+                .recipientId(clientId)
+                .senderId(freelancerId)
+                .type(Notification.NotificationType.PROPOSAL_SUBMITTED)
+                .title("New Proposal Received")
+                .message(String.format("A freelancer has submitted a proposal on your job '%s'", jobTitle))
+                .jobId(jobId)
+                .status(Notification.NotificationStatus.PENDING)
+                .metadata(String.format("{\"freelancerName\":\"%s\"}", freelancerName))
+                .build();
+        
+        return createAndSendNotification(notification);
+    }
+    
+    // #6: Payment escrow funded after proposal accepted -> client notification (email)
+    public Notification createEscrowFundedNotification(Long clientId, Long freelancerId, Long jobId, 
+                                                      String jobTitle, String freelancerName) {
+        if (isDuplicateNotification(clientId, Notification.NotificationType.ESCROW_FUNDED, jobId, null, null)) {
+            log.info("Duplicate ESCROW_FUNDED notification detected for recipient: {}, jobId: {} - skipping", clientId, jobId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(clientId, 
+                    Notification.NotificationType.ESCROW_FUNDED, jobId).stream().findFirst().orElse(null);
+        }
+        
+        Notification notification = Notification.builder()
+                .recipientId(clientId)
+                .senderId(freelancerId)
+                .type(Notification.NotificationType.ESCROW_FUNDED)
+                .title("Payment Escrow Created")
+                .message(String.format("You have accepted the proposal and payment escrow has been made for '%s'", jobTitle))
+                .jobId(jobId)
+                .status(Notification.NotificationStatus.PENDING)
+                .metadata(String.format("{\"freelancerName\":\"%s\"}", freelancerName))
+                .build();
+        
+        return createAndSendNotification(notification);
+    }
+
+    // JOB SUBMISSION NOTIFICATIONS (4 types)
+    
+    // #7: Job submitted -> client notification (email)
+    public Notification createJobSubmittedNotification(Long clientId, Long freelancerId, Long jobId, 
+                                                      String jobTitle, String freelancerName) {
+        if (isDuplicateNotification(clientId, Notification.NotificationType.JOB_SUBMITTED, jobId, null, null)) {
+            log.info("Duplicate JOB_SUBMITTED notification detected for recipient: {}, jobId: {} - skipping", clientId, jobId);
+            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(clientId, 
+                    Notification.NotificationType.JOB_SUBMITTED, jobId).stream().findFirst().orElse(null);
+        }
+        
+        Notification notification = Notification.builder()
+                .recipientId(clientId)
+                .senderId(freelancerId)
+                .type(Notification.NotificationType.JOB_SUBMITTED)
+                .title("Job Submitted for Review")
+                .message(String.format("Freelancer for '%s' has submitted the work, please review", jobTitle))
+                .jobId(jobId)
+                .status(Notification.NotificationStatus.PENDING)
+                .metadata(String.format("{\"freelancerName\":\"%s\"}", freelancerName))
+                .build();
+        
+        return createAndSendNotification(notification);
+    }
+    
+    // #8: Job rejected/revision -> freelancer notification (inbox only)
+    public Notification createJobRejectedNotification(Long freelancerId, Long clientId, Long jobId, 
+                                                     String jobTitle, String clientName, String rejectionReason) {
+        // Allow multiple rejections/revisions so no duplicate check
+        
         Notification notification = Notification.builder()
                 .recipientId(freelancerId)
                 .senderId(clientId)
-                .type(Notification.NotificationType.PROPOSAL_REJECTED)
-                .title("Proposal Update")
-                .message(String.format("Your proposal for '%s' was not selected this time", jobTitle))
+                .type(Notification.NotificationType.JOB_REJECTED)
+                .title("Job Revision Requested")
+                .message(String.format("Client has requested revisions for your job submission '%s'", jobTitle))
                 .jobId(jobId)
                 .status(Notification.NotificationStatus.PENDING)
-                .metadata(String.format("{\"rejectionMessage\":\"%s\"}", rejectionMessage != null ? rejectionMessage : ""))
+                .metadata(String.format("{\"clientName\":\"%s\",\"rejectionReason\":\"%s\"}", 
+                        clientName, rejectionReason != null ? rejectionReason : ""))
                 .build();
         
         return createAndSendNotification(notification);
     }
     
-    public Notification createContractCreatedNotification(Long contractId, Long jobId, Long clientId, 
-                                                         Long freelancerId, String jobTitle) {
-        // Check for duplicate notifications
-        boolean clientNotificationExists = isDuplicateNotification(clientId, Notification.NotificationType.CONTRACT_CREATED, jobId, null, contractId);
-        boolean freelancerNotificationExists = isDuplicateNotification(freelancerId, Notification.NotificationType.CONTRACT_CREATED, jobId, null, contractId);
-        
-        if (clientNotificationExists && freelancerNotificationExists) {
-            log.info("Duplicate CONTRACT_CREATED notifications detected for contractId: {} - skipping both", contractId);
+    // #9: Job accepted -> freelancer notification (email)
+    public Notification createJobAcceptedNotification(Long freelancerId, Long clientId, Long jobId, 
+                                                     String jobTitle, String clientName) {
+        if (isDuplicateNotification(freelancerId, Notification.NotificationType.JOB_ACCEPTED, jobId, null, null)) {
+            log.info("Duplicate JOB_ACCEPTED notification detected for recipient: {}, jobId: {} - skipping", freelancerId, jobId);
             return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(freelancerId, 
-                    Notification.NotificationType.CONTRACT_CREATED, jobId).stream().findFirst().orElse(null);
+                    Notification.NotificationType.JOB_ACCEPTED, jobId).stream().findFirst().orElse(null);
         }
         
-        // Create client notification only if it doesn't exist
-        if (!clientNotificationExists) {
-            Notification clientNotification = Notification.builder()
-                    .recipientId(clientId)
-                    .senderId(freelancerId)
-                    .type(Notification.NotificationType.CONTRACT_CREATED)
-                    .title("Contract Created")
-                    .message(String.format("Contract has been created for job '%s'. Project can now begin!", jobTitle))
-                    .jobId(jobId)
-                    .contractId(contractId)
-                    .status(Notification.NotificationStatus.PENDING)
-                    .build();
-            createAndSendNotification(clientNotification);
-        } else {
-            log.info("Skipping duplicate CONTRACT_CREATED notification for client: {}, contractId: {}", clientId, contractId);
-        }
+        Notification notification = Notification.builder()
+                .recipientId(freelancerId)
+                .senderId(clientId)
+                .type(Notification.NotificationType.JOB_ACCEPTED)
+                .title("Job Accepted - Payment Transferred!")
+                .message(String.format("Client has accepted your submission for '%s'. Payment has been transferred!", jobTitle))
+                .jobId(jobId)
+                .status(Notification.NotificationStatus.PENDING)
+                .metadata(String.format("{\"clientName\":\"%s\"}", clientName))
+                .build();
         
-        // Create freelancer notification only if it doesn't exist
-        if (!freelancerNotificationExists) {
-            Notification freelancerNotification = Notification.builder()
-                    .recipientId(freelancerId)
-                    .senderId(clientId)
-                    .type(Notification.NotificationType.CONTRACT_CREATED)
-                    .title("Contract Created")
-                    .message(String.format("Contract has been created for job '%s'. You can start working!", jobTitle))
-                    .jobId(jobId)
-                    .contractId(contractId)
-                    .status(Notification.NotificationStatus.PENDING)
-                    .build();
-            return createAndSendNotification(freelancerNotification);
-        } else {
-            log.info("Skipping duplicate CONTRACT_CREATED notification for freelancer: {}, contractId: {}", freelancerId, contractId);
-            return notificationRepository.findByRecipientIdAndTypeAndJobIdOrderByCreatedAtDesc(freelancerId, 
-                    Notification.NotificationType.CONTRACT_CREATED, jobId).stream().findFirst().orElse(null);
-        }
+        return createAndSendNotification(notification);
     }
     
-    public Notification createJobSubmittedNotification(Long jobId, Long contractId, Long clientId, 
-                                                      String jobTitle, String freelancerName) {
+    // #10: Review reminder -> client notification (email)
+    public Notification createReviewReminderNotification(Long clientId, Long freelancerId, Long jobId, 
+                                                        String jobTitle, String freelancerName) {
+        // Allow multiple reminders so no duplicate check for this specific case
+        
         Notification notification = Notification.builder()
                 .recipientId(clientId)
-                .senderId(null) // System notification
-                .type(Notification.NotificationType.JOB_SUBMITTED)
-                .title("Job Submitted")
-                .message(String.format("%s has submitted the job '%s' for your review", 
-                        freelancerName, jobTitle))
-                .jobId(jobId)
-                .contractId(contractId)
-                .status(Notification.NotificationStatus.PENDING)
-                .build();
-        
-        return createAndSendNotification(notification);
-    }
-    
-    public Notification createJobAcceptedNotification(Long jobId, Long contractId, Long freelancerId,
-                                                     String jobTitle, String clientName) {
-        Notification notification = Notification.builder()
-                .recipientId(freelancerId)
-                .senderId(null)
-                .type(Notification.NotificationType.JOB_ACCEPTED)
-                .title("Job Accepted")
-                .message(String.format("%s has accepted your job submission for '%s'. Payment will be processed.", 
-                        clientName, jobTitle))
-                .jobId(jobId)
-                .contractId(contractId)
-                .status(Notification.NotificationStatus.PENDING)
-                .build();
-        
-        return createAndSendNotification(notification);
-    }
-    
-    public Notification createJobRejectedNotification(Long jobId, Long contractId, Long freelancerId,
-                                                     String jobTitle, String clientName, String feedback) {
-        Notification notification = Notification.builder()
-                .recipientId(freelancerId)
-                .senderId(null)
-                .type(Notification.NotificationType.JOB_REJECTED)
-                .title("Job Needs Revision")
-                .message(String.format("%s has requested revisions for job '%s'", 
-                        clientName, jobTitle))
-                .jobId(jobId)
-                .contractId(contractId)
-                .metadata(String.format("{\"feedback\": \"%s\"}", feedback != null ? feedback.replace("\"", "\\\"") : ""))
-                .status(Notification.NotificationStatus.PENDING)
-                .build();
-        
-        return createAndSendNotification(notification);
-    }
-    
-    public Notification createPaymentReleasedNotification(Long jobId, Long freelancerId, 
-                                                         Double amount, String currency, String jobTitle) {
-        Notification notification = Notification.builder()
-                .recipientId(freelancerId)
-                .senderId(null) // System notification
-                .type(Notification.NotificationType.PAYMENT_RECEIVED)
-                .title("Payment Received")
-                .message(String.format("You have received a payment of %.2f %s for completed job '%s'", 
-                        amount, currency, jobTitle))
+                .senderId(freelancerId)
+                .type(Notification.NotificationType.REVIEW_REMINDER)
+                .title("Please Review the Freelancer")
+                .message(String.format("After job submission you have accepted for '%s', please go and review the freelancer", jobTitle))
                 .jobId(jobId)
                 .status(Notification.NotificationStatus.PENDING)
-                .metadata(String.format("{\"amount\":%.2f,\"currency\":\"%s\"}", amount, currency))
-                .build();
-        
-        return createAndSendNotification(notification);
-    }
-    
-        public Notification createJobPostedNotification(Long jobId, String jobTitle, String clientName, 
-                                                       String jobDescription, String[] requiredSkills, 
-                                                       String budgetRange, String category) {
-            // Create a system notification about the new job
-            Notification notification = Notification.builder()
-                    .recipientId(null) // System notification - will be used for matching
-                    .senderId(null)
-                    .type(Notification.NotificationType.JOB_POSTED)
-                    .title("New Job Posted")
-                    .message(String.format("New job '%s' posted by %s. Budget: %s", 
-                            jobTitle, clientName, budgetRange != null ? budgetRange : "Not specified"))
-                    .jobId(jobId)
-                    .status(Notification.NotificationStatus.PENDING)
-                    .metadata(String.format("{\"jobTitle\":\"%s\",\"clientName\":\"%s\",\"category\":\"%s\",\"skills\":[%s]}", 
-                            jobTitle.replace("\"", "\\\""), 
-                            clientName.replace("\"", "\\\""),
-                            category != null ? category.replace("\"", "\\\"") : "",
-                            requiredSkills != null ? "\"" + String.join("\",\"", requiredSkills) + "\"" : ""))
-                    .build();
-        
-            return createAndSendNotification(notification);
-        }
-    
-        // Overloaded method for backward compatibility
-        public Notification createJobPostedNotification(Long jobId, String jobTitle, String clientName) {
-            return createJobPostedNotification(jobId, jobTitle, clientName, null, null, null, null);
-        }
-    
-    public Notification createMessageReceivedNotification(Long recipientId, Long senderId, String senderName,
-                                                         Long roomId, String messagePreview) {
-        Notification notification = Notification.builder()
-                .recipientId(recipientId)
-                .senderId(senderId)
-                .type(Notification.NotificationType.MESSAGE_RECEIVED)
-                .title("New Message")
-                .message(String.format("New message from %s: %s", senderName, messagePreview))
-                .status(Notification.NotificationStatus.PENDING)
-                .metadata(String.format("{\"roomId\":%d}", roomId))
+                .metadata(String.format("{\"freelancerName\":\"%s\"}", freelancerName))
                 .build();
         
         return createAndSendNotification(notification);

@@ -79,31 +79,21 @@ public class Notification {
     private Integer retryCount = 0;
 
     public enum NotificationType {
-        // Job & Proposal Related
-        PROPOSAL_SUBMITTED,
-        PROPOSAL_ACCEPTED, 
-        PROPOSAL_REJECTED,
-        JOB_POSTED,
-        JOB_SUBMITTED,
-        JOB_ACCEPTED,
-        JOB_REJECTED,
-        JOB_UPDATED,
-        JOB_CLOSED,
+        // Invite Related (3 types)
+        INVITE_SENT,              // #1: Client sent invite - client notification
+        INVITE_ACCEPTED,          // #2: Freelancer accepted invite - client notification (email)
+        INVITE_RECEIVED,          // #3: Freelancer received invite - freelancer notification (email)
         
-        // Contract Related
-        CONTRACT_CREATED,
+        // Proposal Related (3 types)
+        PROPOSAL_SUBMITTED,       // #5: Freelancer submitted proposal - client notification (inbox only)
+        PROPOSAL_ACCEPTED,        // #4: Client accepted proposal - freelancer notification (email)
+        ESCROW_FUNDED,           // #6: Payment escrow made after proposal accepted - client notification (email)
         
-        // Payment Related
-        PAYMENT_RECEIVED,
-        PAYMENT_SENT,
-        ESCROW_FUNDED,
-        ESCROW_RELEASED,
-        
-        // General
-        SYSTEM_ANNOUNCEMENT,
-        PROFILE_UPDATE_REQUIRED,
-        REVIEW_RECEIVED,
-        MESSAGE_RECEIVED
+        // Job Submission Related (4 types)
+        JOB_SUBMITTED,           // #7: Freelancer submitted job - client notification (email)
+        JOB_REJECTED,            // #8: Client rejected job submission - freelancer notification (inbox only)
+        JOB_ACCEPTED,            // #9: Client accepted job submission - freelancer notification (email)
+        REVIEW_REMINDER          // #10: Remind client to review freelancer - client notification (email)
     }
 
     public enum NotificationStatus {

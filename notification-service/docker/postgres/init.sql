@@ -13,14 +13,16 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create enum types
 DO $$ BEGIN
     CREATE TYPE notification_type AS ENUM (
+        'INVITE_SENT',
+        'INVITE_ACCEPTED',
+        'INVITE_RECEIVED',
         'PROPOSAL_SUBMITTED',
-        'PROPOSAL_ACCEPTED', 
-        'PROPOSAL_REJECTED',
-        'JOB_POSTED',
-        'CONTRACT_CREATED',
-        'MILESTONE_COMPLETED',
-        'PAYMENT_RELEASED',
-        'SYSTEM_ANNOUNCEMENT'
+        'PROPOSAL_ACCEPTED',
+        'ESCROW_FUNDED',
+        'JOB_SUBMITTED',
+        'JOB_REJECTED',
+        'JOB_ACCEPTED',
+        'REVIEW_REMINDER'
     );
 EXCEPTION
     WHEN duplicate_object THEN null;
@@ -54,20 +56,20 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_at TIMESTAMP,
     delivered_at TIMESTAMP,
-    retry_count INTEGER DEFAULT 0,
-    
-    -- Indexes for better performance
-    INDEX idx_notifications_recipient_id (recipient_id),
-    INDEX idx_notifications_sender_id (sender_id),
-    INDEX idx_notifications_type (type),
-    INDEX idx_notifications_job_id (job_id),
-    INDEX idx_notifications_status (status),
-    INDEX idx_notifications_is_read (is_read),
-    INDEX idx_notifications_created_at (created_at),
-    INDEX idx_notifications_reference (reference_id, reference_type)
+    retry_count INTEGER DEFAULT 0
 );
 
--- Create indexes separately (for compatibility)
+-- Create indexes separately for better performance
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient_id ON notifications(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_sender_id ON notifications(sender_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_job_id ON notifications(job_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_reference ON notifications(reference_id, reference_type);
+
+-- Create composite indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient_created ON notifications(recipient_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient_unread ON notifications(recipient_id, is_read) WHERE is_read = FALSE;
 CREATE INDEX IF NOT EXISTS idx_notifications_status_retry ON notifications(status, retry_count) WHERE status = 'FAILED';
@@ -77,7 +79,7 @@ INSERT INTO notifications (recipient_id, sender_id, type, title, message, job_id
 VALUES 
     (1, 2, 'PROPOSAL_SUBMITTED', 'New Proposal Received', 'John Doe has submitted a proposal for your job "Website Development"', 1, 'DELIVERED', FALSE),
     (2, 1, 'PROPOSAL_ACCEPTED', 'Proposal Accepted!', 'Congratulations! Jane Smith has accepted your proposal for "Mobile App Design"', 2, 'DELIVERED', FALSE),
-    (3, NULL, 'SYSTEM_ANNOUNCEMENT', 'Welcome to FreelancerHub', 'Thank you for joining our platform! Start exploring opportunities.', NULL, 'DELIVERED', TRUE)
+    (1, NULL, 'REVIEW_REMINDER', 'Please Review Freelancer', 'Your project has been completed. Please review the freelancer to help our community.', 2, 'DELIVERED', TRUE)
 ON CONFLICT DO NOTHING;
 
 -- Grant permissions to the notification user

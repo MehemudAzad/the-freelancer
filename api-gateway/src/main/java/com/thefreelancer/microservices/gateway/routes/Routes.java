@@ -50,6 +50,7 @@ public class Routes {
 				.route(RequestPredicates.path("/api/jobs/**"), this::forwardToJobProposalService)
 				.route(RequestPredicates.path("/api/proposals/**"), this::forwardToJobProposalService)
 				.route(RequestPredicates.path("/api/contracts/**"), this::forwardToJobProposalService)
+				.route(RequestPredicates.path("/api/invites/**"), this::forwardToJobProposalService)
 				.build();
 			}
 
