@@ -21,7 +21,7 @@ public class AuthServiceClient {
         try {
             return authServiceWebClient
                     .get()
-                    .uri("/api/auth/users/{userId}", userId)
+                    .uri("/api/auth/public/users/{userId}", userId)
                     .retrieve()
                     .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
                             response -> {

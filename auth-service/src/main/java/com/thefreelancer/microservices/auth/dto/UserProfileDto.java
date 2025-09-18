@@ -16,6 +16,7 @@ public class UserProfileDto {
     private String name;
     private String role;
     private Boolean isActive;
+    private String stripeAccountId;
     private LocalDateTime createdAt;
     
     // Profile data from Gig Service (nullable if no profile exists)

@@ -22,6 +22,7 @@ public class UserWithProfileResponseDto {
     private String country;
     private String timezone;
     private Boolean isActive;
+    private String stripeAccountId;
     private String kycStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -57,6 +58,8 @@ public class UserWithProfileResponseDto {
         dto.setRole(user.getRole().name());
         dto.setCountry(user.getCountry());
         dto.setTimezone(user.getTimezone());
+        dto.setIsActive(user.isActive());
+        dto.setStripeAccountId(user.getStripeAccountId());
         dto.setKycStatus(user.getKycStatus() != null ? user.getKycStatus().name() : null);
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());

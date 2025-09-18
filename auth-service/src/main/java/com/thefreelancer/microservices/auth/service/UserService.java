@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.thefreelancer.microservices.auth.client.GigServiceClient;
 import com.thefreelancer.microservices.auth.dto.ProfileResponseDto;
 import com.thefreelancer.microservices.auth.dto.RegisterRequestDto;
+import com.thefreelancer.microservices.auth.dto.StripeAccountStatusDto;
 import com.thefreelancer.microservices.auth.dto.UserResponseDto;
 import com.thefreelancer.microservices.auth.dto.UserWithProfileResponseDto;
 import com.thefreelancer.microservices.auth.event.UserCreatedEvent;
@@ -177,5 +178,47 @@ public class UserService {
         
         log.info("Successfully updated stripe account ID for user: {}", email);
         return true;
+    }
+    
+    /**
+     * Check if user has registered a Stripe account
+     */
+    public boolean hasStripeAccount(Long userId) {
+        log.info("Checking if user {} has Stripe account", userId);
+        
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            log.warn("User not found with ID: {}", userId);
+            return false;
+        }
+        
+        User user = userOpt.get();
+        boolean hasStripeAccount = user.getStripeAccountId() != null && !user.getStripeAccountId().trim().isEmpty();
+        
+        log.info("User {} {} Stripe account", userId, hasStripeAccount ? "has" : "does not have");
+        return hasStripeAccount;
+    }
+    
+    /**
+     * Get user's Stripe account status with details
+     */
+    public Optional<StripeAccountStatusDto> getStripeAccountStatus(Long userId) {
+        log.info("Getting Stripe account status for user: {}", userId);
+        
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            log.warn("User not found with ID: {}", userId);
+            return Optional.empty();
+        }
+        
+        User user = userOpt.get();
+        boolean hasStripeAccount = user.getStripeAccountId() != null && !user.getStripeAccountId().trim().isEmpty();
+        
+        StripeAccountStatusDto status = hasStripeAccount
+                ? StripeAccountStatusDto.registered(userId, user.getStripeAccountId())
+                : StripeAccountStatusDto.notRegistered(userId);
+        
+        log.info("User {} {} Stripe account", userId, hasStripeAccount ? "has" : "does not have");
+        return Optional.of(status);
     }
 }

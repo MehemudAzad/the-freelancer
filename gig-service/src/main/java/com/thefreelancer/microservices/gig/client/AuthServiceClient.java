@@ -40,7 +40,7 @@ public class AuthServiceClient {
         try {
             return getWebClient()
                     .get()
-                    .uri("/api/auth/users/{id}", userId)
+                    .uri("/api/auth/public/users/{id}", userId)
                     .retrieve()
                     .bodyToMono(UserResponseDto.class)
                     .timeout(Duration.ofSeconds(10))

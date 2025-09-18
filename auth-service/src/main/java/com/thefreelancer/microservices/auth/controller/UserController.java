@@ -109,6 +109,7 @@ public class UserController {
             .name(user.getName())
             .role(user.getRole().name())
             .isActive(user.isActive())
+            .stripeAccountId(user.getStripeAccountId())
             .createdAt(user.getCreatedAt());
         
         // Add profile data if available
@@ -147,6 +148,30 @@ public class UserController {
         log.info("Successfully retrieved user profile for user: {}", userId);
         
         return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/stripe-status")
+    public ResponseEntity<?> getStripeAccountStatus(HttpServletRequest request) {
+        log.info("Getting Stripe account status for current user");
+        
+        Long userId = extractUserIdFromRequest(request);
+        if (userId == null) {
+            log.warn("Could not extract user ID from request");
+            return ResponseEntity.status(401).body("Unauthorized: Invalid or missing authentication");
+        }
+        
+        log.debug("Checking Stripe account status for user: {}", userId);
+        
+        Optional<com.thefreelancer.microservices.auth.dto.StripeAccountStatusDto> statusOpt = userService.getStripeAccountStatus(userId);
+        if (statusOpt.isEmpty()) {
+            log.warn("User not found: {}", userId);
+            return ResponseEntity.notFound().build();
+        }
+        
+        com.thefreelancer.microservices.auth.dto.StripeAccountStatusDto status = statusOpt.get();
+        log.info("Retrieved Stripe account status for user {}: hasAccount={}", userId, status.isHasStripeAccount());
+        
+        return ResponseEntity.ok(status);
     }
     
     private Long extractUserIdFromRequest(HttpServletRequest request) {

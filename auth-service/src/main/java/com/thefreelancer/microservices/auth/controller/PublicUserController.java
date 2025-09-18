@@ -89,6 +89,8 @@ public class PublicUserController {
                 .name(user.getName())
                 .role(user.getRole().toString())
                 .isActive(user.isActive())
+                .stripeAccountId(user.getStripeAccountId())
+                .isActive(user.isActive())
                 .createdAt(user.getCreatedAt());
 
         // Try to get profile data from gig service
