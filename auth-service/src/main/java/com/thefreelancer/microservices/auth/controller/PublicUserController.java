@@ -4,6 +4,7 @@ import com.thefreelancer.microservices.auth.client.GigServiceClient;
 import com.thefreelancer.microservices.auth.dto.ProfileResponseDto;
 import com.thefreelancer.microservices.auth.dto.UserProfileDto;
 import com.thefreelancer.microservices.auth.dto.UserResponseDto;
+import com.thefreelancer.microservices.auth.dto.UserWithProfileResponseDto;
 import com.thefreelancer.microservices.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +58,12 @@ public class PublicUserController {
         return ResponseEntity.ok(results);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<UserWithProfileResponseDto> getUserById(@PathVariable Long id) {
+        Optional<UserWithProfileResponseDto> user = userService.getUserWithProfileById(id);
+        return user.map(u -> ResponseEntity.ok(u))
+                   .orElse(ResponseEntity.notFound().build());
+    }
     /**
      * Get full user profile by username (public endpoint)
      * Similar to /me/profile but accessible by username without authentication

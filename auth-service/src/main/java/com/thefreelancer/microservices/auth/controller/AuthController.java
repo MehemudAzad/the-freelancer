@@ -97,12 +97,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/users/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
-        Optional<UserResponseDto> user = userService.getUserById(id);
-        return user.map(u -> ResponseEntity.ok(u))
-                   .orElse(ResponseEntity.notFound().build());
-    }
+    
 
     @GetMapping("/users/email/{email}")
     public ResponseEntity<UserResponseDto> getUserByEmail(@PathVariable String email) {

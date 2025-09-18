@@ -11,8 +11,11 @@ import java.util.stream.Collectors;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.thefreelancer.microservices.auth.client.GigServiceClient;
+import com.thefreelancer.microservices.auth.dto.ProfileResponseDto;
 import com.thefreelancer.microservices.auth.dto.RegisterRequestDto;
 import com.thefreelancer.microservices.auth.dto.UserResponseDto;
+import com.thefreelancer.microservices.auth.dto.UserWithProfileResponseDto;
 import com.thefreelancer.microservices.auth.event.UserCreatedEvent;
 import com.thefreelancer.microservices.auth.model.User;
 import com.thefreelancer.microservices.auth.repository.UserRepository;
@@ -30,6 +33,7 @@ public class UserService {
     // inside event publisher we have kafkaTemplate
     // private final KafkaTemplate<String, UserCreatedEvent> kafkaTemplate;
     private final EventPublisher eventPublisher;
+    private final GigServiceClient gigServiceClient;
 
     @Transactional
     public UserResponseDto createUser(RegisterRequestDto registerRequest) {
@@ -129,5 +133,28 @@ public class UserService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    /**
+     * Get user with profile information from the gig service.
+     */
+    public Optional<UserWithProfileResponseDto> getUserWithProfileById(Long id) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        User user = userOpt.get();
+        
+        // Try to get profile from gig service
+        Optional<ProfileResponseDto> profileOpt = gigServiceClient.getProfileByUserId(id);
+        
+        // Create combined DTO
+        UserWithProfileResponseDto userWithProfile = UserWithProfileResponseDto.fromUserAndProfile(
+            user, 
+            profileOpt.orElse(null)
+        );
+        
+        return Optional.of(userWithProfile);
     }
 }
