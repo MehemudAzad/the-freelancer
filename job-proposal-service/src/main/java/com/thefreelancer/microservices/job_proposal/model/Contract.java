@@ -57,6 +57,31 @@ public class Contract {
     @Column(name = "terms_json", columnDefinition = "TEXT")
     private String termsJson;
 
+    // Job submission tracking fields
+    @Column(name = "submission_description", columnDefinition = "TEXT")
+    private String submissionDescription;
+
+    @Column(name = "submission_notes", columnDefinition = "TEXT")
+    private String submissionNotes;
+
+    @Column(name = "deliverable_urls", columnDefinition = "TEXT")
+    private String deliverableUrls; // JSON array of URLs
+
+    @Column(name = "submitted_at")
+    private LocalDateTime submittedAt;
+
+    @Column(name = "accepted_at")
+    private LocalDateTime acceptedAt;
+
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    @Column(name = "rejection_feedback", columnDefinition = "TEXT")
+    private String rejectionFeedback;
+
     @OneToMany(mappedBy = "contract", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ContractMilestone> milestones;
 

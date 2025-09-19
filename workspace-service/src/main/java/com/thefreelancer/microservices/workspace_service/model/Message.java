@@ -24,6 +24,10 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room; // JPA relationship for @OneToMany mapping
+
     @Column(name = "room_id", insertable = false, updatable = false)
     private Long roomId; // For easier queries
 

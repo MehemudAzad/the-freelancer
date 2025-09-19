@@ -185,7 +185,7 @@ public class ContractController {
     @PostMapping("/{contractId}/submit")
     public ResponseEntity<ContractResponseDto> submitJob(
             @Parameter(description = "Contract ID") @PathVariable Long contractId,
-            @Valid @RequestBody MilestoneSubmissionDto submissionDto,
+            @Valid @RequestBody JobSubmissionDto submissionDto,
             @Parameter(hidden = true) @RequestHeader("X-User-ID") String userId) {
         
         log.info("Submitting job for contract {} by user {}", contractId, userId);
@@ -240,7 +240,7 @@ public class ContractController {
     @PostMapping("/{contractId}/reject")
     public ResponseEntity<ContractResponseDto> rejectJob(
             @Parameter(description = "Contract ID") @PathVariable Long contractId,
-            @Valid @RequestBody MilestoneRejectionDto rejectionDto,
+            @Valid @RequestBody JobRejectionDto rejectionDto,
             @Parameter(hidden = true) @RequestHeader("X-User-ID") String userId) {
         
         log.info("Rejecting job for contract {} by user {}", contractId, userId);

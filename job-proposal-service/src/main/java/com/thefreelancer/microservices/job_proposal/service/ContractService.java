@@ -587,4 +587,194 @@ public class ContractService {
         log.debug("Client {} has completed contracts with freelancer {}: {}", clientId, freelancerId, hasCompleted);
         return hasCompleted;
     }
+
+    /**
+     * Submit job work - Freelancer submits completed work for client review
+     */
+    @Transactional
+    public ContractResponseDto submitJob(Long contractId, JobSubmissionDto submissionDto, String userId) {
+        log.info("Submitting job for contract: {} by user: {}", contractId, userId);
+        
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + contractId));
+        
+        Long userIdLong = Long.parseLong(userId);
+        
+        // Verify user is the freelancer
+        if (!contract.getFreelancerId().equals(userIdLong)) {
+            throw new IllegalArgumentException("Only the freelancer can submit job work");
+        }
+        
+        // Verify contract is in ACTIVE status
+        if (contract.getStatus() != Contract.ContractStatus.ACTIVE) {
+            throw new IllegalStateException("Contract must be ACTIVE to submit work. Current status: " + contract.getStatus());
+        }
+        
+        // Update contract with submission details
+        contract.setSubmissionDescription(submissionDto.getDescription());
+        contract.setSubmissionNotes(submissionDto.getNotes());
+        
+        // Store deliverable URLs as JSON
+        if (submissionDto.getDeliverableUrls() != null && !submissionDto.getDeliverableUrls().isEmpty()) {
+            try {
+                contract.setDeliverableUrls(objectMapper.writeValueAsString(submissionDto.getDeliverableUrls()));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to serialize deliverable URLs", e);
+            }
+        }
+        
+        // Change status to PENDING_REVIEW (we need to add this status)
+        contract.setStatus(Contract.ContractStatus.PAUSED); // Using PAUSED temporarily until we add PENDING_REVIEW
+        contract.setSubmittedAt(java.time.LocalDateTime.now());
+        
+        Contract savedContract = contractRepository.save(contract);
+        
+        // Publish job submitted event for notifications
+        publishJobSubmittedEvent(savedContract);
+        
+        return convertToResponseDto(savedContract, true);
+    }
+
+    /**
+     * Accept job submission - Client accepts submitted work and marks contract as completed
+     */
+    @Transactional
+    public ContractResponseDto acceptJob(Long contractId, String userId) {
+        log.info("Accepting job for contract: {} by user: {}", contractId, userId);
+        
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + contractId));
+        
+        Long userIdLong = Long.parseLong(userId);
+        
+        // Verify user is the client
+        if (!contract.getClientId().equals(userIdLong)) {
+            throw new IllegalArgumentException("Only the client can accept job work");
+        }
+        
+        // Verify contract is in submitted state (PAUSED for now)
+        if (contract.getStatus() != Contract.ContractStatus.PAUSED) {
+            throw new IllegalStateException("Contract must be in submitted state to accept. Current status: " + contract.getStatus());
+        }
+        
+        // Verify work has been submitted
+        if (contract.getSubmittedAt() == null) {
+            throw new IllegalStateException("No work has been submitted for this contract");
+        }
+        
+        // Mark contract as completed
+        contract.setStatus(Contract.ContractStatus.COMPLETED);
+        contract.setAcceptedAt(java.time.LocalDateTime.now());
+        
+        Contract savedContract = contractRepository.save(contract);
+        
+        // Publish job accepted event for notifications
+        publishJobAcceptedEvent(savedContract);
+        
+        return convertToResponseDto(savedContract, true);
+    }
+
+    /**
+     * Reject job submission - Client rejects submitted work with feedback
+     */
+    @Transactional
+    public ContractResponseDto rejectJob(Long contractId, JobRejectionDto rejectionDto, String userId) {
+        log.info("Rejecting job for contract: {} by user: {}", contractId, userId);
+        
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + contractId));
+        
+        Long userIdLong = Long.parseLong(userId);
+        
+        // Verify user is the client
+        if (!contract.getClientId().equals(userIdLong)) {
+            throw new IllegalArgumentException("Only the client can reject job work");
+        }
+        
+        // Verify contract is in submitted state (PAUSED for now)
+        if (contract.getStatus() != Contract.ContractStatus.PAUSED) {
+            throw new IllegalStateException("Contract must be in submitted state to reject. Current status: " + contract.getStatus());
+        }
+        
+        // Verify work has been submitted
+        if (contract.getSubmittedAt() == null) {
+            throw new IllegalStateException("No work has been submitted for this contract");
+        }
+        
+        // Store rejection details
+        contract.setRejectionReason(rejectionDto.getReason());
+        contract.setRejectionFeedback(rejectionDto.getFeedback());
+        contract.setRejectedAt(java.time.LocalDateTime.now());
+        
+        // Clear submission timestamp to allow resubmission
+        contract.setSubmittedAt(null);
+        
+        // Set status based on rejection type
+        if (rejectionDto.isPauseContract()) {
+            contract.setStatus(Contract.ContractStatus.PAUSED);
+        } else {
+            contract.setStatus(Contract.ContractStatus.ACTIVE); // Allow freelancer to resubmit
+        }
+        
+        Contract savedContract = contractRepository.save(contract);
+        
+        // Publish job rejected event for notifications
+        publishJobRejectedEvent(savedContract, rejectionDto);
+        
+        return convertToResponseDto(savedContract, true);
+    }
+
+    /**
+     * Publish job submitted event for notifications
+     */
+    private void publishJobSubmittedEvent(Contract contract) {
+        try {
+            eventPublisherService.publishJobSubmittedEvent(
+                contract.getId(),
+                contract.getJob().getId(),
+                contract.getClientId(),
+                contract.getFreelancerId(),
+                contract.getJob().getProjectName(),
+                contract.getSubmissionDescription()
+            );
+        } catch (Exception e) {
+            log.error("Failed to publish job submitted event for contract: {}", contract.getId(), e);
+        }
+    }
+
+    /**
+     * Publish job accepted event for notifications
+     */
+    private void publishJobAcceptedEvent(Contract contract) {
+        try {
+            eventPublisherService.publishJobAcceptedEvent(
+                contract.getId(),
+                contract.getJob().getId(),
+                contract.getClientId(),
+                contract.getFreelancerId(),
+                contract.getJob().getProjectName()
+            );
+        } catch (Exception e) {
+            log.error("Failed to publish job accepted event for contract: {}", contract.getId(), e);
+        }
+    }
+
+    /**
+     * Publish job rejected event for notifications
+     */
+    private void publishJobRejectedEvent(Contract contract, JobRejectionDto rejectionDto) {
+        try {
+            eventPublisherService.publishJobRejectedEvent(
+                contract.getId(),
+                contract.getJob().getId(),
+                contract.getClientId(),
+                contract.getFreelancerId(),
+                contract.getJob().getProjectName(),
+                rejectionDto.getReason(),
+                rejectionDto.getFeedback()
+            );
+        } catch (Exception e) {
+            log.error("Failed to publish job rejected event for contract: {}", contract.getId(), e);
+        }
+    }
 }

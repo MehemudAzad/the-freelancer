@@ -54,8 +54,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
         @Param("searchTerm") String searchTerm, 
         Pageable pageable);
     
-    // Find message with reply context
-    @Query("SELECT m FROM Message m LEFT JOIN FETCH m.replyToMessage WHERE m.id = :messageId")
+    // Find message with reply context - simplified since Message entity only has replyToId
+    @Query("SELECT m FROM Message m WHERE m.id = :messageId")
     Optional<Message> findByIdWithReplyContext(@Param("messageId") Long messageId);
     
     // Count messages in room

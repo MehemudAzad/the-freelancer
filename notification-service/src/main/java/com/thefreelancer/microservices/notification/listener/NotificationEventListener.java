@@ -34,9 +34,9 @@ public class NotificationEventListener {
             InviteSentEvent event = objectMapper.readValue(eventData, InviteSentEvent.class);
             
             notificationService.createInviteSentNotification(
-                event.getClientId(),
-                event.getFreelancerId(),
-                event.getJobId(),
+                Long.parseLong(event.getClientId()),
+                Long.parseLong(event.getFreelancerId()),
+                Long.parseLong(event.getJobId()),
                 event.getJobTitle(),
                 event.getFreelancerName()
             );
@@ -61,9 +61,9 @@ public class NotificationEventListener {
             InviteAcceptedEvent event = objectMapper.readValue(eventData, InviteAcceptedEvent.class);
             
             notificationService.createInviteAcceptedNotification(
-                event.getClientId(),
-                event.getFreelancerId(),
-                event.getJobId(),
+                Long.parseLong(event.getClientId()),
+                Long.parseLong(event.getFreelancerId()),
+                Long.parseLong(event.getJobId()),
                 event.getJobTitle(),
                 event.getFreelancerName()
             );
@@ -88,9 +88,9 @@ public class NotificationEventListener {
             InviteReceivedEvent event = objectMapper.readValue(eventData, InviteReceivedEvent.class);
             
             notificationService.createInviteReceivedNotification(
-                event.getFreelancerId(),
-                event.getClientId(),
-                event.getJobId(),
+                Long.parseLong(event.getFreelancerId()),
+                Long.parseLong(event.getClientId()),
+                Long.parseLong(event.getJobId()),
                 event.getJobTitle(),
                 event.getClientName()
             );
@@ -165,13 +165,11 @@ public class NotificationEventListener {
             
             // Notification #6: You have accepted the proposal and payment escrow has been made -> client (email + inbox)
             notificationService.createEscrowFundedNotification(
-                event.getClientId(),
-                event.getFreelancerId(),
-                event.getJobId(),
+                Long.parseLong(event.getClientId()),
+                Long.parseLong(event.getFreelancerId()),
+                Long.parseLong(event.getJobId()),
                 event.getJobTitle(),
-                event.getFreelancerName(),
-                event.getAmountCents(),
-                event.getCurrency()
+                event.getFreelancerName()
             );
             
             acknowledgment.acknowledge();
@@ -284,9 +282,9 @@ public class NotificationEventListener {
             
             // Notification #10: After job submission you have accepted, go and review the freelancer -> client (email + inbox)
             notificationService.createReviewReminderNotification(
-                event.getClientId(),
-                event.getFreelancerId(),
-                event.getJobId(),
+                Long.parseLong(event.getClientId()),
+                Long.parseLong(event.getFreelancerId()),
+                Long.parseLong(event.getJobId()),
                 event.getJobTitle(),
                 event.getFreelancerName()
             );
