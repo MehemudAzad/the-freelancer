@@ -24,10 +24,6 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id", nullable = false)
-    private Room room;
-
     @Column(name = "room_id", insertable = false, updatable = false)
     private Long roomId; // For easier queries
 
@@ -45,9 +41,7 @@ public class Message {
     @Builder.Default
     private MessageType messageType = MessageType.TEXT;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reply_to_id")
-    private Message replyToMessage; // For threaded conversations
+
 
     @Column(name = "reply_to_id", insertable = false, updatable = false)
     private Long replyToId; // For easier queries (stores the message ID)

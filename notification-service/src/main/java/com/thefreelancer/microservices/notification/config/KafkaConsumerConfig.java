@@ -3,7 +3,6 @@ package com.thefreelancer.microservices.notification.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thefreelancer.microservices.notification.event.ProposalSubmittedEvent;
 import com.thefreelancer.microservices.notification.event.ProposalAcceptedEvent;
-import com.thefreelancer.microservices.notification.event.ProposalRejectedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,10 +47,6 @@ public class KafkaConsumerConfig {
         return createConsumerFactory(ProposalAcceptedEvent.class);
     }
 
-    @Bean
-    public ConsumerFactory<String, ProposalRejectedEvent> proposalRejectedConsumerFactory() {
-        return createConsumerFactory(ProposalRejectedEvent.class);
-    }
 
     private <T> ConsumerFactory<String, T> createConsumerFactory(Class<T> eventClass) {
         Map<String, Object> configProps = new HashMap<>();
@@ -85,11 +80,6 @@ public class KafkaConsumerConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ProposalAcceptedEvent> proposalAcceptedKafkaListenerContainerFactory() {
         return createListenerContainerFactory(proposalAcceptedConsumerFactory());
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, ProposalRejectedEvent> proposalRejectedKafkaListenerContainerFactory() {
-        return createListenerContainerFactory(proposalRejectedConsumerFactory());
     }
 
     @Bean

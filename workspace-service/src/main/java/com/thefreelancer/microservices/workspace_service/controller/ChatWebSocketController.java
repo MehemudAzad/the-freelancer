@@ -59,8 +59,16 @@ public class ChatWebSocketController {
                 throw new IllegalArgumentException("Invalid user ID: " + userId);
             }
             
+            // Parse roomId to Long
+            Long roomIdLong;
+            try {
+                roomIdLong = Long.parseLong(roomId);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid room ID: " + roomId);
+            }
+            
             // Send message through service (this also saves to database)
-            MessageResponseDto response = messageService.sendMessage(roomId, userId, messageDto);
+            MessageResponseDto response = messageService.sendMessage(roomIdLong, userId, messageDto);
             
             log.info("Message sent successfully via WebSocket: {}", response.getId());
             return response;

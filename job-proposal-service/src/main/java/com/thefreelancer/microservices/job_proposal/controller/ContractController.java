@@ -103,7 +103,7 @@ public class ContractController {
         }
     }
 
-    @Operation(summary = "Update contract status")
+    @Operation(summary = "Update contract status", description = "Update contract status with enhanced state transitions: ACTIVE <-> PAUSED, dispute escalation, completion")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Contract status updated successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid status transition"),
@@ -171,6 +171,89 @@ public class ContractController {
         } catch (Exception e) {
             log.error("Error checking if user can review freelancer", e);
             return ResponseEntity.badRequest().body(false);
+        }
+    }
+
+    @Operation(summary = "Submit job work", description = "Freelancer submits completed job work")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Job submitted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request or contract not ready for submission"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Only freelancer can submit"),
+        @ApiResponse(responseCode = "404", description = "Contract not found")
+    })
+    @PostMapping("/{contractId}/submit")
+    public ResponseEntity<ContractResponseDto> submitJob(
+            @Parameter(description = "Contract ID") @PathVariable Long contractId,
+            @Valid @RequestBody MilestoneSubmissionDto submissionDto,
+            @Parameter(hidden = true) @RequestHeader("X-User-ID") String userId) {
+        
+        log.info("Submitting job for contract {} by user {}", contractId, userId);
+        
+        try {
+            ContractResponseDto response = contractService.submitJob(contractId, submissionDto, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.warn("Job submission failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error submitting job", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Operation(summary = "Accept job submission", description = "Client accepts submitted job work")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Job accepted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request or contract not ready for acceptance"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Only client can accept"),
+        @ApiResponse(responseCode = "404", description = "Contract not found")
+    })
+    @PostMapping("/{contractId}/accept")
+    public ResponseEntity<ContractResponseDto> acceptJob(
+            @Parameter(description = "Contract ID") @PathVariable Long contractId,
+            @Parameter(hidden = true) @RequestHeader("X-User-ID") String userId) {
+        
+        log.info("Accepting job for contract {} by user {}", contractId, userId);
+        
+        try {
+            ContractResponseDto response = contractService.acceptJob(contractId, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.warn("Job acceptance failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error accepting job", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Operation(summary = "Reject job submission", description = "Client rejects submitted job work with feedback")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Job rejected successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request or contract not ready for rejection"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Only client can reject"),
+        @ApiResponse(responseCode = "404", description = "Contract not found")
+    })
+    @PostMapping("/{contractId}/reject")
+    public ResponseEntity<ContractResponseDto> rejectJob(
+            @Parameter(description = "Contract ID") @PathVariable Long contractId,
+            @Valid @RequestBody MilestoneRejectionDto rejectionDto,
+            @Parameter(hidden = true) @RequestHeader("X-User-ID") String userId) {
+        
+        log.info("Rejecting job for contract {} by user {}", contractId, userId);
+        
+        try {
+            ContractResponseDto response = contractService.rejectJob(contractId, rejectionDto, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.warn("Job rejection failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error rejecting job", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

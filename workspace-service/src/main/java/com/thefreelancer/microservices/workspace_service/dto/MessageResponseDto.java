@@ -21,7 +21,6 @@ public class MessageResponseDto {
     private String content;
     private String messageType;
     private Long replyToId;
-    private MessageResponseDto replyToMessage; // Nested message for thread context
     private List<MessageAttachmentDto> attachments;
     private LocalDateTime editedAt;
     private LocalDateTime createdAt;

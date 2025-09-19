@@ -44,8 +44,6 @@ public class MessageMapper {
             .content(message.getContent())
             .messageType(message.getMessageType().name())
             .replyToId(message.getReplyToId())
-            .replyToMessage(message.getReplyToMessage() != null ? 
-                toResponseDto(message.getReplyToMessage()) : null)
             .attachments(attachmentDtos)
             .editedAt(message.getEditedAt())
             .createdAt(message.getCreatedAt())

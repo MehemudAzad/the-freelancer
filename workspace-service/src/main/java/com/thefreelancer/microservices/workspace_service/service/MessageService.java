@@ -47,20 +47,20 @@ public class MessageService {
         
         // Create message entity
     Message message = messageMapper.toEntity(createDto, roomId, senderIdLong);
-        message.setRoom(room);
+        message.setRoomId(roomId);
         
-        // Handle reply-to message
-        if (createDto.getReplyToId() != null) {
-            Message replyToMessage = messageRepository.findById(createDto.getReplyToId())
-                .orElseThrow(() -> new IllegalArgumentException("Reply-to message not found: " + createDto.getReplyToId()));
+        // // Handle reply-to message
+        // if (createDto.getReplyToId() != null) {
+        //     Message replyToMessage = messageRepository.findById(createDto.getReplyToId())
+        //         .orElseThrow(() -> new IllegalArgumentException("Reply-to message not found: " + createDto.getReplyToId()));
             
-            if (!replyToMessage.getRoomId().equals(roomId)) {
-                throw new IllegalArgumentException("Cannot reply to message from different room");
-            }
+        //     if (!replyToMessage.getRoomId().equals(roomId)) {
+        //         throw new IllegalArgumentException("Cannot reply to message from different room");
+        //     }
             
-            message.setReplyToMessage(replyToMessage);
-            // replyToId is set by the mapper when parsing from String to Long
-        }
+        //     message.setReplyToMessage(replyToMessage);
+        //     // replyToId is set by the mapper when parsing from String to Long
+        // }
         
         Message savedMessage = messageRepository.save(message);
         
@@ -256,11 +256,11 @@ public class MessageService {
         log.info("Creating system message in room: {}", roomId);
         
         // Long roomIdLong = Long.parseLong(roomId);
-        Room room = roomRepository.findById(roomId)
-            .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
+        // Room room = roomRepository.findById(roomId)
+        //     .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
         
         Message systemMessage = Message.builder()
-            .room(room)
+            // .room(room)
             .roomId(roomId)
             .senderId(0L) // System sender ID as 0
             .content(content)

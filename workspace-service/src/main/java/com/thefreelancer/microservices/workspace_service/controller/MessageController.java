@@ -75,11 +75,11 @@ public class MessageController {
     })
     @GetMapping("/{roomId}/messages")
     public ResponseEntity<MessagePageResponseDto> getMessageHistory(
-            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
+            @Parameter(description = "ID of the workspace room") @PathVariable Long roomId,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "50") int limit,
             @Parameter(description = "Get messages before this message ID (cursor pagination)") 
-            @RequestParam(required = false) String before,
+            @RequestParam(required = false) Long before,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
             @RequestHeader(value = "X-User-Role", required = false) String userRole) {
@@ -120,8 +120,8 @@ public class MessageController {
     })
     @PutMapping("/{roomId}/messages/{messageId}")
     public ResponseEntity<MessageResponseDto> editMessage(
-            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
-            @Parameter(description = "ID of the message to edit") @PathVariable String messageId,
+            @Parameter(description = "ID of the workspace room") @PathVariable Long roomId,
+            @Parameter(description = "ID of the message to edit") @PathVariable Long messageId,
             @Valid @RequestBody MessageUpdateDto updateDto,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
@@ -161,8 +161,8 @@ public class MessageController {
     })
     @DeleteMapping("/{roomId}/messages/{messageId}")
     public ResponseEntity<Void> deleteMessage(
-            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
-            @Parameter(description = "ID of the message to delete") @PathVariable String messageId,
+            @Parameter(description = "ID of the workspace room") @PathVariable Long roomId,
+            @Parameter(description = "ID of the message to delete") @PathVariable Long messageId,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
             @RequestHeader(value = "X-User-Role", required = false) String userRole) {
@@ -201,7 +201,7 @@ public class MessageController {
     })
     @GetMapping("/{roomId}/messages/search")
     public ResponseEntity<MessagePageResponseDto> searchMessages(
-            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
+            @Parameter(description = "ID of the workspace room") @PathVariable Long roomId,
             @Parameter(description = "Search term") @RequestParam String q,
             @Parameter(description = "Message type filter") @RequestParam(required = false) String type,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
@@ -247,7 +247,7 @@ public class MessageController {
     })
     @PostMapping("/{roomId}/typing")
     public ResponseEntity<Void> sendTypingIndicator(
-            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
+            @Parameter(description = "ID of the workspace room") @PathVariable Long roomId,
             @Valid @RequestBody TypingStatusDto typingStatus,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
@@ -272,7 +272,7 @@ public class MessageController {
                 throw new IllegalArgumentException("Invalid user ID: " + authenticatedUserId);
             }
             
-            typingStatus.setRoomId(roomId);
+            typingStatus.setRoomId(roomId.toString());
             
             // Broadcast typing indicator via WebSocket
             messageService.sendTypingIndicator(roomId, typingStatus);
@@ -296,8 +296,8 @@ public class MessageController {
     })
     @PostMapping("/{roomId}/read")
     public ResponseEntity<Void> markMessagesAsRead(
-            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
-            @Parameter(description = "Message IDs to mark as read") @RequestBody List<String> messageIds,
+            @Parameter(description = "ID of the workspace room") @PathVariable Long roomId,
+            @Parameter(description = "Message IDs to mark as read") @RequestBody List<Long> messageIds,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
             @RequestHeader(value = "X-User-Role", required = false) String userRole) {
@@ -333,7 +333,7 @@ public class MessageController {
     })
     @GetMapping("/{roomId}/unread-count")
     public ResponseEntity<UnreadCountDto> getUnreadMessageCount(
-            @Parameter(description = "ID of the workspace room") @PathVariable String roomId,
+            @Parameter(description = "ID of the workspace room") @PathVariable Long roomId,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
             @RequestHeader(value = "X-User-Role", required = false) String userRole) {
@@ -350,7 +350,7 @@ public class MessageController {
             String authenticatedUserId = userIdHeader;
             long unreadCount = messageService.getUnreadMessageCount(roomId, authenticatedUserId);
             
-            UnreadCountDto response = new UnreadCountDto(roomId, unreadCount);
+            UnreadCountDto response = new UnreadCountDto(roomId.toString(), unreadCount);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             log.error("Invalid unread count request for room {}: {}", roomId, e.getMessage());
