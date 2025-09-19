@@ -466,6 +466,50 @@ public class ContractService {
     }
 
     /**
+     * Convert Contract entity to ContractSubmissionResponseDto
+     */
+    private ContractSubmissionResponseDto convertToSubmissionResponseDto(Contract contract) {
+        ContractSubmissionResponseDto dto = new ContractSubmissionResponseDto();
+        dto.setContractId(contract.getId());
+        dto.setJobTitle(contract.getJob().getProjectName());
+        dto.setClientId(contract.getClientId());
+        dto.setFreelancerId(contract.getFreelancerId());
+        
+        // Submission details
+        dto.setSubmissionDescription(contract.getSubmissionDescription());
+        dto.setSubmissionNotes(contract.getSubmissionNotes());
+        dto.setSubmittedAt(contract.getSubmittedAt());
+        
+        // Parse deliverable URLs from JSON
+        if (contract.getDeliverableUrls() != null && !contract.getDeliverableUrls().isEmpty()) {
+            try {
+                List<String> urls = objectMapper.readValue(
+                    contract.getDeliverableUrls(), 
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                );
+                dto.setDeliverableUrls(urls);
+            } catch (Exception e) {
+                log.warn("Failed to parse deliverable URLs for contract {}: {}", contract.getId(), e.getMessage());
+                dto.setDeliverableUrls(List.of()); // Return empty list on parse error
+            }
+        }
+        
+        // Acceptance/Rejection details
+        dto.setAcceptedAt(contract.getAcceptedAt());
+        dto.setRejectedAt(contract.getRejectedAt());
+        dto.setRejectionReason(contract.getRejectionReason());
+        dto.setRejectionFeedback(contract.getRejectionFeedback());
+        
+        // Status information
+        dto.setContractStatus(contract.getStatus().toString());
+        dto.setIsSubmitted(contract.getSubmittedAt() != null);
+        dto.setIsAccepted(contract.getAcceptedAt() != null);
+        dto.setIsRejected(contract.getRejectedAt() != null);
+        
+        return dto;
+    }
+
+    /**
      * Validate contract status transition
      */
     private void validateStatusTransition(Contract.ContractStatus currentStatus, Contract.ContractStatus newStatus) {
@@ -589,6 +633,27 @@ public class ContractService {
     }
 
     /**
+     * Get contract submission details
+     * Returns detailed submission information for a specific contract
+     */
+    @Transactional(readOnly = true)
+    public ContractSubmissionResponseDto getContractSubmission(Long contractId, String userId) {
+        log.info("Getting contract submission details for contract: {} by user: {}", contractId, userId);
+        
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + contractId));
+        
+        Long userIdLong = Long.parseLong(userId);
+        
+        // Check access - only client or freelancer can view submission details
+        if (!contract.getClientId().equals(userIdLong) && !contract.getFreelancerId().equals(userIdLong)) {
+            throw new IllegalArgumentException("Access denied - only contract participants can view submission details");
+        }
+        
+        return convertToSubmissionResponseDto(contract);
+    }
+
+    /**
      * Submit job work - Freelancer submits completed work for client review
      */
     @Transactional
@@ -667,6 +732,15 @@ public class ContractService {
         contract.setAcceptedAt(java.time.LocalDateTime.now());
         
         Contract savedContract = contractRepository.save(contract);
+        
+        // Update room status to ARCHIVED when contract is completed
+        try {
+            workspaceClient.updateRoomStatus(savedContract.getId(), "ARCHIVED");
+            log.info("Successfully updated room status to ARCHIVED for completed contract: {}", savedContract.getId());
+        } catch (Exception e) {
+            log.error("Failed to update room status for contract {}: {}", savedContract.getId(), e.getMessage());
+            // Don't fail the contract acceptance if room update fails
+        }
         
         // Publish job accepted event for notifications
         publishJobAcceptedEvent(savedContract);
@@ -754,6 +828,18 @@ public class ContractService {
                 contract.getFreelancerId(),
                 contract.getJob().getProjectName()
             );
+            
+            // Also publish review reminder to prompt client to review the freelancer
+            String freelancerName = "Freelancer-" + contract.getFreelancerId(); // Placeholder - you might want to get this from user service
+            eventPublisherService.publishReviewReminderEvent(
+                contract.getId(),
+                contract.getJob().getId(),
+                contract.getClientId(),
+                contract.getFreelancerId(),
+                contract.getJob().getProjectName(),
+                freelancerName
+            );
+            
         } catch (Exception e) {
             log.error("Failed to publish job accepted event for contract: {}", contract.getId(), e);
         }

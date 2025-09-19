@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 127 / 139 APIs Completed (91.4%)**
+## 📊 **Overall Progress: 128 / 140 APIs Completed (91.4%)**
 
-**Current Status: Kafka Event-Driven Integration Complete! Job-Proposal-Service → Notification-Service real-time event processing with automatic WebSocket notifications and email delivery**
+**Current Status: Kafka Event-Driven Integration Complete! Job-Proposal-Service → Notification-Service real-time event processing with automatic WebSocket notifications, email delivery, and review reminder notifications**
 
 ---
 
@@ -232,8 +232,9 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `job-posted` event listener ✅ **COMPLETED**
 - [x] `job-accepted` event listener ✅ **COMPLETED**
 - [x] `job-rejected` event listener ✅ **COMPLETED**
+- [x] `review-reminder` event listener ✅ **COMPLETED**
 
-**Status: All 30 Notification APIs Completed** ✅
+**Status: All 31 Notification APIs Completed** ✅
 
 ### 🔥 **Latest Implementation Highlights:**
 - ✅ **Kafka Producer-Consumer Integration** - job-proposal-service → notification-service

@@ -256,4 +256,30 @@ public class ContractController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @Operation(summary = "Get contract submission details", description = "Get detailed submission information for a contract")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Submission details retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Only contract participants can view submission details"),
+        @ApiResponse(responseCode = "404", description = "Contract not found")
+    })
+    @GetMapping("/{contractId}/submission")
+    public ResponseEntity<ContractSubmissionResponseDto> getContractSubmission(
+            @Parameter(description = "Contract ID") @PathVariable Long contractId,
+            @Parameter(hidden = true) @RequestHeader("X-User-ID") String userId) {
+        
+        log.info("Getting submission details for contract {} by user {}", contractId, userId);
+        
+        try {
+            ContractSubmissionResponseDto response = contractService.getContractSubmission(contractId, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.warn("Access denied for contract submission: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            log.error("Error getting contract submission details", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

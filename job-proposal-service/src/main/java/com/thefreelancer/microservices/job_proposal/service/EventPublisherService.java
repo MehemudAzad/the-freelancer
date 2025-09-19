@@ -141,4 +141,25 @@ public class EventPublisherService {
             log.error("Failed to publish JobRejectedEvent for contractId: {}", contractId, e);
         }
     }
+
+    public void publishReviewReminderEvent(Long contractId, Long jobId, Long clientId, Long freelancerId, String jobTitle, String freelancerName) {
+        try {
+            ReviewReminderEvent event = ReviewReminderEvent.builder()
+                    .contractId(contractId.toString())
+                    .jobId(jobId.toString())
+                    .clientId(clientId.toString())
+                    .freelancerId(freelancerId.toString())
+                    .jobTitle(jobTitle)
+                    .freelancerName(freelancerName)
+                    .timestamp(System.currentTimeMillis())
+                    .completedAt(LocalDateTime.now())
+                    .build();
+
+            kafkaTemplate.send("review-reminder", contractId.toString(), event);
+            log.info("Published ReviewReminderEvent for contractId: {}", contractId);
+            
+        } catch (Exception e) {
+            log.error("Failed to publish ReviewReminderEvent for contractId: {}", contractId, e);
+        }
+    }
 }
