@@ -731,6 +731,11 @@ public class ContractService {
         contract.setStatus(Contract.ContractStatus.COMPLETED);
         contract.setAcceptedAt(java.time.LocalDateTime.now());
         
+        // Update the associated job status to COMPLETED
+        Job job = contract.getJob();
+        job.setStatus(Job.JobStatus.COMPLETED);
+        jobRepository.save(job);
+        
         Contract savedContract = contractRepository.save(contract);
         
         // Update room status to ARCHIVED when contract is completed
