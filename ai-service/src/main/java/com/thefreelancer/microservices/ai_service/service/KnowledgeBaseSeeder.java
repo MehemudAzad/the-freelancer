@@ -31,20 +31,74 @@ public class KnowledgeBaseSeeder implements CommandLineRunner {
             return;
         }
         
+        // Add a small delay to ensure database is fully initialized
         try {
-            // Check if knowledge base already has content
-            Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM knowledge_base", Integer.class);
-            if (count != null && count > 0) {
-                log.info("Knowledge base already contains {} entries, skipping seeding", count);
-                return;
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        // Retry logic for database initialization
+        int maxRetries = 5;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                log.info("Attempting to seed knowledge base (attempt {}/{})", attempt, maxRetries);
+                
+                // Check if knowledge_base table exists first
+                if (!checkTableExists()) {
+                    log.warn("Knowledge base table does not exist on attempt {}. Waiting for schema initialization...", attempt);
+                    if (attempt < maxRetries) {
+                        Thread.sleep(3000); // Wait 3 seconds before retry
+                        continue;
+                    } else {
+                        log.error("Knowledge base table still does not exist after {} attempts. Please check schema initialization.", maxRetries);
+                        return;
+                    }
+                }
+                
+                // Check if knowledge base already has content
+                Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM knowledge_base", Integer.class);
+                if (count != null && count > 0) {
+                    log.info("Knowledge base already contains {} entries, skipping seeding", count);
+                    return;
+                }
+                
+                log.info("Seeding knowledge base with initial content...");
+                seedInitialKnowledge();
+                log.info("Knowledge base seeding completed successfully");
+                return; // Success, exit retry loop
+                
+            } catch (Exception e) {
+                log.error("Failed to seed knowledge base on attempt {}: {}", attempt, e.getMessage());
+                if (attempt < maxRetries) {
+                    try {
+                        Thread.sleep(5000); // Wait 5 seconds before retry
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                } else {
+                    log.error("Failed to seed knowledge base after {} attempts", maxRetries, e);
+                }
             }
-            
-            log.info("Seeding knowledge base with initial content...");
-            seedInitialKnowledge();
-            log.info("Knowledge base seeding completed successfully");
-            
+        }
+    }
+    
+    /**
+     * Check if the knowledge_base table exists
+     */
+    private boolean checkTableExists() {
+        try {
+            String sql = "SELECT EXISTS (" +
+                        "SELECT FROM information_schema.tables " +
+                        "WHERE table_schema = 'public' " +
+                        "AND table_name = 'knowledge_base'" +
+                        ")";
+            Boolean exists = jdbcTemplate.queryForObject(sql, Boolean.class);
+            return exists != null && exists;
         } catch (Exception e) {
-            log.error("Failed to seed knowledge base", e);
+            log.warn("Could not check if knowledge_base table exists: {}", e.getMessage());
+            return false;
         }
     }
     
