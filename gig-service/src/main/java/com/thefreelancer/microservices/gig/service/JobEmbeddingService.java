@@ -161,7 +161,7 @@ public class JobEmbeddingService {
         return docs.isEmpty() ? Optional.empty() : Optional.of(docs.get(0));
     }
     
-    private List<Document> findAllJobDocuments(Long jobId) {
+    public List<Document> findAllJobDocuments(Long jobId) {
         FilterExpressionBuilder builder = new FilterExpressionBuilder();
         Filter.Expression filter = builder.and(
             builder.eq(DOCUMENT_TYPE_KEY, JOB_DOCUMENT_TYPE),

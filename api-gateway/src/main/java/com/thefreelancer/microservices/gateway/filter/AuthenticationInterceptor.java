@@ -115,6 +115,19 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             return true;
         }
         
+        // Special case: Job matching endpoints require authentication
+        if (requestURI.matches("/api/jobs/\\d+/match-freelancers") || 
+            requestURI.matches("/api/jobs/match-freelancers") ||
+            requestURI.matches("/api/jobs/\\d+/bulk-match")) {
+            return false; // Require authentication for job matching
+        }
+        
+        // Special case: Freelancer feed endpoints require authentication
+        if (requestURI.matches("/api/freelancers/\\d+/job-feed") ||
+            requestURI.matches("/api/freelancers/\\d+/clear-cache")) {
+            return false; // Require authentication for personalized feeds
+        }
+        
         // Special case: Job milestones endpoints are public (GET only)
         if ("GET".equals(method) && requestURI.matches("/api/jobs/\\d+/milestones")) {
             return true;

@@ -29,6 +29,7 @@ public class GigService {
     private final GigMapper gigMapper;
     private final AuthServiceClient authServiceClient;
     private final GigEmbeddingService gigEmbeddingService;
+    private final ProfileEmbeddingService profileEmbeddingService;
     
     @Transactional
     public GigResponseDto createGig(Long userId, GigCreateDto createDto) {
@@ -51,6 +52,13 @@ public class GigService {
             gigEmbeddingService.storeGigEmbedding(savedGig);
         } catch (Exception e) {
             log.warn("Failed to store gig embedding for gig {}: {}", savedGig.getId(), e.getMessage());
+        }
+        
+        // Update profile embedding to include new gig data
+        try {
+            profileEmbeddingService.updateProfileEmbeddingOnGigChange(userId);
+        } catch (Exception e) {
+            log.warn("Failed to update profile embedding for user {}: {}", userId, e.getMessage());
         }
         
         return gigMapper.toResponseDto(savedGig);
@@ -168,6 +176,13 @@ public class GigService {
             log.warn("Failed to update gig embedding for gig {}: {}", updatedGig.getId(), e.getMessage());
         }
         
+        // Update profile embedding to reflect updated gig data
+        try {
+            profileEmbeddingService.updateProfileEmbeddingOnGigChange(updatedGig.getProfileId());
+        } catch (Exception e) {
+            log.warn("Failed to update profile embedding for user {}: {}", updatedGig.getProfileId(), e.getMessage());
+        }
+        
         return Optional.of(gigMapper.toResponseDto(updatedGig));
     }
     
@@ -175,10 +190,14 @@ public class GigService {
     public boolean deleteGig(Long gigId) {
         log.info("Deleting gig with ID: {}", gigId);
         
-        if (!gigRepository.existsById(gigId)) {
+        // Get gig details before deletion for profile embedding update
+        Optional<Gig> gigOpt = gigRepository.findById(gigId);
+        if (gigOpt.isEmpty()) {
             log.warn("Gig not found with ID: {}", gigId);
             return false;
         }
+        
+        Long profileId = gigOpt.get().getProfileId();
         
         // Delete gig embedding first
         try {
@@ -189,6 +208,14 @@ public class GigService {
         
         gigRepository.deleteById(gigId);
         log.info("Successfully deleted gig with ID: {}", gigId);
+        
+        // Update profile embedding to remove deleted gig data
+        try {
+            profileEmbeddingService.updateProfileEmbeddingOnGigChange(profileId);
+        } catch (Exception e) {
+            log.warn("Failed to update profile embedding for user {}: {}", profileId, e.getMessage());
+        }
+        
         return true;
     }
     

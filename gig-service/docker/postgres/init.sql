@@ -94,27 +94,27 @@ CREATE TABLE IF NOT EXISTS reviews (
 -- Enable pgvector extension
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Create profile_embeddings table
-CREATE TABLE IF NOT EXISTS profile_embeddings (
-    user_id BIGINT PRIMARY KEY,
-    embedding vector(1536),
-    content_hash VARCHAR(255),
-    skills_text TEXT,
-    profile_summary TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+-- -- Create profile_embeddings table
+-- CREATE TABLE IF NOT EXISTS profile_embeddings (
+--     user_id BIGINT PRIMARY KEY,
+--     embedding vector(1536),
+--     content_hash VARCHAR(255),
+--     skills_text TEXT,
+--     profile_summary TEXT,
+--     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- );
 
--- Create job_embeddings table
-CREATE TABLE IF NOT EXISTS job_embeddings (
-    job_id BIGINT PRIMARY KEY,
-    embedding vector(1536),
-    content_hash VARCHAR(255),
-    skills_text TEXT,
-    job_summary TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+-- -- Create job_embeddings table
+-- CREATE TABLE IF NOT EXISTS job_embeddings (
+--     job_id BIGINT PRIMARY KEY,
+--     embedding vector(1536),
+--     content_hash VARCHAR(255),
+--     skills_text TEXT,
+--     job_summary TEXT,
+--     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- );
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_gigs_profile_id ON gigs(profile_id);
@@ -132,23 +132,23 @@ CREATE INDEX IF NOT EXISTS idx_reviews_gig_rating ON reviews(gig_id, overall_rat
 CREATE INDEX IF NOT EXISTS idx_reviews_freelancer_rating ON reviews(freelancer_id, overall_rating);
 
 -- Insert some sample data for testing
-INSERT INTO profiles (user_id, headline, bio, hourly_rate_cents, currency, availability, skills, location_text) 
-VALUES 
-    (1, 'Full-Stack Developer', 'Experienced developer specializing in React and Node.js', 7500, 'USD', 'PART_TIME', ARRAY['React', 'Node.js', 'PostgreSQL'], 'New York, USA'),
-    (2, 'UI/UX Designer', 'Creative designer with 5+ years experience in web and mobile design', 6000, 'USD', 'FULL_TIME', ARRAY['Figma', 'Adobe XD', 'Photoshop'], 'San Francisco, USA')
-ON CONFLICT (user_id) DO NOTHING;
+-- INSERT INTO profiles (user_id, headline, bio, hourly_rate_cents, currency, availability, skills, location_text) 
+-- VALUES 
+--     (1, 'Full-Stack Developer', 'Experienced developer specializing in React and Node.js', 7500, 'USD', 'PART_TIME', ARRAY['React', 'Node.js', 'PostgreSQL'], 'New York, USA'),
+--     (2, 'UI/UX Designer', 'Creative designer with 5+ years experience in web and mobile design', 6000, 'USD', 'FULL_TIME', ARRAY['Figma', 'Adobe XD', 'Photoshop'], 'San Francisco, USA')
+-- ON CONFLICT (user_id) DO NOTHING;
 
-INSERT INTO gigs (profile_id, title, description, status, category, tags)
-VALUES 
-    (1, 'I will build a complete React website', 'Custom React website with modern UI/UX and responsive design', 'ACTIVE', 'Web Development', ARRAY['React', 'JavaScript', 'CSS']),
-    (2, 'I will design a modern mobile app UI', 'Beautiful and intuitive mobile app design using latest design trends', 'ACTIVE', 'Design', ARRAY['UI Design', 'Mobile', 'Figma'])
-ON CONFLICT DO NOTHING;
+-- INSERT INTO gigs (profile_id, title, description, status, category, tags)
+-- VALUES 
+--     (1, 'I will build a complete React website', 'Custom React website with modern UI/UX and responsive design', 'ACTIVE', 'Web Development', ARRAY['React', 'JavaScript', 'CSS']),
+--     (2, 'I will design a modern mobile app UI', 'Beautiful and intuitive mobile app design using latest design trends', 'ACTIVE', 'Design', ARRAY['UI Design', 'Mobile', 'Figma'])
+-- ON CONFLICT DO NOTHING;
 
-INSERT INTO gig_packages (gig_id, tier, title, description, price_cents, currency, delivery_days, revisions)
-VALUES 
-    (1, 'BASIC', 'Simple Website', 'Basic React website with 3-5 pages', 50000, 'USD', 7, 2),
-    (1, 'STANDARD', 'Advanced Website', 'React website with backend integration', 100000, 'USD', 14, 3),
-    (1, 'PREMIUM', 'Full-Stack Solution', 'Complete website with admin panel and database', 200000, 'USD', 21, 5),
-    (2, 'BASIC', 'Basic UI Design', 'Mobile app UI for 5-8 screens', 30000, 'USD', 5, 2),
-    (2, 'STANDARD', 'Complete UI/UX', 'Full app design with user flow and prototypes', 60000, 'USD', 10, 3)
-ON CONFLICT DO NOTHING;
+-- INSERT INTO gig_packages (gig_id, tier, title, description, price_cents, currency, delivery_days, revisions)
+-- VALUES 
+--     (1, 'BASIC', 'Simple Website', 'Basic React website with 3-5 pages', 50000, 'USD', 7, 2),
+--     (1, 'STANDARD', 'Advanced Website', 'React website with backend integration', 100000, 'USD', 14, 3),
+--     (1, 'PREMIUM', 'Full-Stack Solution', 'Complete website with admin panel and database', 200000, 'USD', 21, 5),
+--     (2, 'BASIC', 'Basic UI Design', 'Mobile app UI for 5-8 screens', 30000, 'USD', 5, 2),
+--     (2, 'STANDARD', 'Complete UI/UX', 'Full app design with user flow and prototypes', 60000, 'USD', 10, 3)
+-- ON CONFLICT DO NOTHING;

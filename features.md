@@ -3,9 +3,9 @@
 ## 🎯 **Project Overview**
 A microservices-based freelance marketplace platform built with Spring Boot, PostgreSQL, and Kafka for event-driven communication.
 
-## 📊 **Overall Progress: 128 / 140 APIs Completed (91.4%)**
+## 📊 **Overall Progress: 135 / 147 APIs Completed (91.8%)**
 
-**Current Status: Kafka Event-Driven Integration Complete! Job-Proposal-Service → Notification-Service real-time event processing with automatic WebSocket notifications, email delivery, and review reminder notifications**
+**Current Status: Job-to-Freelancer Matching System Complete! Added semantic search for clients to find suitable freelancers for jobs with comprehensive skill matching, filtering, and intelligent scoring algorithms**
 
 ---
 
@@ -49,6 +49,11 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `POST /api/gigs/my-gigs/{gigId}/packages` - Add package to authenticated user's gig ✅ **COMPLETED**
 - [x] `PUT /api/gigs/my-gigs/{gigId}/packages/{packageId}` - Update authenticated user's package ✅ **COMPLETED**
 - [x] `DELETE /api/gigs/my-gigs/{gigId}/packages/{packageId}` - Delete authenticated user's package ✅ **COMPLETED**
+
+### Job-to-Freelancer Matching (Semantic Search)
+- [x] `POST /api/jobs/match-freelancers` - Find matching freelancers for a job using semantic search ✅ **COMPLETED**
+- [x] `GET /api/jobs/{jobId}/match-freelancers` - Simple job-to-freelancer matching with query parameters ✅ **COMPLETED**
+- [x] `POST /api/jobs/{jobId}/bulk-match` - Bulk matching for multiple job variations ✅ **COMPLETED**
 
 ### Gig Media (Portfolio)
 - [ ] `POST /api/gigs/{gigId}/media` - Upload portfolio images/videos
@@ -273,6 +278,15 @@ A microservices-based freelance marketplace platform built with Spring Boot, Pos
 - [x] `GET /api/gigs/search` - Public gig search ✅ **COMPLETED**
 - [x] `POST /api/payments/webhooks/**` - Stripe webhooks (external access) ✅ **COMPLETED**
 - [x] Auth endpoints (`/api/auth/register`, `/api/auth/login`, etc.) ✅ **COMPLETED**
+
+### Marketplace Intelligence & Analytics (New!)
+
+- [x] `POST /api/marketplace/analyze` - Comprehensive market analysis using vector embeddings ✅ **COMPLETED**
+- [x] `GET /api/marketplace/analyze` - Quick market analysis with query parameters ✅ **COMPLETED**
+- [x] `GET /api/marketplace/trends/{category}` - Category-specific trend analysis ✅ **COMPLETED**
+- [x] `GET /api/marketplace/health/{skill}` - Market health check for skills ✅ **COMPLETED**
+
+**Marketplace Intelligence APIs: 4/4 Completed** ✅
 
 ---
 
