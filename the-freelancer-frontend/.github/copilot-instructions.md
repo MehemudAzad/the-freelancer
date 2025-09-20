@@ -1,0 +1,1 @@
+dont change FREELANCER and CLIENT to lowercase or uppercase. Keep them as it is.
