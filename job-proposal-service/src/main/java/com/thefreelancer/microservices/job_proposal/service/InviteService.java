@@ -29,6 +29,7 @@ public class InviteService {
     private final JobRepository jobRepository;
     private final InviteMapper inviteMapper;
     private final AuthServiceClient authServiceClient;
+    private final EventPublisherService eventPublisherService;
     
     @Autowired
     @Lazy
@@ -60,6 +61,40 @@ public class InviteService {
         
         Invite savedInvite = inviteRepository.save(invite);
         log.info("Created invite with id: {}", savedInvite.getId());
+        
+        // Publish invite events for notifications
+        try {
+            Optional<UserResponseDto> client = authServiceClient.getUserById(createDto.getClientId());
+            String clientName = client.map(UserResponseDto::getName).orElse("Unknown Client");
+            String freelancerName = freelancer.get().getName();
+            
+            // Publish InviteSentEvent (for client notification)
+            eventPublisherService.publishInviteSentEvent(
+                savedInvite.getId(),
+                createDto.getClientId(),
+                createDto.getFreelancerId(),
+                createDto.getJobId(),
+                job.getProjectName(),
+                freelancerName,
+                clientName
+            );
+            
+            // Publish InviteReceivedEvent (for freelancer notification)
+            eventPublisherService.publishInviteReceivedEvent(
+                savedInvite.getId(),
+                createDto.getClientId(),
+                createDto.getFreelancerId(),
+                createDto.getJobId(),
+                job.getProjectName(),
+                freelancerName,
+                clientName
+            );
+            
+            log.info("Published invite events for invite: {}", savedInvite.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish invite events for invite: {}", savedInvite.getId(), e);
+            // Don't fail the entire operation for event publishing errors
+        }
         
         return enrichInviteResponse(savedInvite);
     }

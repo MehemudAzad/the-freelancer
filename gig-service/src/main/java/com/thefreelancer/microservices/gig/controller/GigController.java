@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -129,17 +130,18 @@ public class GigController {
         
         try {
             GigSearchResponseDto response = gigSemanticSearchService.searchGigs(request);
-            log.info("Semantic search completed - found {} results", response.getTotalResults());
+            log.info("Semantic search completed - found {} results", response.getTotalFound());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error performing semantic search: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(GigSearchResponseDto.builder()
                     .query(request.getQuery())
-                    .results(List.of())
-                    .totalResults(0)
-                    .searchType("semantic")
-                    .error("Search service temporarily unavailable")
+                    .gigs(List.of())
+                    .totalFound(0)
+                    .enhancedQuery(request.getQuery())
+                    .processingTimeMs(0L)
+                    .filterSummary(Map.of("error", "Search service temporarily unavailable"))
                     .build());
         }
     }
@@ -151,23 +153,20 @@ public class GigController {
         @ApiResponse(responseCode = "400", description = "Invalid search parameters")
     })
     public ResponseEntity<GigSearchResponseDto> semanticSearchGigsGet(
-            @RequestParam String q,
-            @RequestParam(defaultValue = "20") Integer limit,
-            @RequestParam(defaultValue = "0") Integer offset,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String skills,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) Double minRating) {
+            @RequestParam(required = false) Long minPrice,
+            @RequestParam(required = false) Long maxPrice,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(defaultValue = "0") Integer offset) {
         
-        log.info("GET /api/gigs/search/semantic - Performing semantic search with query: '{}'", q);
+        log.info("GET /api/gigs/search/semantic - Performing semantic search with query: '{}'", query);
         
-        GigSearchRequestDto request = GigSearchRequestDto.builder()
-            .query(q)
-            .limit(limit)
-            .offset(offset)
-            .category(category)
-            .minRating(minRating)
-            .build();
-        
-        return semanticSearchGigs(request);
+        return ResponseEntity.ok(gigSemanticSearchService.searchGigsSimple(
+            query, skills, category, minPrice, maxPrice, minRating, limit, offset
+        ));
     }
     
     @GetMapping("/search/semantic/category/{category}")
@@ -178,24 +177,32 @@ public class GigController {
     })
     public ResponseEntity<GigSearchResponseDto> semanticSearchByCategory(
             @PathVariable String category,
-            @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "20") Integer limit) {
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String skills,
+            @RequestParam(required = false) Long minPrice,
+            @RequestParam(required = false) Long maxPrice,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(defaultValue = "0") Integer offset) {
         
-        log.info("GET /api/gigs/search/semantic/category/{} - Searching in category with additional query: '{}'", category, q);
+        log.info("GET /api/gigs/search/semantic/category/{} - Searching in category with query: '{}'", category, query);
         
         try {
-            GigSearchResponseDto response = gigSemanticSearchService.searchGigsByCategory(category, q, limit);
-            log.info("Category semantic search completed - found {} results", response.getTotalResults());
+            GigSearchResponseDto response = gigSemanticSearchService.searchGigsByCategory(
+                category, query, skills, minPrice, maxPrice, minRating, limit, offset
+            );
+            log.info("Category semantic search completed - found {} results", response.getTotalFound());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error performing category semantic search: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(GigSearchResponseDto.builder()
-                    .query(category + (q != null ? " " + q : ""))
-                    .results(List.of())
-                    .totalResults(0)
-                    .searchType("category_semantic")
-                    .error("Search service temporarily unavailable")
+                    .query(category + (query != null ? " " + query : ""))
+                    .gigs(List.of())
+                    .totalFound(0)
+                    .enhancedQuery(category)
+                    .processingTimeMs(0L)
+                    .filterSummary(Map.of("error", "Search service temporarily unavailable"))
                     .build());
         }
     }

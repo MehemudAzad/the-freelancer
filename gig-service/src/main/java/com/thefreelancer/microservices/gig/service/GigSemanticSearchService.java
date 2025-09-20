@@ -2,12 +2,13 @@ package com.thefreelancer.microservices.gig.service;
 
 import com.thefreelancer.microservices.gig.dto.GigSearchRequestDto;
 import com.thefreelancer.microservices.gig.dto.GigSearchResponseDto;
-import com.thefreelancer.microservices.gig.dto.GigSearchResultDto;
 import com.thefreelancer.microservices.gig.model.Gig;
 import com.thefreelancer.microservices.gig.repository.GigRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -18,246 +19,243 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GigSemanticSearchService {
     
-    private final GigEmbeddingService gigEmbeddingService;
-    private final GigRepository gigRepository;
+    private final VectorStore vectorStore;
     private final QueryEnhancementService queryEnhancementService;
+    private final GigRepository gigRepository;
     
     /**
-     * Perform semantic search on gigs
+     * Advanced semantic search with comprehensive filtering
      */
     public GigSearchResponseDto searchGigs(GigSearchRequestDto request) {
-        log.info("Semantic search for gigs: '{}'", request.getQuery());
+        long startTime = System.currentTimeMillis();
         
         try {
-            // Enhance query for better semantic matching
-            String enhancedQuery = queryEnhancementService.enhanceGigQuery(request.getQuery());
-            log.info("Enhanced gig query: '{}' -> '{}'", request.getQuery(), enhancedQuery);
+            log.info("Performing semantic gig search for query: {}", request.getQuery());
+            
+            // Build semantic query
+            String semanticQuery = buildSemanticQuery(request);
+            log.debug("Enhanced semantic query: {}", semanticQuery);
             
             // Perform vector search
-            List<Document> documents = gigEmbeddingService.findSimilarGigs(
-                enhancedQuery, 
-                request.getLimit(), 
-                0.7
-            );
+            List<Document> documents = performVectorSearch(semanticQuery, request);
+            log.debug("Vector search returned {} documents", documents.size());
             
-            // Convert documents to search results
-            List<GigSearchResultDto> results = documents.stream()
-                .map(this::convertDocumentToSearchResult)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+            // Extract gig IDs and fetch full gig data
+            List<Long> gigIds = extractGigIds(documents);
+            List<Gig> gigs = gigRepository.findAllById(gigIds);
             
-            // Apply additional filters if specified
-            results = applyFilters(results, request);
+            // Apply business filters
+            List<Gig> filteredGigs = applyBusinessFilters(gigs, request);
             
-            // Calculate enhanced relevance scores
-            results = enhanceRelevanceScoring(results, request.getQuery());
+            // Add similarity scores and sort
+            List<GigSearchResponseDto.GigResult> results = buildResults(filteredGigs, documents, request);
             
+            // Build response
             return GigSearchResponseDto.builder()
+                .gigs(results)
+                .totalFound(results.size())
                 .query(request.getQuery())
-                .enhancedQuery(enhancedQuery)
-                .results(results)
-                .totalResults(results.size())
-                .searchType("semantic")
+                .enhancedQuery(semanticQuery)
+                .processingTimeMs(System.currentTimeMillis() - startTime)
+                .filterSummary(buildFilterSummary(gigs.size(), results.size(), request))
                 .build();
-            
+                
         } catch (Exception e) {
-            log.error("Error performing semantic search for gigs: {}", e.getMessage(), e);
-            return GigSearchResponseDto.builder()
-                .query(request.getQuery())
-                .results(Collections.emptyList())
-                .totalResults(0)
-                .searchType("semantic")
-                .error("Search temporarily unavailable")
-                .build();
+            log.error("Error performing semantic gig search: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to search gigs", e);
         }
     }
     
     /**
-     * Search gigs by category with semantic enhancement
+     * Simple semantic search with basic filtering
      */
-    public GigSearchResponseDto searchGigsByCategory(String category, String additionalQuery, int limit) {
-        log.info("Searching gigs by category: '{}' with additional query: '{}'", category, additionalQuery);
+    public GigSearchResponseDto searchGigsSimple(String query, String skills, String category, 
+                                                Long minPrice, Long maxPrice, Double minRating, 
+                                                Integer limit, Integer offset) {
         
-        try {
-            List<Document> documents = gigEmbeddingService.findGigsByCategory(
-                category, 
-                additionalQuery, 
-                limit
-            );
+        GigSearchRequestDto request = GigSearchRequestDto.builder()
+            .query(query)
+            .skills(skills != null ? Arrays.asList(skills.split(",")) : Collections.emptyList())
+            .category(category)
+            .minPrice(minPrice)
+            .maxPrice(maxPrice)
+            .minRating(minRating)
+            .limit(limit != null ? limit : 20)
+            .offset(offset != null ? offset : 0)
+            .build();
             
-            List<GigSearchResultDto> results = documents.stream()
-                .map(this::convertDocumentToSearchResult)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-            
-            return GigSearchResponseDto.builder()
-                .query(category + (additionalQuery != null ? " " + additionalQuery : ""))
-                .results(results)
-                .totalResults(results.size())
-                .searchType("category_semantic")
-                .build();
-            
-        } catch (Exception e) {
-            log.error("Error searching gigs by category: {}", e.getMessage(), e);
-            return GigSearchResponseDto.builder()
-                .query(category)
-                .results(Collections.emptyList())
-                .totalResults(0)
-                .searchType("category_semantic")
-                .error("Search temporarily unavailable")
-                .build();
-        }
+        return searchGigs(request);
     }
     
     /**
-     * Convert document to search result
+     * Category-specific semantic search
      */
-    private GigSearchResultDto convertDocumentToSearchResult(Document document) {
-        try {
-            Map<String, Object> metadata = document.getMetadata();
+    public GigSearchResponseDto searchGigsByCategory(String category, String query, String skills,
+                                                    Long minPrice, Long maxPrice, Double minRating,
+                                                    Integer limit, Integer offset) {
+        
+        GigSearchRequestDto request = GigSearchRequestDto.builder()
+            .query(query)
+            .skills(skills != null ? Arrays.asList(skills.split(",")) : Collections.emptyList())
+            .category(category)
+            .minPrice(minPrice)
+            .maxPrice(maxPrice)
+            .minRating(minRating)
+            .limit(limit != null ? limit : 20)
+            .offset(offset != null ? offset : 0)
+            .build();
             
-            Long gigId = Long.parseLong(metadata.get("gigId").toString());
-            Long profileId = Long.parseLong(metadata.get("profileId").toString());
-            String title = metadata.get("title").toString();
-            String description = metadata.get("description").toString();
-            String category = metadata.get("category").toString();
-            String tagsString = metadata.get("tags").toString();
-            
-            // Parse tags
-            List<String> tags = tagsString.isEmpty() ? 
-                Collections.emptyList() : 
-                Arrays.asList(tagsString.split(","));
-            
-            // Calculate relevance score
-            double relevanceScore = calculateRelevanceScore(document);
-            
-            // Get additional gig details from database if needed
-            Optional<Gig> gigOpt = gigRepository.findById(gigId);
-            if (gigOpt.isEmpty()) {
-                log.warn("Gig {} found in vector search but not in database", gigId);
-                return null;
-            }
-            
-            Gig gig = gigOpt.get();
-            
-            return GigSearchResultDto.builder()
-                .gigId(gigId)
-                .profileId(profileId)
-                .title(title)
-                .description(description)
-                .category(category)
-                .tags(tags)
-                .status(gig.getStatus().toString())
-                .reviewsCount(gig.getReviewsCount())
-                .relevanceScore(relevanceScore)
-                .matchReason(generateMatchReason(document))
-                .hasPackages(false)
-                .build();
-            
-        } catch (Exception e) {
-            log.error("Error converting document to search result: {}", e.getMessage());
-            return null;
-        }
+        return searchGigs(request);
     }
     
-    /**
-     * Apply additional filters to search results
-     */
-    private List<GigSearchResultDto> applyFilters(List<GigSearchResultDto> results, GigSearchRequestDto request) {
-        return results.stream()
-            .filter(result -> {
-                // Category filter
-                if (request.getCategory() != null && !request.getCategory().isEmpty()) {
-                    if (!result.getCategory().equalsIgnoreCase(request.getCategory())) {
-                        return false;
+    private String buildSemanticQuery(GigSearchRequestDto request) {
+        StringBuilder queryBuilder = new StringBuilder();
+        
+        // Add main query
+        if (request.getQuery() != null && !request.getQuery().trim().isEmpty()) {
+            String enhancedQuery = queryEnhancementService.enhanceGigQuery(request.getQuery());
+            queryBuilder.append(enhancedQuery);
+        }
+        
+        // Add skills
+        if (request.getSkills() != null && !request.getSkills().isEmpty()) {
+            String skillsText = String.join(" ", request.getSkills());
+            if (queryBuilder.length() > 0) queryBuilder.append(" ");
+            queryBuilder.append(skillsText);
+        }
+        
+        // Add category context
+        if (request.getCategory() != null && !request.getCategory().trim().isEmpty()) {
+            if (queryBuilder.length() > 0) queryBuilder.append(" ");
+            queryBuilder.append(request.getCategory());
+        }
+        
+        return queryBuilder.toString().trim();
+    }
+    
+    private List<Document> performVectorSearch(String query, GigSearchRequestDto request) {
+        SearchRequest searchRequest = SearchRequest.builder()
+            .query(query)
+            .topK(Math.max(request.getLimit() * 3, 100)) // Get more for filtering
+            .similarityThreshold(0.3)
+            .build();
+        
+        return vectorStore.similaritySearch(searchRequest);
+    }
+    
+    private List<Long> extractGigIds(List<Document> documents) {
+        return documents.stream()
+            .map(doc -> {
+                Object gigIdObj = doc.getMetadata().get("gigId");
+                if (gigIdObj instanceof Number) {
+                    return ((Number) gigIdObj).longValue();
+                } else if (gigIdObj instanceof String) {
+                    try {
+                        return Long.valueOf((String) gigIdObj);
+                    } catch (NumberFormatException e) {
+                        log.warn("Invalid gigId format: {}", gigIdObj);
+                        return null;
                     }
+                }
+                return null;
+            })
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(Collectors.toList());
+    }
+    
+    private List<Gig> applyBusinessFilters(List<Gig> gigs, GigSearchRequestDto request) {
+        return gigs.stream()
+            .filter(gig -> {
+                // Filter by status (only active gigs)
+                if (!Gig.Status.ACTIVE.equals(gig.getStatus())) {
+                    return false;
                 }
                 
-                // Minimum rating filter
-                if (request.getMinRating() != null) {
-                    if (result.getReviewAvg() == null || result.getReviewAvg() < request.getMinRating()) {
-                        return false;
-                    }
+                // Filter by rating
+                if (request.getMinRating() != null && 
+                    (gig.getReviewAvg() == null || gig.getReviewAvg().doubleValue() < request.getMinRating())) {
+                    return false;
                 }
+                if (request.getMaxRating() != null && 
+                    (gig.getReviewAvg() == null || gig.getReviewAvg().doubleValue() > request.getMaxRating())) {
+                    return false;
+                }
+                
+                // Filter by review count
+                if (request.getMinReviews() != null && 
+                    (gig.getReviewsCount() == null || gig.getReviewsCount() < request.getMinReviews())) {
+                    return false;
+                }
+                
+                // TODO: Price filtering requires fetching gig packages
+                // This would need a join query or separate service call
                 
                 return true;
             })
             .collect(Collectors.toList());
     }
     
-    /**
-     * Enhance relevance scoring based on query analysis
-     */
-    private List<GigSearchResultDto> enhanceRelevanceScoring(List<GigSearchResultDto> results, String originalQuery) {
-        List<String> queryTerms = extractQueryTerms(originalQuery);
+    private List<GigSearchResponseDto.GigResult> buildResults(List<Gig> gigs, List<Document> documents, GigSearchRequestDto request) {
+        // Create similarity score map
+        Map<Long, Double> similarityScores = documents.stream()
+            .collect(Collectors.toMap(
+                doc -> {
+                    Object gigIdObj = doc.getMetadata().get("gigId");
+                    return gigIdObj instanceof Number ? ((Number) gigIdObj).longValue() : 
+                           Long.valueOf(gigIdObj.toString());
+                },
+                doc -> (Double) doc.getMetadata().getOrDefault("distance", 0.0),
+                (existing, replacement) -> existing
+            ));
         
-        return results.stream()
-            .map(result -> {
-                double enhancedScore = calculateEnhancedRelevanceScore(result, queryTerms);
-                return result.toBuilder().relevanceScore(enhancedScore).build();
+        // Convert gigs to results with similarity scores
+        List<GigSearchResponseDto.GigResult> results = gigs.stream()
+            .map(gig -> {
+                Double similarityScore = similarityScores.getOrDefault(gig.getId(), 0.0);
+                
+                return GigSearchResponseDto.GigResult.builder()
+                    .id(gig.getId().toString())
+                    .title(gig.getTitle())
+                    .description(gig.getDescription())
+                    .profileId(gig.getProfileId())
+                    .category(gig.getCategory())
+                    .tags(gig.getTags() != null ? Arrays.asList(gig.getTags()) : Collections.emptyList())
+                    .reviewAvg(gig.getReviewAvg() != null ? gig.getReviewAvg().doubleValue() : 0.0)
+                    .reviewsCount(gig.getReviewsCount() != null ? gig.getReviewsCount() : 0)
+                    .similarityScore(1.0 - similarityScore) // Convert distance to similarity
+                    .createdAt(gig.getCreatedAt())
+                    // TODO: Add packages when available
+                    .packages(Collections.emptyList())
+                    .build();
             })
-            .sorted((a, b) -> Double.compare(b.getRelevanceScore(), a.getRelevanceScore()))
             .collect(Collectors.toList());
+        
+        // Sort by relevance (similarity score)
+        results.sort((a, b) -> Double.compare(b.getSimilarityScore(), a.getSimilarityScore()));
+        
+        // Apply pagination
+        int fromIndex = Math.min(request.getOffset(), results.size());
+        int toIndex = Math.min(fromIndex + request.getLimit(), results.size());
+        
+        return results.subList(fromIndex, toIndex);
     }
     
-    /**
-     * Calculate enhanced relevance score
-     */
-    private double calculateEnhancedRelevanceScore(GigSearchResultDto result, List<String> queryTerms) {
-        double baseScore = result.getRelevanceScore();
+    private Map<String, Object> buildFilterSummary(int totalBeforeFilters, int totalAfterFilters, GigSearchRequestDto request) {
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("totalGigs", totalBeforeFilters);
+        summary.put("afterFilters", totalAfterFilters);
         
-        // Title match bonus
-        double titleBonus = 0.0;
-        for (String term : queryTerms) {
-            if (result.getTitle().toLowerCase().contains(term.toLowerCase())) {
-                titleBonus += 0.1;
-            }
-        }
+        List<String> appliedFilters = new ArrayList<>();
+        if (request.getMinRating() != null) appliedFilters.add("minRating");
+        if (request.getMaxRating() != null) appliedFilters.add("maxRating");
+        if (request.getMinReviews() != null) appliedFilters.add("minReviews");
+        if (request.getCategory() != null) appliedFilters.add("category");
+        if (request.getMinPrice() != null) appliedFilters.add("minPrice");
+        if (request.getMaxPrice() != null) appliedFilters.add("maxPrice");
         
-        // Tag match bonus
-        double tagBonus = 0.0;
-        for (String tag : result.getTags()) {
-            for (String term : queryTerms) {
-                if (tag.toLowerCase().contains(term.toLowerCase())) {
-                    tagBonus += 0.05;
-                }
-            }
-        }
-        
-        // Rating bonus
-        double ratingBonus = 0.0;
-        if (result.getReviewAvg() != null && result.getReviewsCount() > 0) {
-            ratingBonus = (result.getReviewAvg() / 5.0) * 0.1;
-        }
-        
-        return Math.min(1.0, baseScore + titleBonus + tagBonus + ratingBonus);
+        summary.put("appliedFilters", appliedFilters);
+        return summary;
     }
     
-    /**
-     * Extract query terms for matching
-     */
-    private List<String> extractQueryTerms(String query) {
-        return Arrays.stream(query.toLowerCase().split("\\s+"))
-            .filter(term -> term.length() > 2)
-            .collect(Collectors.toList());
-    }
-    
-    /**
-     * Calculate relevance score from document
-     */
-    private double calculateRelevanceScore(Document document) {
-        Object distanceObj = document.getMetadata().get("distance");
-        if (distanceObj instanceof Number) {
-            double distance = ((Number) distanceObj).doubleValue();
-            return Math.max(0.0, Math.min(1.0, 1.0 - distance));
-        }
-        return 0.8; // Default score
-    }
-    
-    /**
-     * Generate match reason explanation
-     */
-    private String generateMatchReason(Document document) {
-        return "Content and skill alignment with search criteria";
-    }
 }

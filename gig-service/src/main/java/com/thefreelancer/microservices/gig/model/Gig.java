@@ -55,7 +55,8 @@ public class Gig {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    public enum Status {
-        DRAFT, ACTIVE, PAUSED, ARCHIVED
+    // ✅ FIXED: Made enum static to fix Hibernate processing error
+    public static enum Status {
+        DRAFT, ACTIVE, PAUSED, ARCHIVED;
     }
 }

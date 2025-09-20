@@ -162,4 +162,48 @@ public class EventPublisherService {
             log.error("Failed to publish ReviewReminderEvent for contractId: {}", contractId, e);
         }
     }
+
+    public void publishInviteSentEvent(Long inviteId, Long clientId, Long freelancerId, Long jobId, 
+                                      String jobTitle, String freelancerName, String clientName) {
+        try {
+            InviteSentEvent event = InviteSentEvent.builder()
+                    .inviteId(inviteId.toString())
+                    .clientId(clientId.toString())
+                    .freelancerId(freelancerId.toString())
+                    .jobId(jobId.toString())
+                    .jobTitle(jobTitle)
+                    .freelancerName(freelancerName)
+                    .clientName(clientName)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+
+            kafkaTemplate.send("invite-sent", inviteId.toString(), event);
+            log.info("Published InviteSentEvent for inviteId: {}", inviteId);
+            
+        } catch (Exception e) {
+            log.error("Failed to publish InviteSentEvent for inviteId: {}", inviteId, e);
+        }
+    }
+
+    public void publishInviteReceivedEvent(Long inviteId, Long clientId, Long freelancerId, Long jobId, 
+                                          String jobTitle, String freelancerName, String clientName) {
+        try {
+            InviteReceivedEvent event = InviteReceivedEvent.builder()
+                    .inviteId(inviteId.toString())
+                    .clientId(clientId.toString())
+                    .freelancerId(freelancerId.toString())
+                    .jobId(jobId.toString())
+                    .jobTitle(jobTitle)
+                    .freelancerName(freelancerName)
+                    .clientName(clientName)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+
+            kafkaTemplate.send("invite-received", inviteId.toString(), event);
+            log.info("Published InviteReceivedEvent for inviteId: {}", inviteId);
+            
+        } catch (Exception e) {
+            log.error("Failed to publish InviteReceivedEvent for inviteId: {}", inviteId, e);
+        }
+    }
 }
