@@ -61,7 +61,7 @@ services:
       - "6379:6379"
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
-      - ./redis-data:/data
+      - ./ai-service/redis-data:/data
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     restart: unless-stopped
