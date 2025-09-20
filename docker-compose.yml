@@ -1,20 +1,27 @@
 version: '3.8'
 
 services:
+  # ===========================================
+  # INFRASTRUCTURE SERVICES
+  # ===========================================
+  
   # Zookeeper - Required for Kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     hostname: zookeeper
-    container_name: zookeeper
+    container_name: freelancer-zookeeper
     ports:
       - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - freelancer-network
 
+  # Kafka Broker
   broker:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: broker
+    container_name: freelancer-broker
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -26,32 +33,9 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-  # schema-registry:
-  #   image: confluentinc/cp-schema-registry:7.5.0
-  #   hostname: schema-registry
-  #   container_name: schema-registry
-  #   depends_on:
-  #     - broker
-  #   ports:
-  #     - "8088:8081"
-  #   environment:
-  #     SCHEMA_REGISTRY_HOST_NAME: schema-registry
-  #     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
-  #     SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
-  # kafka-ui:
-  #   container_name: kafka-ui
-  #   image: provectuslabs/kafka-ui:latest
-  #   ports:
-  #     - "8089:8080"
-  #   depends_on:
-  #     - broker
-  #     - schema-registry
-  #   environment:
-  #     KAFKA_CLUSTERS_NAME: local
-  #     KAFKA_CLUSTERS_BOOTSTRAPSERVERS: broker:29092
-  #     # KAFKA_CLUSTERS_SCHEMAREGISTRY: http://schema-registry:8081
-  #     DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - freelancer-network
 
   # Redis for AI Service conversational memory
   redis:
@@ -61,7 +45,7 @@ services:
       - "6379:6379"
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
-      - ./ai-service/redis-data:/data
+      - redis_data:/data
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     restart: unless-stopped
@@ -70,11 +54,17 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
+    networks:
+      - freelancer-network
 
+  # ===========================================
+  # DATABASE SERVICES
+  # ===========================================
+  
   # Auth Service Database
   auth-postgres:
     image: postgres:16-alpine
-    container_name: auth-postgres-db
+    container_name: freelancer-auth-db
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=password
@@ -84,11 +74,18 @@ services:
     volumes:
       - ./auth-service/postgres-data:/var/lib/postgresql/data
       - ./auth-service/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelancer-network
 
-  # Gig Service Database
+  # Gig Service Database (with pgvector extension)
   gig-postgres:
     image: pgvector/pgvector:pg16
-    container_name: gig-postgres-db
+    container_name: freelancer-gig-db
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=password
@@ -98,50 +95,78 @@ services:
     volumes:
       - ./gig-service/postgres-data:/var/lib/postgresql/data
       - ./gig-service/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d gig_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelancer-network
 
-  # # Job Proposal Service Database
-  # job-proposal-postgres:
-  #   image: postgres:16-alpine
-  #   container_name: job-proposal-postgres-db
-  #   environment:
-  #     - POSTGRES_USER=admin
-  #     - POSTGRES_PASSWORD=password
-  #     - POSTGRES_DB=job_proposal_db
-  #   ports:
-  #     - "5435:5432"
-  #   volumes:
-  #     - ./job-proposal-service/postgres-data:/var/lib/postgresql/data
+  # Job Proposal Service Database
+  job-proposal-postgres:
+    image: postgres:16-alpine
+    container_name: freelancer-job-proposal-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=job_proposal_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./job-proposal-service/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d job_proposal_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelancer-network
 
   # Workspace Service Database
-  # workspace-postgres:
-  #   image: postgres:16-alpine
-  #   container_name: workspace-postgres-db
-  #   environment:
-  #     - POSTGRES_USER=admin
-  #     - POSTGRES_PASSWORD=password
-  #     - POSTGRES_DB=workspace_db
-  #   ports:
-  #     - "5436:5432"
-  #   volumes:
-  #     - ./workspace-service/postgres-data:/var/lib/postgresql/data
+  workspace-postgres:
+    image: postgres:16-alpine
+    container_name: freelancer-workspace-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=workspace_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./workspace-service/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d workspace_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelancer-network
 
   # Payment Service Database
-  # payment-postgres:
-  #   image: postgres:16-alpine
-  #   container_name: payment-postgres-db
-  #   environment:
-  #     - POSTGRES_USER=admin
-  #     - POSTGRES_PASSWORD=password
-  #     - POSTGRES_DB=payment_db
-  #   ports:
-  #     - "5437:5432"
-  #   volumes:
-  #     - ./payment-service/postgres-data:/var/lib/postgresql/data
+  payment-postgres:
+    image: postgres:16-alpine
+    container_name: freelancer-payment-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=payment_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - ./payment-service/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d payment_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelancer-network
 
   # Notification Service Database
   notification-postgres:
     image: postgres:16-alpine
-    container_name: notification-postgres-db
+    container_name: freelancer-notification-db
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=password
@@ -151,5 +176,553 @@ services:
     volumes:
       - ./notification-service/postgres-data:/var/lib/postgresql/data
       - ./notification-service/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d notification_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelancer-network
+
+  # ===========================================
+  # MICROSERVICES - CONTAINERIZED
+  # ===========================================
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    image: freelancer/auth-service:latest
+    container_name: freelancer-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-postgres:5432/auth_db?serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-that-should-be-at-least-256-bits-long}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION:-604800000}
+      
+      # Kafka Configuration
+      - KAFKA_BOOTSTRAP_SERVERS=broker:29092
+      - KAFKA_GROUP_ID=auth-service-group
+      
+      # Email Configuration (for password reset, verification)
+      - SPRING_MAIL_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SPRING_MAIL_PORT=${SMTP_PORT:-587}
+      - SPRING_MAIL_USERNAME=${SMTP_USERNAME:-your-email@gmail.com}
+      - SPRING_MAIL_PASSWORD=${SMTP_PASSWORD:-your-app-password}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+      
+      # Logging
+      - LOGGING_LEVEL_COM_THEFREELANCER=${LOG_LEVEL:-INFO}
+      - LOGGING_LEVEL_ROOT=WARN
+      
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Gig Service
+  gig-service:
+    build:
+      context: ./gig-service
+      dockerfile: Dockerfile
+    image: freelancer/gig-service:latest
+    container_name: freelancer-gig-service
+    ports:
+      - "8082:8082"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://gig-postgres:5432/gig_db?serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      
+      # Service URLs
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      
+      # Kafka Configuration
+      - KAFKA_BOOTSTRAP_SERVERS=broker:29092
+      - KAFKA_GROUP_ID=gig-service-group
+      
+      # OpenAI Configuration (for embeddings & AI features)
+      - SPRING_AI_OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SPRING_AI_OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL:-gpt-3.5-turbo}
+      - SPRING_AI_OPENAI_EMBEDDING_MODEL=${OPENAI_EMBEDDING_MODEL:-text-embedding-ada-002}
+      
+      # Cloudinary Configuration (for media uploads)
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-your-cloud-name}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-your-api-key}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-your-api-secret}
+      - CLOUDINARY_SECURE=true
+      - CLOUDINARY_URL=${CLOUDINARY_URL:-cloudinary://315316952342711:TljH8OV7vyy4H0scuxbx1akqFLA@dzc2cftmz}
+      
+      # File Upload Configuration
+      - SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=10MB
+      - SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=10MB
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+      
+      # Logging
+      - LOGGING_LEVEL_COM_THEFREELANCER=${LOG_LEVEL:-INFO}
+      - LOGGING_LEVEL_ROOT=WARN
+      
+    depends_on:
+      gig-postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Job Proposal Service
+  job-proposal-service:
+    build:
+      context: ./job-proposal-service
+      dockerfile: Dockerfile
+    image: freelancer/job-proposal-service:latest
+    container_name: freelancer-job-proposal-service
+    ports:
+      - "8083:8083"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://job-proposal-postgres:5432/job_proposal_db?serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      
+      # Service URLs
+      # Service URLs (fix the variable names to match application.properties)
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - GIG_SERVICE_URL=http://gig-service:8082
+      - WORKSPACE_SERVICE_URL=http://workspace-service:8084
+      
+      # Kafka Configuration
+      - KAFKA_BOOTSTRAP_SERVERS=broker:29092
+      - KAFKA_GROUP_ID=job-proposal-service-group
+      
+      # File Upload Configuration
+      - SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=50MB
+      - SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=50MB
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+      
+      # Logging
+      - LOGGING_LEVEL_COM_THEFREELANCER=${LOG_LEVEL:-INFO}
+      - LOGGING_LEVEL_ROOT=WARN
+      
+    depends_on:
+      job-proposal-postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Workspace Service
+  workspace-service:
+    build:
+      context: ./workspace-service
+      dockerfile: Dockerfile
+    image: freelancer/workspace-service:latest
+    container_name: freelancer-workspace-service
+    ports:
+      - "8084:8084"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://workspace-postgres:5432/workspace_db?serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      
+      # Service URLs
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      
+      # Kafka Configuration
+      - KAFKA_BOOTSTRAP_SERVERS=broker:29092
+      - KAFKA_GROUP_ID=workspace-service-group
+      
+      # Cloudinary Configuration (for file uploads)
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-your-cloud-name}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-your-api-key}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-your-api-secret}
+      - CLOUDINARY_URL=${CLOUDINARY_URL:-cloudinary://315316952342711:TljH8OV7vyy4H0scuxbx1akqFLA@dzc2cftmz}
+      - CLOUDINARY_SECURE=true
+
+
+      # File Storage Configuration
+      - FILE_STORAGE_TYPE=${FILE_STORAGE_TYPE:-local}
+      - FILE_STORAGE_LOCAL_PATH=${FILE_STORAGE_LOCAL_PATH:-/app/uploads}
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+      
+      # Logging
+      - LOGGING_LEVEL_COM_THEFREELANCER=${LOG_LEVEL:-INFO}
+      - LOGGING_LEVEL_ROOT=WARN
+      
+    depends_on:
+      workspace-postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    image: freelancer/notification-service:latest
+    container_name: freelancer-notification-service
+    ports:
+      - "8085:8085"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://notification-postgres:5432/notification_db?serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      
+      # Service URLs
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - JOB_PROPOSAL_SERVICE_URL=http://job-proposal-service:8083
+      - GIG_SERVICE_URL=http://gig-service:8082
+      - WORKSPACE_SERVICE_URL=http://workspace-service:8084
+
+      # Kafka Configuration
+      - KAFKA_BOOTSTRAP_SERVERS=broker:29092
+      - KAFKA_GROUP_ID=notification-service-group
+      
+      # Email Configuration
+      - SPRING_MAIL_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SPRING_MAIL_PORT=${SMTP_PORT:-587}
+      - SPRING_MAIL_USERNAME=${SMTP_USERNAME:-your-email@gmail.com}
+      - SPRING_MAIL_PASSWORD=${SMTP_PASSWORD:-your-app-password}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+      
+      # Push Notifications (Firebase/FCM)
+      #! removing it for now
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+      
+      # Logging
+      - LOGGING_LEVEL_COM_THEFREELANCER=${LOG_LEVEL:-INFO}
+      - LOGGING_LEVEL_ROOT=WARN
+      
+    depends_on:
+      notification-postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    image: freelancer/payment-service:latest
+    container_name: freelancer-payment-service
+    ports:
+      - "8087:8087"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://payment-postgres:5432/payment_db?serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      
+      # Service URLs
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      
+      # Kafka Configuration
+      - KAFKA_BOOTSTRAP_SERVERS=broker:29092
+      - KAFKA_GROUP_ID=payment-service-group
+      
+      # Stripe Configuration
+      - STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY:-pk_test_your_stripe_public_key}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_your_stripe_secret_key}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_your_webhook_secret}
+      # - STRIPE_CONNECT_CLIENT_ID=${STRIPE_CONNECT_CLIENT_ID:-ca_your_connect_client_id}
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+      
+      # Logging
+      - LOGGING_LEVEL_COM_THEFREELANCER=${LOG_LEVEL:-INFO}
+      - LOGGING_LEVEL_ROOT=WARN
+      
+    depends_on:
+      payment-postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # AI Service
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    image: freelancer/ai-service:latest
+    container_name: freelancer-ai-service
+    ports:
+      - "8086:8086"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # Database Configuration (shares gig-service DB for vector operations)
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://gig-postgres:5432/gig_db?serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_JPA_SHOW_SQL=false
+      
+      # Redis Configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      
+      # OpenAI Configuration
+      - SPRING_AI_OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SPRING_AI_OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL:-gpt-3.5-turbo}
+      - SPRING_AI_OPENAI_EMBEDDING_MODEL=${OPENAI_EMBEDDING_MODEL:-text-embedding-ada-002}
+      
+      # AI Service Configuration
+      - AI_CONVERSATION_MEMORY_SIZE=${AI_CONVERSATION_MEMORY_SIZE:-10}
+      - AI_MAX_TOKENS=${AI_MAX_TOKENS:-1000}
+      - AI_TEMPERATURE=${AI_TEMPERATURE:-0.7}
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+      
+      # Logging
+      - LOGGING_LEVEL_COM_THEFREELANCER=${LOG_LEVEL:-INFO}
+      - LOGGING_LEVEL_ROOT=WARN
+      
+    depends_on:
+      gig-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    image: freelancer/api-gateway:latest
+    container_name: freelancer-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+
+      - JWT_SECRET=${JWT_SECRET:-GnOiUp/O8nRQ0U+ZJovb8t1OgillgLfAghwwf1pn5xzSJqE95trGqK+qaRVcq7z6U/SPy8QAWBt2ACPzJYuBFg==}
+
+      # Service URLs
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - GIG_SERVICE_URL=http://gig-service:8082
+      - JOB_PROPOSAL_SERVICE_URL=http://job-proposal-service:8083
+      - WORKSPACE_SERVICE_URL=http://workspace-service:8084
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8085
+      - PAYMENT_SERVICE_URL=http://payment-service:8087
+      - AI_SERVICE_URL=http://ai-service:8086
+      
+      # Gateway Configuration
+      - GATEWAY_TIMEOUT=${GATEWAY_TIMEOUT:-30000}
+      - GATEWAY_RETRY_ATTEMPTS=${GATEWAY_RETRY_ATTEMPTS:-3}
+      
+      # Rate Limiting
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=${RATE_LIMIT_REQUESTS_PER_MINUTE:-100}
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      - CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS,PATCH
+      - CORS_ALLOWED_HEADERS=*
+      
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,gateway
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+      
+      # Logging
+      - LOGGING_LEVEL_COM_THEFREELANCER=${LOG_LEVEL:-INFO}
+      - LOGGING_LEVEL_ROOT=WARN
+      
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      gig-service:
+        condition: service_healthy
+      job-proposal-service:
+        condition: service_healthy
+      workspace-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  freelancer-network:
+    driver: bridge
+    name: freelancer-network
+
+volumes:
+  auth_postgres_data:
+  gig_postgres_data:
+  job_proposal_postgres_data:
+  workspace_postgres_data:
+  notification_postgres_data:
+  payment_postgres_data:
+  redis_data:
 
 

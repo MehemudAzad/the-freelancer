@@ -1,0 +1,35 @@
+# Maven
+target/
+!target/*.jar
+*.log
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# Application specific
+logs/
+temp/
+
+# Spring Boot
+.gradle/
+build/
