@@ -87,11 +87,18 @@ public class ProfileEmbeddingService {
      * Find similar profiles based on skills and description
      */
     public List<Document> findSimilarProfiles(String query, int topK, double similarityThreshold) {
+        
+        // Validate query is not empty
+        if (query == null || query.trim().isEmpty()) {
+            log.warn("Empty query provided to findSimilarProfiles, using fallback");
+            query = "software developer programmer";
+        }
+        
         FilterExpressionBuilder builder = new FilterExpressionBuilder();
         Filter.Expression filter = builder.eq(DOCUMENT_TYPE_KEY, PROFILE_DOCUMENT_TYPE).build();
         
         SearchRequest searchRequest = SearchRequest.builder()
-            .query(query)
+            .query(query.trim())
             .topK(topK)
             .similarityThreshold(similarityThreshold)
             .filterExpression(filter)

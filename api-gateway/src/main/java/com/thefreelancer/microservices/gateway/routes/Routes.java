@@ -27,6 +27,25 @@ public class Routes {
 				.build();
 	}
 
+	// CRITICAL: This bean name starts with 'a' to ensure it runs FIRST alphabetically
+	@Bean
+	public RouterFunction<ServerResponse> aGigServiceSpecificRoutes() {
+		return GatewayRouterFunctions.route("gig-service-specific")
+				// Marketplace Analysis APIs - HIGH PRIORITY
+				.route(RequestPredicates.path("/api/marketplace/**"), this::forwardToGigService)
+				
+				// Job Matching APIs - must come BEFORE broad /api/jobs/** pattern
+				.route(RequestPredicates.path("/api/jobs/match-freelancers"), this::forwardToGigService)
+				.route(RequestPredicates.path("/api/jobs/*/match-freelancers"), this::forwardToGigService)
+				.route(RequestPredicates.path("/api/jobs/*/match-freelancers/smart"), this::forwardToGigService)
+				.route(RequestPredicates.path("/api/jobs/*/bulk-match"), this::forwardToGigService)
+				
+				// Freelancer APIs
+				.route(RequestPredicates.path("/api/freelancers/*/job-feed"), this::forwardToGigService)
+				.route(RequestPredicates.path("/api/freelancers/*/clear-cache"), this::forwardToGigService)
+				.build();
+	}
+
 	@Bean
 	public RouterFunction<ServerResponse> gigServiceRoute() {
 		return GatewayRouterFunctions.route("gig-service")
@@ -44,15 +63,16 @@ public class Routes {
 				.build();
 	}
 
+	// This bean name starts with 'z' to ensure it runs LAST alphabetically
 	@Bean
-	public RouterFunction<ServerResponse> jobProposalServiceRoute() {
+	public RouterFunction<ServerResponse> zJobProposalServiceRoute() {
 		return GatewayRouterFunctions.route("job-proposal-service")
 				.route(RequestPredicates.path("/api/jobs/**"), this::forwardToJobProposalService)
 				.route(RequestPredicates.path("/api/proposals/**"), this::forwardToJobProposalService)
 				.route(RequestPredicates.path("/api/contracts/**"), this::forwardToJobProposalService)
 				.route(RequestPredicates.path("/api/invites/**"), this::forwardToJobProposalService)
 				.build();
-			}
+	}
 
 	@Bean
 	public RouterFunction<ServerResponse> workspaceServiceRoute() {

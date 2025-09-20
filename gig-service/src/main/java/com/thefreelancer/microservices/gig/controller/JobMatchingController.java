@@ -165,4 +165,72 @@ public class JobMatchingController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    
+    @GetMapping("/{jobId}/match-freelancers/smart")
+    @Operation(
+        summary = "Smart matching with hybrid scoring (80% semantic + 20% business metrics)",
+        description = "Advanced matching that normalizes semantic scores and combines with business metrics. " +
+                     "Takes top 15 profiles, normalizes semantic score to 0-100%, then applies 80% semantic + 20% business weighting."
+    )
+    @ApiResponse(
+        responseCode = "200", 
+        description = "Successfully found smart matching freelancers with hybrid scores"
+    )
+    public ResponseEntity<JobMatchingResponseDto> findMatchingFreelancersSmart(
+            @Parameter(description = "Job ID to find freelancers for")
+            @PathVariable String jobId,
+            
+            @Parameter(description = "Job title")
+            @RequestParam(required = false) String title,
+            
+            @Parameter(description = "Job description")
+            @RequestParam(required = false) String description,
+            
+            @Parameter(description = "Required skills (comma-separated)")
+            @RequestParam(required = false) String requiredSkills,
+            
+            @Parameter(description = "Job category")
+            @RequestParam(required = false) String category,
+            
+            @Parameter(description = "Minimum similarity score", example = "0.3")
+            @RequestParam(defaultValue = "0.3") Double minSimilarityScore,
+            
+            @Parameter(description = "Minimum rating", example = "4.0")
+            @RequestParam(required = false) Double minRating,
+            
+            @Parameter(description = "Maximum hourly rate in cents")
+            @RequestParam(required = false) Long maxHourlyRateCents,
+            
+            @Parameter(description = "Required availability", example = "FULL_TIME")
+            @RequestParam(required = false) String availability) {
+        
+        log.info("Received smart matching request for jobId: {}", jobId);
+        
+        try {
+            // Build request DTO for smart matching
+            JobMatchingRequestDto request = JobMatchingRequestDto.builder()
+                .jobId(Long.parseLong(jobId))
+                .title(title)
+                .description(description)
+                .requiredSkills(requiredSkills != null ? List.of(requiredSkills.split(",")) : null)
+                .category(category)
+                .limit(15) // Always get top 15 for smart scoring
+                .minSimilarityScore(minSimilarityScore)
+                .minRating(minRating)
+                .maxHourlyRateCents(maxHourlyRateCents)
+                .availability(availability)
+                .build();
+            
+            JobMatchingResponseDto response = jobToFreelancerMatchingService.findMatchingFreelancersWithSmartScoring(request);
+            
+            log.info("Successfully found {} smart matching freelancers for job: {}", 
+                    response.getTotalMatches(), jobId);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error in smart matching for job {}: {}", jobId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
