@@ -1,0 +1,3896 @@
+{
+	"info": {
+		"_postman_id": "e87c5477-04d6-44e3-97f8-40b0590f7fc9",
+		"name": "the-freelancer",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32200524",
+		"_collection_link": "https://oppenheimer-8399.postman.co/workspace/oppenheimer-Workspace~0938d168-371c-412f-8f35-27e7d32e9e94/collection/32200524-e87c5477-04d6-44e3-97f8-40b0590f7fc9?action=share&source=collection_link&creator=32200524"
+	},
+	"item": [
+		{
+			"name": "auth-service",
+			"item": [
+				{
+					"name": "create user",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"mehemudazad.km@gmail.com\",\n  \"password\": \"password\",\n  \"name\": \"Mehemud Azad\",\n  \"handle\": \"kmazd\",\n  \"country\": \"Bangladesh\",\n  \"timezone\": \"Dhaka\",\n  \"role\" : \"CLIENT\"\n}\n\n\n\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/register",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get user by ids",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\",\n  \"handle\": \"johndoe\",\n  \"country\": \"USA\",\n  \"timezone\": \"America/New_York\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/auth/users?ids=11,2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"auth",
+								"users"
+							],
+							"query": [
+								{
+									"key": "ids",
+									"value": "11,2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test8@gmail.com\",\n  \"password\": \"password\"\n}\n"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refresh token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"eyJhbGciOiJIUzUxMiJ9.eyJ0eXBlIjoicmVmcmVzaCIsInN1YiI6IjQiLCJpYXQiOjE3NTczMzkwNjEsImV4cCI6MTc1Nzk0Mzg2MX0.vLFqFEf384eCv5FBPtYfbId2GydGYmaJLCZP5ILK-D9GodOPy--N7MK_oz4G1FAsWjMF1cEVaSHeYNnBN5jq9Q\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/auth/refresh",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiRlJFRUxBTkNFUiIsInR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwic3ViIjoiNCIsImlhdCI6MTc1NzMzODg1OCwiZXhwIjoxNzU3NDI1MjU4fQ.LvaYac8rjiC-18yVTkBYgibDUfG0M90kJCrUYFccpEqHsMoIYxjMG8-iu-NzYgHe1o7gN1QesF95HV5Y1DCYoQ",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/logout",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{c-access-token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/auth/me",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get profile from user-service",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{access-token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/me/profile",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get user by username",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/public/users/username/absk",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"public",
+								"users",
+								"username",
+								"absk"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "search users by handle",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/public/users/search?handle=abs&page=0&size=10",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"public",
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "handle",
+									"value": "abs"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get user-profile detail by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/public/users/24",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"public",
+								"users",
+								"24"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "stripe-status",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "gig-profile-service",
+			"item": [
+				{
+					"name": "Profile",
+					"item": [
+						{
+							"name": "update profile",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"headline\": \"Technical Writer | API Documentation & Developer Content Expert\",\n  \"bio\": \"Technical writer with 6+ years creating clear, comprehensive documentation for software companies. Expert in API documentation, developer guides, and technical content strategy. Passionate about making complex technology accessible.\",\n  \"hourlyRateCents\": 7500,\n  \"currency\": \"USD\",\n  \"availability\": \"FULL_TIME\",\n  \"languages\": [\"English\", \"Chinese\"],\n  \"skills\": [\"Technical Writing\", \"API Documentation\", \"Developer Documentation\", \"Content Strategy\", \"Markdown\", \"Git\", \"GitBook\", \"Confluence\", \"Notion\", \"OpenAPI\", \"Swagger\", \"REST APIs\", \"Software Documentation\", \"User Guides\", \"Tutorial Writing\"],\n  \"locationText\": \"Vancouver, Canada\",\n  \"githubUsername\": \"tech_writer_9\",\n  \"gitlabUsername\": null,\n  \"websiteUrl\": \"https://techwriter-portfolio.com\",\n  \"linkedinUrl\": \"https://linkedin.com/in/techwriter9\",\n  \"deliveryScore\": 89.7,\n  \"reviewAvg\": 4.7,\n  \"reviewsCount\": 33\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/profiles/me",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"profiles",
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get profile",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8082/api/profiles/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"api",
+										"profiles",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Badge to My Profile",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"type\": \"VERIFIED_SKILL_JAVA\",\n  \"score\": 92.5\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/profiles/me/badges",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"profiles",
+										"me",
+										"badges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Badge to My Profile Copy",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/api/profiles/me/badges",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"profiles",
+										"me",
+										"badges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "public",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Profile Picture Upload",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "multipart/form-data",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "gig",
+											"value": "{\n  \"title\": \"Mobile App Development with React Native & Firebase\",\n  \"description\": \"I will develop a cross-platform mobile application that works seamlessly on both iOS and Android. This comprehensive service includes:\\n\\n• Cross-platform mobile app development with React Native\\n• Backend integration with Firebase or custom REST APIs\\n• Real-time data synchronization and offline functionality\\n• Push notifications and in-app messaging\\n• User authentication and profile management\\n• Payment integration (Stripe, PayPal, or in-app purchases)\\n• App store optimization and deployment guidance\\n• Performance optimization and memory management\\n• Comprehensive testing on multiple devices\\n\\nDeliverables:\\n✅ Complete mobile app source code\\n✅ Firebase/backend configuration\\n✅ App store submission assets\\n✅ User documentation and admin panel\\n✅ 60 days of support and updates\",\n  \"category\": \"Mobile Development\", \n  \"tags\": [\"React Native\", \"Mobile App\", \"iOS\", \"Android\", \"Firebase\", \"Cross-Platform\", \"Push\"]\n  }",
+											"contentType": "application/json",
+											"type": "text"
+										},
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/Users/mr.x/Downloads/👅.jpeg"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/profiles/profile-picture",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"profiles",
+										"profile-picture"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create gig",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"xxxxWedding & Event Photography with Professional Editing\",\n  \"description\": \"I will capture your special moments with artistic vision and professional expertise. This comprehensive photography service includes:\\n\\n• Pre-event consultation and planning\\n• Engagement or pre-event photo session\\n• Full event day coverage (8-12 hours)\\n• Candid and posed photography\\n• Ceremony and reception documentation\\n• Family and group portraits\\n• Couple portraits and romantic shots\\n• Detail shots of decor, rings, and venue\\n• Behind-the-scenes moments\\n• Guest candid photography\\n• Professional photo editing and retouching\\n• Color correction and artistic enhancement\\n• Black and white artistic versions\\n• Online gallery for sharing\\n• High-resolution digital delivery\\n• Print-ready files for albums\\n• USB drive with all edited photos\\n• Printing recommendations and services\\n• Album design consultation\\n• Social media preview images\\n\\nEvent Types:\\n• Weddings and engagements\\n• Corporate events and conferences\\n• Birthday and anniversary parties\\n• Family reunions and gatherings\\n• Graduation ceremonies\\n• Product launches and openings\\n\\nDeliverables:\\n• 300-500+ edited high-resolution photos\\n• Online gallery with download access\\n• Print release for personal use\\n• Professional editing and retouching\\n• Quick preview gallery within 48 hours\\n\\nPerfect for couples, families, and businesses wanting professional event documentation with artistic flair.\",\n  \"category\": \"Event Photography\",\n  \"tags\": [\"Wedding Photography\", \"Event Photography\", \"Portrait Photography\", \"Photo Editing\", \"Professional Photography\", \"Candid Photography\", \"Celebration Photography\", \"Memory Preservation\"]\n}"
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/gigs/my-gigs",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"gigs",
+										"my-gigs"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create gig Copy",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Mobile App Development with React Native & Firebase\",\n  \"description\": \"I will develop a cross-platform mobile application that works seamlessly on both iOS and Android. This comprehensive service includes:\\n\\n• Cross-platform mobile app development with React Native\\n• Backend integration with Firebase or custom REST APIs\\n• Real-time data synchronization and offline functionality\\n• Push notifications and in-app messaging\\n• User authentication and profile management\\n• Payment integration (Stripe, PayPal, or in-app purchases)\\n• App store optimization and deployment guidance\\n• Performance optimization and memory management\\n• Comprehensive testing on multiple devices\\n\\nDeliverables:\\n✅ Complete mobile app source code\\n✅ Firebase/backend configuration\\n✅ App store submission assets\\n✅ User documentation and admin panel\\n✅ 60 days of support and updates\",\n  \"category\": \"Mobile Development\", \n  \"tags\": [\"React Native\", \"Mobile App\", \"iOS\", \"Android\", \"Firebase\", \"Cross-Platform\", \"Push\"]\n  }"
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/gigs/my-gigs",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"gigs",
+										"my-gigs"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Gig",
+					"item": [
+						{
+							"name": "gig-package",
+							"item": [
+								{
+									"name": "Create Gig-Package",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"tier\": \"PREMIUM\",\n  \"title\": \"Starter Website\", \n  \"description\": \"Simple 3-page website with contact form and basic styling\",\n  \"priceCents\": 25000,\n  \"currency\": \"USD\",\n  \"deliveryDays\": 7,\n  \"revisions\": 2,\n  \"features\": [\n    \"3 pages (Home, About, Contact)\",\n    \"Contact form\",\n    \"Mobile responsive\", \n    \"Basic SEO\"\n  ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/gigs/my-gigs/3/packages",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"gigs",
+												"my-gigs",
+												"3",
+												"packages"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "get gig packages",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"tier\": \"PREMIUM\",\n  \"title\": \"Starter Website\", \n  \"description\": \"Simple 3-page website with contact form and basic styling\",\n  \"priceCents\": 25000,\n  \"currency\": \"USD\",\n  \"deliveryDays\": 7,\n  \"revisions\": 2,\n  \"features\": [\n    \"3 pages (Home, About, Contact)\",\n    \"Contact form\",\n    \"Mobile responsive\", \n    \"Basic SEO\"\n  ]\n}"
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/gigs/3/packages",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"gigs",
+												"3",
+												"packages"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete gig package",
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/api/gigs/my-gigs/3/packages/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"gigs",
+												"my-gigs",
+												"3",
+												"packages",
+												"1"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Gig Media",
+							"item": [
+								{
+									"name": "Get gigs media",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/api/gigs/1/media",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"gigs",
+												"1",
+												"media"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Upload gigs media",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "content-Type",
+												"value": "multipart/form-data",
+												"type": "text"
+											},
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "file",
+													"type": "file",
+													"src": "/Users/mr.x/Downloads/1 (9).pdf"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/gigs/1/media/upload",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"gigs",
+												"1",
+												"media",
+												"upload"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "my gig",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"mySecurePassword123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/gigs/my-gigs",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"gigs",
+										"my-gigs"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "public gig details by id",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/gigs/1",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"gigs",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "public search gigs",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/gigs/search?category=\"Web Development\"",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"gigs",
+										"search"
+									],
+									"query": [
+										{
+											"key": "category",
+											"value": "\"Web Development\""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "public gig by user id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": ""
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create gig with media",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "multipart/form-data",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "gig",
+											"value": "{\n  \"title\": \"Mobile App Development with React Native & Firebase\",\n  \"description\": \"I will develop a cross-platform mobile application that works seamlessly on both iOS and Android. This comprehensive service includes:\\n\\n• Cross-platform mobile app development with React Native\\n• Backend integration with Firebase or custom REST APIs\\n• Real-time data synchronization and offline functionality\\n• Push notifications and in-app messaging\\n• User authentication and profile management\\n• Payment integration (Stripe, PayPal, or in-app purchases)\\n• App store optimization and deployment guidance\\n• Performance optimization and memory management\\n• Comprehensive testing on multiple devices\\n\\nDeliverables:\\n✅ Complete mobile app source code\\n✅ Firebase/backend configuration\\n✅ App store submission assets\\n✅ User documentation and admin panel\\n✅ 60 days of support and updates\",\n  \"category\": \"Mobile Development\", \n  \"tags\": [\"React Native\", \"Mobile App\", \"iOS\", \"Android\", \"Firebase\", \"Cross-Platform\", \"Push\"]\n  }",
+											"contentType": "application/json",
+											"type": "text"
+										},
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/Users/mr.x/Downloads/photo_2025-09-17 01.46.38.jpeg"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/gigs/create-with-media",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"gigs",
+										"create-with-media"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Reviews",
+					"item": [
+						{
+							"name": "Get freelancer summury",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/reviews/freelancers/10/summary",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"reviews",
+										"freelancers",
+										"10",
+										"summary"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get reviews for a freelancer",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/reviews/freelancers/10",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"reviews",
+										"freelancers",
+										"10"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "can review freelancer",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Give a review as a client",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"freelancerId\": 10,\n  \"jobId\": \"4\",\n  \"contractId\": \"3\",\n  \"overallRating\": 5,\n  \"qualityRating\": 5,\n  \"communicationRating\": 4,\n  \"timelinessRating\": 5,\n  \"professionalismRating\": 5,\n  \"title\": \"Excellent Freelancer!\",\n  \"comment\": \"Excellent work! The freelancer delivered high-quality code on time and was very responsive to feedback. The API implementation was clean and well-documented. Would definitely work with them again.\",\n  \"reviewType\": \"GIG_REVIEW\",\n  \"isAnonymous\": false,\n  \"wouldRecommend\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/reviews",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"reviews"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Mark review helpful",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/reviews/1/helpful?helpful=1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"reviews",
+										"1",
+										"helpful"
+									],
+									"query": [
+										{
+											"key": "helpful",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "job-proposal-service",
+			"item": [
+				{
+					"name": "Job",
+					"item": [
+						{
+							"name": "milestone",
+							"item": [
+								{
+									"name": "Create job milestones",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"title\": \"UI/UX Design & Wireframes\",\n  \"description\": \"Create user interface mockups and wireframes for all main pages\",\n  \"suggestedAmountCents\": 80000,\n  \"currency\": \"USD\",\n  \"estimatedDays\": 7,\n  \"orderIndex\": 1,\n  \"dod\": [\n    \"High-fidelity mockups for all pages\",\n    \"Interactive prototype\",\n    \"Design system documentation\"\n  ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/1/milestones",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"1",
+												"milestones"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "get job milestones",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/1/milestones",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"1",
+												"milestones"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Job Attachment",
+							"item": [
+								{
+									"name": "Get job attachments",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/1/attachments",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"1",
+												"attachments"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create job attachments",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "file",
+													"type": "file",
+													"src": "/Users/mr.x/Downloads/000000000004.jpg"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/1/attachments",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"1",
+												"attachments"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "job",
+							"item": [
+								{
+									"name": "Get a job by job id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create a job",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"projectName\": \"Luxury Real Estate Photography Portfolio\",\n  \"description\": \"Photograph 10 high-end properties for real estate listings. Need interior, exterior, and aerial drone shots. Deliverables: HDR processed images, virtual tour ready photos, and marketing materials.\",\n  \"skills\": [\"real estate photography\", \"architectural photography\", \"drone photography\", \"HDR photography\", \"photo editing\", \"virtual tours\"],\n  \"budgetType\": \"HOURLY\",\n  \"minBudget\": 50000,\n  \"maxBudget\": 100000,\n  \"category\": \"PHOTOGRAPHY\",\n  \"isUrgent\": false,\n  \"ndaRequired\": true,\n  \"ipAssignment\": true\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "get my posted jobs",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/my-jobs?status=OPEN",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"my-jobs"
+											],
+											"query": [
+												{
+													"key": "status",
+													"value": "OPEN"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Search jobs by category",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8083/api/jobs/search",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8083",
+											"path": [
+												"api",
+												"jobs",
+												"search"
+											],
+											"query": [
+												{
+													"key": "category",
+													"value": "web",
+													"disabled": true
+												},
+												{
+													"key": "minBudget",
+													"value": "50000",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update job",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"projectName\": \"string\",\n  \"description\": \"string\",\n  \"budgetType\": \"FIXED\",\n  \"minBudgetCents\": 10,\n  \"maxBudgetCents\": 2000,\n  \"category\": \"string\",\n  \"skills\": [\n    \"string\"\n  ],\n  \"isUrgent\": true,\n  \"ndaRequired\": true,\n  \"ipAssignment\": true,\n  \"status\": \"DRAFT\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/my-jobs/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"my-jobs",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete a job",
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/my-jobs/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"my-jobs",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create job with attachment",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "multipart/form-data",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "job",
+													"value": "{\"projectName\": \"Mobile app MVP yum yum\", \"description\": \"Build iOS/Android app with auth, payments, and admin panel. Deliverables: auth, payments integration, CI, and basic e2e tests.\", \"skills\": [\"react-native\", \"node\", \"postgres\"],  \"budgetType\": \"FIXED\",  \"minBudget\": 100000,  \"maxBudget\": 500000,  \"category\": \"WEB DEVELOPMENT\",  \"isUrgent\": true,  \"ndaRequired\": false,\n  \"ipAssignment\": true}",
+													"contentType": "application/json",
+													"type": "text"
+												},
+												{
+													"key": "file",
+													"type": "file",
+													"src": "/Users/mr.x/Downloads/photo_2025-09-17 01.46.38.jpeg"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/with-attachment",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"with-attachment"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "invites",
+							"item": [
+								{
+									"name": "create invite",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"jobId\": 3,\n  \"clientId\": 1,\n  \"freelancerId\": 2\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/invites",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"invites"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "get freelancer invites",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/api/invites/my-received",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"invites",
+												"my-received"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get invitations for a job",
+									"request": {
+										"method": "GET",
+										"header": []
+									},
+									"response": []
+								},
+								{
+									"name": "accept/reject invitations",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"status\": \"ACCEPTED\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/invites/1/status",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"invites",
+												"1",
+												"status"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Proposal",
+					"item": [
+						{
+							"name": "milestone",
+							"item": [
+								{
+									"name": "Create Proposal milestone",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"title\": \"Create Payment gateway\",\n  \"description\": \"Create a stripe payment gateway\",\n  \"amountCents\": 50000,\n  \"currency\": \"USD\",\n  \"dueDate\": \"2025-09-20\",\n  \"orderIndex\": 1\n//   \"dod\": \"Figma design file delivered and approved by client.\"\n}\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/proposals/5/milestones",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"proposals",
+												"5",
+												"milestones"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get milestones of a proposal",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/api/proposals/1/milestones",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"proposals",
+												"1",
+												"milestones"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Create a proposal",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"jobId\": 4,\n  \"coverLetter\": \"With over 7 years of experience building scalable backend systems, I specialize in designing REST APIs with secure multi-tenant architectures. For this SaaS platform, I will implement robust user management with role-based access control, JWT authentication, and rate-limiting for security. I will integrate Stripe for payment processing, Redis for caching, and set up WebSocket-based real-time notifications. My development approach includes writing comprehensive unit and integration tests, setting up CI/CD pipelines, and delivering Dockerized services ready for AWS deployment. I will also provide detailed API documentation using OpenAPI/Swagger to ensure maintainability. You can expect a secure, scalable, and production-ready API.\",\n  \"proposedRate\": 5500.00,\n  \"deliveryDays\": 50,\n  \"portfolioLinks\": \"https://github.com/yourusername, https://yourportfolio.com\",\n  \"additionalNotes\": \"I will ensure the API follows best practices for SaaS scalability, including modular architecture, monitoring setup, and automated deployment. I can also advise on database optimization and future feature scaling. NDA and IP assignment are acceptable.\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/proposals/my-proposals",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"proposals",
+										"my-proposals"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get proposals for a job by jobid",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/proposals/job/8",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"proposals",
+										"job",
+										"8"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get my proposals",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/proposals/my-proposals",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"proposals",
+										"my-proposals"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create proposal with milestone",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"jobId\": 2,\n  \"cover\": \"I will deliver a robust MVP for your SaaS project.\",\n  \"totalCents\": 50000,\n  \"currency\": \"USD\",\n  \"deliveryDays\": 14,\n  \"milestones\": [\n    {\n      \"title\": \"Design UI\",\n      \"description\": \"Deliver Figma mockups and design assets.\",\n      \"amountCents\": 15000,\n      \"currency\": \"USD\",\n      \"dueDate\": \"2025-09-20\",\n      \"orderIndex\": 1\n    },\n    {\n      \"title\": \"Build Backend\",\n      \"description\": \"Implement REST API and database models.\",\n      \"amountCents\": 35000,\n      \"currency\": \"USD\",\n      \"dueDate\": \"2025-09-27\",\n      \"orderIndex\": 2\n    }\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/proposals/my-proposals-with-milestones",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"proposals",
+										"my-proposals-with-milestones"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Job proposals by ID",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/proposals/job/",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"proposals",
+										"job",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Make invites",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Contract",
+					"item": [
+						{
+							"name": "Actions",
+							"item": [
+								{
+									"name": "Get submission detail",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/api/contracts/5/submission",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"contracts",
+												"5",
+												"submission"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Submission accept",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"description\": \"Implemented all required features and completed the project as per the contract.\",\n  \"deliverableUrls\": [\n    \"https://github.com/thefreelancer/project-repo\",\n    \"https://app.vercel.com/preview/thefreelancer\"\n  ],\n  \"notes\": \"Please review the deployment and let me know if any changes are needed.\"\n}"
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/contracts/5/accept",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"contracts",
+												"5",
+												"accept"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Submission reject",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"reason\": \"The deliverables do not meet the requirements.\",\n  \"feedback\": \"Please update the documentation and fix the login bug.\",\n  \"pauseContract\": false\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/contracts/5/reject",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"contracts",
+												"5",
+												"reject"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "job status update",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"description\": \"Implemented all required features and completed the project as per the contract.\",\n  \"deliverableUrls\": [\n    \"https://github.com/thefreelancer/project-repo\",\n    \"https://app.vercel.com/preview/thefreelancer\"\n  ],\n  \"notes\": \"Please review the deployment and let me know if any changes are needed.\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/contracts/5/submit",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"contracts",
+												"5",
+												"submit"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Create contract",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"jobId\": 4,\n    \"proposalId\": 5,\n    \"clientId\": 11,\n    \"freelancerId\": 1,\n    \"totalAmountCents\": 15000,\n    \"paymentModel\": \"FIXED\",\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-02-01\",\n    \"termsJson\": \"{\\\"scope\\\":\\\"Simple website\\\",\\\"timeline\\\":\\\"4 weeks\\\"}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/contracts",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"contracts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get contract using contract ID",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/contracts/3",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"contracts",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get my contracts",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/contracts/my-contracts",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"contracts",
+										"my-contracts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update contract status",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"COMPLETED\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/contracts/3/status",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"contracts",
+										"3",
+										"status"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "workspace-service",
+			"item": [
+				{
+					"name": "Chat",
+					"item": [
+						{
+							"name": "Get messages from a conversation",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/api/direct-messages/conversations/5",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"direct-messages",
+										"conversations",
+										"5"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete a message",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/direct-messages/91be1429-9ec8-49f6-bb1a-9d881d67bbf9",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"direct-messages",
+										"91be1429-9ec8-49f6-bb1a-9d881d67bbf9"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update a message",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"updated hihi 2\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/direct-messages/27acf734-9afd-4af6-80f1-c8920357a73e",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"direct-messages",
+										"27acf734-9afd-4af6-80f1-c8920357a73e"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create a message",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n        \"receiverId\": 5,\n        \"content\": \"absk is friends with robin\",\n        \"messageType\": \"TEXT\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/direct-messages",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"direct-messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create complex message",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"receiverId\": \"11\",\n  \"content\": \"Screenshots and the doc attached.\",\n  \"messageType\": \"FILE\",\n  \"attachments\": [\n    {\n      \"filename\": \"screenshot1.png\",\n      \"url\": \"https://cdn.example.com/screenshot1.png\",\n      \"contentType\": \"image/png\",\n      \"fileSize\": 234567\n    },\n    {\n      \"filename\": \"spec.docx\",\n      \"url\": \"https://cdn.example.com/spec.docx\",\n      \"contentType\": \"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\n      \"fileSize\": 123456\n    }\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/direct-messages",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"direct-messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "message read conversation",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/direct-messages/f798da36-2f7c-4572-9cc2-97c39d6da099/read",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"direct-messages",
+										"f798da36-2f7c-4572-9cc2-97c39d6da099",
+										"read"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get recent users",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/direct-messages/recent",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"direct-messages",
+										"recent"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "File System",
+					"item": [
+						{
+							"name": "Get Files in a room",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/1/files",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"1",
+										"files"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete file from a room",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/1/files/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"1",
+										"files",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit file metadata",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Simple file upload",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"contentType": "",
+											"type": "file",
+											"src": "/Users/mr.x/Downloads/3. RefrigerationAC.pdf"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/2/files/multipart",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"2",
+										"files",
+										"multipart"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unread message count",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Get conversation with a user",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/direct-messages/conversations/11",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"direct-messages",
+										"conversations",
+										"11"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "{{BASE_URL}}/api/workspaces/rooms/1/files/multipart",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "multipart/form-data",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/Users/mr.x/Downloads/1 (3).pdf"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/1/files/multipart",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"1",
+										"files",
+										"multipart"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Event System",
+					"item": [
+						{
+							"name": "Create events",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"roomId\": 1,\n  \"title\": \"freshers meeting\",\n  \"description\": \"Introductory meeting\",\n  \"eventType\": \"MEETING\",\n  \"startTime\": \"2025-09-16T08:03:13.496Z\",\n  \"endTime\": \"2025-09-16T08:04:13.496Z\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/events",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get events in a room",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/events/room/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"events",
+										"room",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete events",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/events/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"events",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update events",
+							"request": {
+								"method": "PUT",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Room",
+					"item": [
+						{
+							"name": "Get a room by id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/contract/3",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"contract",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create a room",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Test Room\",\n  \"description\": \"For file uploads\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/workspaces/rooms",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get my rooms",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/my-rooms",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"my-rooms"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Workspace Messaging",
+					"item": [
+						{
+							"name": "Send messages",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Thanks for the clarification! I'll update the API endpoints accordingly.Hi hi\",\n  \"senderName\": \"absk\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/1/messages",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"1",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get conversation messages",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/1/messages",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"1",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update message in workspace",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"string hihi\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/1/messages/a7225fd4-3b18-408d-820b-11011a34fe52",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"1",
+										"messages",
+										"a7225fd4-3b18-408d-820b-11011a34fe52"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/1/messages",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"1",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Workspace Tasks",
+					"item": [
+						{
+							"name": "Update status of a task",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"TODO\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/1/tasks/1/status",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"1",
+										"tasks",
+										"1",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get tasks in a room",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/3/tasks",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"3",
+										"tasks"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": null,
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Post a task",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"string\",\n  \"description\": \"string\",\n  \"priority\": \"MEDIUM\",\n  \"assigneeId\": 10,\n  \"dueDate\": \"2025-09-17\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/3/tasks",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"3",
+										"tasks"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete a task",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/workspaces/rooms/3/tasks/4",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"workspaces",
+										"rooms",
+										"3",
+										"tasks",
+										"4"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "payment-service",
+			"item": [
+				{
+					"name": "escrow",
+					"item": [
+						{
+							"name": "Fund escrow",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\"jobId\": 9,\n\"amountCents\": 10000,\n\"currency\": \"usd\",\n\"paymentMethodId\": \"pm_card_visa\",\n\"clientEmail\": \"mehemudazad.km@gmail.com\",\n\"clientName\": \"Mehemud Azad\",\n\"description\": \"Frontend milestone payment\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/payments/escrow/fund",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"payments",
+										"escrow",
+										"fund"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get escrow status",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/api/payments/escrow/milestone/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"payments",
+										"escrow",
+										"milestone",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Release funds",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/payments/escrow/job/8/release?destinationAccountId=acct_1S8iwIRiZrlKXDGn",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"payments",
+										"escrow",
+										"job",
+										"8",
+										"release"
+									],
+									"query": [
+										{
+											"key": "destinationAccountId",
+											"value": "acct_1S8iwIRiZrlKXDGn"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Refund",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"escrowId\": \"d93241f7-8df9-4944-b804-09c85dbd93c1\",\n  \"amountCents\": 30000,\n  \"reason\": \"string\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/payments/escrow/refund",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"payments",
+										"escrow",
+										"refund"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Connect freelancer account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{access-token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"official.kzama@gmail.com\",\n  \"country\": \"US\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/accounts/create",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"payments",
+								"accounts",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Onboard freelancer accounts",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{access-token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "http://localhost:8080/api/payments/accounts/acct_1S6Z6ADkiWJG8ra9/onboarding-link?refreshUrl=https://example.com/onboarding-failed&returnUrl=https://example.com/onboarding-success\"",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/accounts/acct_1S8iwIRiZrlKXDGn/onboarding-link?refreshUrl=https://example.com/onboarding-failed&returnUrl=https://example.com/onboarding-success",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"payments",
+								"accounts",
+								"acct_1S8iwIRiZrlKXDGn",
+								"onboarding-link"
+							],
+							"query": [
+								{
+									"key": "refreshUrl",
+									"value": "https://example.com/onboarding-failed"
+								},
+								{
+									"key": "returnUrl",
+									"value": "https://example.com/onboarding-success"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Connect freelancer account",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{access-token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"kalidtuhin3@gmail.com\",\n  \"country\": \"US\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/accounts/create",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"payments",
+								"accounts",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ai-service",
+			"item": [
+				{
+					"name": "job-enhancement",
+					"item": [
+						{
+							"name": "Enhance entire job",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Build React E-commerce Website\",\n  \"description\": \"Need someone to build online store with payment integration. Should have product catalog and user accounts.\",\n  \"budgetRange\": \"2000-5000\",\n  \"stack\": [\"React\", \"Node.js\", \"MongoDB\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/enhance-job",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"enhance-job"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get info",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/info",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"info"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Enhance job description",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"description\": \"Need someone to build a website for my business. It should have login and payment features.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/enhance-description",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"enhance-description"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get enhannced job title",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"description\": \"Need someone to build a website for my business. It should have login and payment features. Looking for React developer with experience in Stripe integration.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/enhance-title",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"enhance-title"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "suggest skills stack from description",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"description\": \"Need a logo designer for my startup\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/suggest-skills",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"suggest-skills"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "proposal-assistance",
+					"item": [
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Analyze proposal",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"proposalContent\": \"Dear Client,\\n\\nI'm excited about your React dashboard project and confident I can deliver exactly what you need. With 5+ years of specialized React development experience, I've successfully built 15+ SaaS dashboards for companies ranging from startups to enterprise clients.\\n\\nMy expertise directly aligns with your requirements:\\n• Advanced React development with TypeScript\\n• State management using Redux and Context API\\n• RESTful API integration and data visualization\\n• Modern UI/UX with Material-UI and custom components\\n• Responsive design and cross-browser compatibility\\n\\nRecent relevant projects:\\n1. Analytics Dashboard for FinTech Company - React, TypeScript, Redux, Chart.js\\n2. Project Management SaaS - Real-time updates, complex state management\\n3. E-commerce Admin Panel - Inventory management, sales analytics\\n\\nProject Approach:\\n- Week 1-2: Setup, core components, and authentication\\n- Week 3-4: Dashboard features and API integration\\n- Week 5-6: Testing, optimization, and deployment\\n\\nI follow agile methodology with daily progress updates and use Git for version control. All code includes comprehensive documentation and testing.\\n\\nBudget: $3,500 - $4,500 (negotiable based on scope)\\nTimeline: 6 weeks\\nAvailability: Can start immediately\\n\\nI'd love to discuss your specific requirements and share my portfolio. Looking forward to collaborating with you!\\n\\nBest regards,\\nJohn Developer\",\n  \"jobDescription\": \"Looking for an experienced React developer to build a modern analytics dashboard for our SaaS platform. Must have experience with TypeScript, Redux, API integration, and data visualization.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/analyze-proposal",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"analyze-proposal"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Generate cover letter",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"jobTitle\": \"Senior React Developer for Healthcare SaaS Platform\",\n  \"jobDescription\": \"We're seeking a senior React developer to join our team building a comprehensive healthcare management platform. The ideal candidate will have experience with React, TypeScript, Redux, API integration, and healthcare compliance (HIPAA). You'll be working on patient management dashboards, appointment scheduling, and reporting modules.\",\n  \"freelancerExperience\": \"7+ years React development, built 3 healthcare platforms, HIPAA compliance experience, worked with major hospitals and clinics\",\n  \"keySkills\": \"React, TypeScript, Redux, HIPAA compliance, Healthcare APIs, Node.js, PostgreSQL, AWS\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/generate-cover-letter",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"generate-cover-letter"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Improve proposal",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"proposalContent\": \"Hi, I can build your website. I have some experience with coding. Let me know if you want to hire me. Thanks.\",\n  \"jobTitle\": \"Build E-commerce Website with Payment Integration\", \n  \"jobDescription\": \"We need a full-stack developer to create an online store with user authentication, product catalog, shopping cart, and Stripe payment integration. Must be responsive and SEO-friendly.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/improve-proposal",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"improve-proposal"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Recomendation",
+					"item": [
+						{
+							"name": "Freelancar search",
+							"item": [
+								{
+									"name": "paid smart matching api",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/1/match-freelancers/smart",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"1",
+												"match-freelancers",
+												"smart"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get job recommendation",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{c-access-token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/api/jobs/8/match-freelancers",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"jobs",
+												"8",
+												"match-freelancers"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "job recomendation",
+							"item": [
+								{
+									"name": "Get job recomendations for freelancer",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "{{access-token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/recommendations/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"recommendations",
+												"1"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Gig semantic search",
+							"item": [
+								{
+									"name": "Gigs semantic search",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/api/gigs/search/semantic?q=mongodb",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"gigs",
+												"search",
+												"semantic"
+											],
+											"query": [
+												{
+													"key": "q",
+													"value": "mongodb"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "gig semantic search + bussiness logic",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"query\": \"React developer with e-commerce experience\",\n  \"skills\": [\"React\", \"Node.js\", \"JavaScript\", \"E-commerce\"],\n  \"category\": \"Web Development\",\n  \"minBudget\": 100000,\n  \"maxBudget\": 500000,\n  \"location\": \"Remote\",\n  \"minRating\": 4.0,\n  \"maxRating\": 5.0,\n  \"minReviews\": 5,\n  \"sortBy\": \"relevance\",\n  \"sortOrder\": \"desc\",\n  \"limit\": 10,\n  \"offset\": 0\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/gigs/search/semantic",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"gigs",
+												"search",
+												"semantic"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "gig category search",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/api/gigs/search/semantic/category/Web Development?query=React dashboard&limit=10",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"gigs",
+												"search",
+												"semantic",
+												"category",
+												"Web Development"
+											],
+											"query": [
+												{
+													"key": "query",
+													"value": "React dashboard"
+												},
+												{
+													"key": "limit",
+													"value": "10"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Chatbot",
+					"item": [
+						{
+							"name": "health",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "getChatbot Message",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"message\": \"who am I\",\n  \"sessionId\": \"anon_67cec3ed-391b-45e6-855f-72cdf4908ff8\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/chatbot/chat",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"chatbot",
+										"chat"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get suggested questions",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/chatbot/suggestions",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"chatbot",
+										"suggestions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Knowledge Add",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"How to create a gig\",\n  \"content\": \"To create a gig, go to your profile and click 'Create Gig'...\",\n  \"contentType\": \"guide\",\n  \"tags\": [\"gig\", \"freelancer\", \"getting-started\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}",
+									"host": [
+										"{{BASE_URL}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/ai/knowledge/{id}",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"ai",
+										"knowledge",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Market Place Analysis",
+					"item": [
+						{
+							"name": "New Request",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{c-access-token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/marketplace/analyze?skill=graphic design&sampleSize=80&depth=standard",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"marketplace",
+										"analyze"
+									],
+									"query": [
+										{
+											"key": "skill",
+											"value": "graphic design"
+										},
+										{
+											"key": "sampleSize",
+											"value": "80"
+										},
+										{
+											"key": "depth",
+											"value": "standard"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Notification",
+			"item": [
+				{
+					"name": "Get notifications for a user",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{c-access-token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications/user",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get unread count",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{access-token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications/user/unread/count",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"user",
+								"unread",
+								"count"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get notification stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{c-access-token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications/user/stats",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"user",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "http://localhost:8082"
+		},
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "c-access-token",
+			"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiQ0xJRU5UIiwidHlwZSI6ImFjY2VzcyIsImVtYWlsIjoicm9iaW5AZ21haWwuY29tIiwic3ViIjoiMiIsImlhdCI6MTc1NzgzMDgzMSwiZXhwIjoxNzU3OTE3MjMxfQ.2jqbSoEdOd5p-4QqLkFI5ufA0kkV24UnnGZk0Krl3CCVzp6cfCMuLaIkpHWGmD0bQs5Bx_zwKD1hCJB7d-z5JA"
+		},
+		{
+			"key": "access-token",
+			"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiRlJFRUxBTkNFUiIsInR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InJva2lAZ21haWwuY29tIiwic3ViIjoiNCIsImlhdCI6MTc1NzgzMDc0NCwiZXhwIjoxNzU3OTE3MTQ0fQ.Dpko0foZ9c8K-eyU5RkvN4g44RCmruNI4m2c6prVTeh_yRtPDyNyrV4i15JEPZx8NGnXpVcTyfeogeR3pxHCpw"
+		}
+	]
+}
